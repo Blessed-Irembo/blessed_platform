@@ -1,1 +1,1 @@
-# blessed_application
+# Blessed Platform
