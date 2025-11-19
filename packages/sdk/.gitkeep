@@ -1,0 +1,11 @@
+# Shared SDK
+
+This directory will contain the shared API SDK used across Web, iOS, and Android platforms.
+
+## Purpose
+
+Provides consistent API communication layer for all client applications.
+
+## Coming Soon
+
+Will be developed alongside backend API implementation.

@@ -1,0 +1,18 @@
+# Backend API
+
+This directory will contain the REST/GraphQL APIs for the Blessed Irembo platform.
+
+## Structure
+
+- `api/` - API endpoints
+- `services/` - Business logic
+- `models/` - Database models
+- `controllers/` - Route controllers
+- `middleware/` - Authentication, logging, etc.
+- `utils/` - Helper functions
+- `config/` - Configuration
+- `tests/` - Backend tests
+
+## Coming Soon
+
+Backend development will begin after initial web and mobile prototypes.

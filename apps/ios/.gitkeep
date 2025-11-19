@@ -1,0 +1,17 @@
+# iOS Application
+
+This directory will contain the native iOS application built with Swift and SwiftUI.
+
+## Setup Instructions
+
+Coming soon...
+
+## Requirements
+
+- Xcode 15+
+- iOS 15+ target
+- Swift 5.9+
+
+## Getting Started
+
+Development will begin once the web foundation is complete.

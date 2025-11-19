@@ -1,0 +1,7 @@
+# Shared Configuration
+
+This directory will contain shared constants and environment schema used across platforms.
+
+## Coming Soon
+
+Configuration files will be added as the application grows.
