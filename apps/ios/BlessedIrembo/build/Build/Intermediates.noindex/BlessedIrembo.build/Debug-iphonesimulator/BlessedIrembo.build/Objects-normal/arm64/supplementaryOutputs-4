@@ -1,0 +1,23 @@
+{
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/ViewModels/AuthViewModel.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AuthViewModel.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AuthViewModel.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AuthViewModel.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AuthViewModel.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AuthViewModel.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/ViewModels/OnboardingViewModel.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingViewModel.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingViewModel.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingViewModel.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingViewModel.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingViewModel.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/ViewModels/PharmacyMapViewModel.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/PharmacyMapViewModel.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/PharmacyMapViewModel.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/PharmacyMapViewModel.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/PharmacyMapViewModel.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/PharmacyMapViewModel.swiftdeps"
+  }
+}

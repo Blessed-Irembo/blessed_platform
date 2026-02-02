@@ -1,0 +1,23 @@
+{
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Utilities/LocationManager.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/LocationManager.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/LocationManager.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/LocationManager.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/LocationManager.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/LocationManager.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Utilities/MockData.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/MockData.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/MockData.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/MockData.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/MockData.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/MockData.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Utilities/UserDefaultsKeys.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/UserDefaultsKeys.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/UserDefaultsKeys.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/UserDefaultsKeys.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/UserDefaultsKeys.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/UserDefaultsKeys.swiftdeps"
+  }
+}
