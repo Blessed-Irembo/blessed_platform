@@ -1,0 +1,39 @@
+# Gradle
+.gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Android Studio
+*.iml
+.idea/
+local.properties
+.DS_Store
+
+# Generated files
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# Kotlin
+*.kotlin_metadata
+
+# Google Services
+google-services.json
+
+# Keystore
+*.jks
+*.keystore
+
+# Log Files
+*.log
+
+# Debug
+*.hprof
+
+# Environment
+.env
