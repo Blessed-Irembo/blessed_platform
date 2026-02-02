@@ -36,7 +36,7 @@ export default function Header() {
               Home
             </Link>
             <Link 
-              href="/pharmacies" 
+              href="/login" 
               className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
             >
               Find Pharmacies

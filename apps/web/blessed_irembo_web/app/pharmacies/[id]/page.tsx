@@ -1,0 +1,490 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { getCurrentUser } from '@/lib/auth';
+
+/**
+ * Pharmacy Detail Page
+ * 
+ * Shows complete pharmacy information including:
+ * - Full details and badges
+ * - Location map with coordinates
+ * - Inquiry form for contacting pharmacy
+ */
+
+// Demo pharmacy data
+const DEMO_PHARMACIES = [
+  {
+    id: 1,
+    name: 'City Central Pharmacy',
+    address: 'KN 4 Ave, Kigali',
+    district: 'Gasabo',
+    phone: '+250 788 123 456',
+    email: 'contact@citypharmacy.rw',
+    isOpen: true,
+    hours: 'Mon-Sat: 8AM-8PM, Sun: 9AM-5PM',
+    rating: 4.8,
+    distance: '0.5 km',
+    verified: true,
+    is24_7: false,
+    isPremium: true,
+    description: 'Full-service pharmacy with 24/7 availability in the heart of Kigali.',
+    latitude: -1.9536,
+    longitude: 30.0605,
+  },
+  {
+    id: 2,
+    name: 'Health Plus Pharmacy',
+    address: 'KG 11 Ave, Kigali',
+    district: 'Kicukiro',
+    phone: '+250 788 234 567',
+    email: 'info@healthplus.rw',
+    isOpen: true,
+    hours: 'Open 24 Hours',
+    rating: 4.9,
+    distance: '1.2 km',
+    verified: true,
+    is24_7: true,
+    isPremium: true,
+    description: 'Professional pharmacy services available round the clock for all your medical needs.',
+    latitude: -1.9659,
+    longitude: 30.1046,
+  },
+  {
+    id: 3,
+    name: 'MediCare Pharmacy',
+    address: 'KN 3 Rd, Kigali',
+    district: 'Nyarugenge',
+    phone: '+250 788 345 678',
+    email: 'contact@medicare.rw',
+    isOpen: false,
+    hours: 'Mon-Sat: 8AM-6PM',
+    rating: 4.6,
+    distance: '2.1 km',
+    verified: true,
+    is24_7: false,
+    isPremium: false,
+    description: 'Trusted pharmacy offering quality medications and health consultation services.',
+    latitude: -1.9441,
+    longitude: 30.0619,
+  },
+  {
+    id: 4,
+    name: 'Wellness Pharmacy',
+    address: 'KK 15 Ave, Kigali',
+    district: 'Gasabo',
+    phone: '+250 788 456 789',
+    email: 'info@wellness.rw',
+    isOpen: true,
+    hours: 'Mon-Fri: 8AM-7PM, Sat: 9AM-5PM',
+    rating: 4.7,
+    distance: '3.0 km',
+    verified: true,
+    is24_7: false,
+    isPremium: false,
+    description: 'Your neighborhood pharmacy providing personalized healthcare solutions.',
+    latitude: -1.9403,
+    longitude: 30.0677,
+  },
+  {
+    id: 5,
+    name: 'LifeCare Pharmacy',
+    address: 'KG 7 Ave, Kigali',
+    district: 'Kicukiro',
+    phone: '+250 788 567 890',
+    email: 'contact@lifecare.rw',
+    isOpen: true,
+    hours: 'Mon-Sun: 7AM-10PM',
+    rating: 4.5,
+    distance: '3.5 km',
+    verified: true,
+    is24_7: false,
+    isPremium: true,
+    description: 'Comprehensive pharmacy services with extended hours for your convenience.',
+    latitude: -1.9706,
+    longitude: 30.1261,
+  },
+  {
+    id: 6,
+    name: 'Green Cross Pharmacy',
+    address: 'KN 8 St, Kigali',
+    district: 'Nyarugenge',
+    phone: '+250 788 678 901',
+    email: 'info@greencross.rw',
+    isOpen: false,
+    hours: 'Mon-Sat: 8AM-8PM',
+    rating: 4.4,
+    distance: '4.2 km',
+    verified: true,
+    is24_7: false,
+    isPremium: false,
+    description: 'Community pharmacy dedicated to providing affordable healthcare solutions.',
+    latitude: -1.9578,
+    longitude: 30.0944,
+  },
+];
+
+export default function PharmacyDetailPage() {
+  const router = useRouter();
+  const params = useParams();
+  const [user, setUser] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const pharmacyId = parseInt(params.id as string);
+  const pharmacy = DEMO_PHARMACIES.find(p => p.id === pharmacyId);
+
+  useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      router.push('/login');
+      return;
+    }
+    setUser(currentUser);
+  }, [router]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    setTimeout(() => {
+      setIsSubmitting(false);
+      setSubmitSuccess(true);
+      setFormData({ name: '', email: '', phone: '', message: '' });
+      
+      // Reset success message after 3 seconds
+      setTimeout(() => {
+        setSubmitSuccess(false);
+      }, 3000);
+    }, 1000);
+  };
+
+  if (!pharmacy) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Pharmacy Not Found</h1>
+          <p className="text-gray-600 mb-4">The pharmacy you're looking for doesn't exist.</p>
+          <Link href="/dashboard" className="text-teal-600 hover:text-teal-700 font-medium">
+            Back to Dashboard
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="shrink-0">
+              <Link href="/" className="flex items-center gap-2">
+                <Image
+                  src="/logo1.png"
+                  alt="Blessed Irembo"
+                  width={40}
+                  height={40}
+                  className="object-contain"
+                />
+                <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
+              </Link>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Back Button */}
+        <Link 
+          href="/dashboard"
+          className="inline-flex items-center text-gray-700 hover:text-teal-600 font-medium mb-6 transition-colors"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+            <path d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to Directory
+        </Link>
+
+        {/* Pharmacy Details Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-6">
+          {/* Pharmacy Name and Badges */}
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{pharmacy.name}</h1>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {pharmacy.verified && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-600 text-white">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Verified
+              </span>
+            )}
+            {pharmacy.is24_7 && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-600 text-white">
+                <svg className="w-4 h-4 mr-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                24/7 Available
+              </span>
+            )}
+            {pharmacy.isPremium && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white text-blue-600 border-2 border-blue-600">
+                Premium Member
+              </span>
+            )}
+          </div>
+
+          {/* Description */}
+          <p className="text-gray-600 mb-6">{pharmacy.description}</p>
+
+          {/* Contact Information */}
+          <div className="space-y-4">
+            {/* Address */}
+            <div className="flex items-start">
+              <div className="w-12 h-12 bg-teal-50 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-teal-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-gray-500">Address</div>
+                <div className="text-gray-900 font-medium">{pharmacy.address}</div>
+              </div>
+            </div>
+
+            {/* Phone */}
+            <div className="flex items-start">
+              <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-gray-500">Phone</div>
+                <div className="text-gray-900 font-medium">{pharmacy.phone}</div>
+              </div>
+            </div>
+
+            {/* Email */}
+            <div className="flex items-start">
+              <div className="w-12 h-12 bg-purple-50 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-purple-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-gray-500">Email</div>
+                <div className="text-gray-900 font-medium">{pharmacy.email}</div>
+              </div>
+            </div>
+
+            {/* Hours */}
+            <div className="flex items-start">
+              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+                <svg className="w-6 h-6 text-green-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <div className="text-sm font-medium text-gray-500">Hours</div>
+                <div className="text-gray-900 font-medium">{pharmacy.hours}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Location Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Location</h2>
+          
+          {/* Map Visualization */}
+          <div className="relative w-full h-64 bg-gradient-to-br from-blue-50 via-green-50 to-yellow-50 rounded-lg overflow-hidden mb-4">
+            <svg className="w-full h-full" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+              {/* Background - Roads */}
+              <line x1="0" y1="100" x2="400" y2="100" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
+              <line x1="0" y1="200" x2="400" y2="200" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
+              <line x1="100" y1="0" x2="100" y2="300" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
+              <line x1="200" y1="0" x2="200" y2="300" stroke="#94A3B8" strokeWidth="3" opacity="0.5"/>
+              <line x1="300" y1="0" x2="300" y2="300" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
+              
+              {/* Districts/Areas */}
+              <rect x="50" y="50" width="150" height="100" fill="#FEF3C7" opacity="0.3" rx="10"/>
+              <rect x="220" y="120" width="130" height="130" fill="#D1FAE5" opacity="0.3" rx="10"/>
+              
+              {/* Parks */}
+              <circle cx="120" cy="100" r="20" fill="#86EFAC" opacity="0.4"/>
+              <circle cx="280" cy="180" r="25" fill="#86EFAC" opacity="0.4"/>
+              
+              {/* Main Pharmacy Marker */}
+              <g className="animate-pulse">
+                <circle cx="200" cy="150" r="25" fill="#0D9488" opacity="0.2"/>
+                <circle cx="200" cy="150" r="18" fill="#0D9488"/>
+                <circle cx="200" cy="150" r="22" fill="none" stroke="#0D9488" strokeWidth="3"/>
+                <path d="M200 140 L200 160 M190 150 L210 150" stroke="white" strokeWidth="3" strokeLinecap="round"/>
+              </g>
+            </svg>
+            
+            {/* Coordinates Badge */}
+            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200">
+              <div className="text-xs font-medium text-gray-500 mb-1">Coordinates</div>
+              <div className="text-sm font-semibold text-gray-900">
+                {pharmacy.latitude}, {pharmacy.longitude}
+              </div>
+            </div>
+            
+            {/* Location Pin Icon */}
+            <div className="absolute top-4 right-4 w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-7 h-7 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </div>
+
+          {/* Get Directions Button */}
+          <button className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center">
+            <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+            </svg>
+            Get Directions
+          </button>
+        </div>
+
+        {/* Send Inquiry Card */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Send Inquiry</h2>
+          
+          {submitSuccess && (
+            <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
+              Your inquiry has been sent successfully! The pharmacy will respond via email or phone.
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Your Name */}
+            <div>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+                Your Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                value={formData.name}
+                onChange={handleInputChange}
+                placeholder="Enter your name"
+                required
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 placeholder-gray-400"
+              />
+            </div>
+
+            {/* Email */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                placeholder="your.email@example.com"
+                required
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 placeholder-gray-400"
+              />
+            </div>
+
+            {/* Phone */}
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                Phone
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                placeholder="+250 788 123 456"
+                required
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 placeholder-gray-400"
+              />
+            </div>
+
+            {/* Message */}
+            <div>
+              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
+                Message
+              </label>
+              <textarea
+                id="message"
+                name="message"
+                value={formData.message}
+                onChange={handleInputChange}
+                placeholder="What would you like to know?"
+                rows={4}
+                required
+                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none text-gray-900 placeholder-gray-400"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Send Inquiry
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="text-sm text-gray-500 text-center mt-4">
+            The pharmacy will receive your inquiry and respond via email or phone
+          </p>
+        </div>
+      </main>
+    </div>
+  );
+}

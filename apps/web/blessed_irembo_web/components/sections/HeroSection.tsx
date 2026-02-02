@@ -9,29 +9,29 @@ import Image from 'next/image';
  */
 export default function HeroSection() {
   return (
-    <section className="bg-gray-50 py-12 md:py-20">
+    <section className="bg-gray-50 py-8 md:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid md:grid-cols-2 gap-12 items-center">
+        <div className="grid md:grid-cols-2 gap-8 items-center">
           {/* Left Column - Content */}
-          <div className="space-y-6">
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+          <div className="space-y-4">
+            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
               Find Trusted Pharmacies Anywhere in Rwanda
             </h1>
             
-            <p className="text-lg text-gray-600 leading-relaxed">
+            <p className="text-base text-gray-600 leading-relaxed">
               Blessed Irembo connects you with verified pharmacies nationwide. 
               Search by location, check availability, and get the medication you need, 
               when you need it.
             </p>
 
             {/* Call-to-Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Link 
-                href="/pharmacies"
-                className="inline-flex items-center justify-center bg-teal-600 text-white px-6 py-3 rounded-md font-medium hover:bg-teal-700 transition-colors"
+                href="/login"
+                className="inline-flex items-center justify-center bg-teal-600 text-white px-5 py-2.5 rounded-md font-medium hover:bg-teal-700 transition-colors"
               >
                 <svg 
-                  className="w-5 h-5 mr-2" 
+                  className="w-4 h-4 mr-2" 
                   fill="none" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
@@ -46,11 +46,11 @@ export default function HeroSection() {
 
               <Link 
                 href="/register-pharmacy"
-                className="inline-flex items-center justify-center bg-white text-teal-600 px-6 py-3 rounded-md font-medium border-2 border-teal-600 hover:bg-teal-50 transition-colors"
+                className="inline-flex items-center justify-center bg-white text-teal-600 px-5 py-2.5 rounded-md font-medium border-2 border-teal-600 hover:bg-teal-50 transition-colors"
               >
                 Register Pharmacy
                 <svg 
-                  className="w-5 h-5 ml-2" 
+                  className="w-4 h-4 ml-2" 
                   fill="none" 
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
@@ -65,7 +65,7 @@ export default function HeroSection() {
           </div>
 
           {/* Right Column - Hero Image */}
-          <div className="relative h-96 md:h-[500px]">
+          <div className="relative h-64 md:h-80">
             <Image
               src="/pharmacist1.jpg"
               alt="Pharmacist at work"

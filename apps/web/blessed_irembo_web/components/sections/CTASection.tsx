@@ -19,7 +19,7 @@ export default function CTASection() {
         </p>
 
         <Link 
-          href="/pharmacies"
+          href="/login"
           className="inline-flex items-center bg-white text-teal-600 px-8 py-3 rounded-md font-medium hover:bg-gray-50 transition-colors shadow-lg"
         >
           <svg 
