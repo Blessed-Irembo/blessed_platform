@@ -4,89 +4,58 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { emailSchema } from '@/lib/security/validation';
-
-/**
- * Login Page
- * 
- * User authentication page with email/password login.
- * Includes form validation, remember me functionality,
- * and demo credentials for testing.
- */
-
-// Demo credentials for development
-const DEMO_CREDENTIALS = [
-  { email: 'user@example.com', password: 'user123', role: 'user', name: 'John Doe' },
-  { email: 'user2@example.com', password: 'user123', role: 'user', name: 'Jane Smith' },
-  { email: 'pharmacy@example.com', password: 'pharmacy123', role: 'pharmacy', name: 'City Pharmacy' },
-  { email: 'pharmacy2@example.com', password: 'pharmacy123', role: 'pharmacy', name: 'Health Plus Pharmacy' },
-];
+import { useAuth } from '@/lib/AuthContext';
+import { useRedirectIfAuth } from '@/lib/authHooks';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn } = useAuth();
+  // Redirect already-logged-in users straight to the app
+  useRedirectIfAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
+
+    // Basic client-side validation
+    if (!email.trim()) {
+      setErrors({ email: 'Email is required' });
+      return;
+    }
+    if (!password || password.length < 6) {
+      setErrors({ password: 'Password must be at least 6 characters' });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Validate email format
-      emailSchema.parse(email);
-
-      // Validate password
-      if (!password || password.length < 6) {
-        setErrors({ password: 'Password must be at least 6 characters' });
-        setIsLoading(false);
-        return;
-      }
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Check against demo credentials
-      const matchedUser = DEMO_CREDENTIALS.find(
-        u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-      );
-
-      if (matchedUser) {
-        // Store user session
-        const userSession = {
-          email: matchedUser.email,
-          name: matchedUser.name,
-          role: matchedUser.role,
-          loggedInAt: new Date().toISOString(),
-        };
-        
-        if (rememberMe) {
-          localStorage.setItem('userSession', JSON.stringify(userSession));
-        } else {
-          sessionStorage.setItem('userSession', JSON.stringify(userSession));
-        }
-
-        // Redirect based on role
-        if (matchedUser.role === 'pharmacy') {
-          router.replace('/pharmacy/dashboard');
-        } else {
-          router.replace('/pharmacies');
-        }
-      } else {
-        // Invalid credentials
-        setErrors({ general: 'Invalid email or password. Please use demo credentials.' });
-        setIsLoading(false);
-      }
-
+      await signIn(email, password);
+      // Redirect to pharmacy finder after successful login
+      router.replace('/pharmacies');
     } catch (error: any) {
-      if (error.errors) {
-        setErrors({ email: error.errors[0].message });
-      } else {
-        setErrors({ general: 'Invalid email or password' });
+      // Map Firebase error codes to friendly messages
+      switch (error.code) {
+        case 'auth/user-not-found':
+        case 'auth/wrong-password':
+        case 'auth/invalid-credential':
+          setErrors({ general: 'Invalid email or password. Please try again.' });
+          break;
+        case 'auth/too-many-requests':
+          setErrors({ general: 'Too many failed attempts. Please try again later or reset your password.' });
+          break;
+        case 'auth/user-disabled':
+          setErrors({ general: 'This account has been disabled. Please contact support.' });
+          break;
+        default:
+          setErrors({ general: 'Something went wrong. Please try again.' });
       }
+    } finally {
       setIsLoading(false);
     }
   };
@@ -257,22 +226,8 @@ export default function LoginPage() {
               )}
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <input
-                  id="remember-me"
-                  name="remember-me"
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded cursor-pointer"
-                />
-                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 cursor-pointer">
-                  Remember me
-                </label>
-              </div>
-
+            {/* Forgot Password */}
+            <div className="flex items-center justify-end">
               <div className="text-sm">
                 <Link 
                   href="/forgot-password" 
@@ -304,16 +259,7 @@ export default function LoginPage() {
               </button>
             </div>
 
-            {/* Demo Credentials */}
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <p className="text-center text-sm text-gray-600 mb-2">
-                Demo credentials for testing:
-              </p>
-              <div className="space-y-1 text-xs text-gray-500 text-center">
-                <p><strong>Users:</strong> user@example.com / user123</p>
-                <p><strong>Pharmacy:</strong> pharmacy@example.com / pharmacy123</p>
-              </div>
-            </div>
+
           </form>
         </div>
 

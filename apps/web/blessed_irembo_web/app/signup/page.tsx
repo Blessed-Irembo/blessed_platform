@@ -4,15 +4,11 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-
-/**
- * User Sign Up Page
- * 
- * Allows regular users to create an account to find pharmacies.
- */
+import { useAuth } from '@/lib/AuthContext';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const { signUp } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -31,7 +27,6 @@ export default function SignUpPage() {
       ...formData,
       [e.target.name]: e.target.value,
     });
-    // Clear error when user starts typing
     if (errors[e.target.name]) {
       setErrors({ ...errors, [e.target.name]: '' });
     }
@@ -69,20 +64,34 @@ export default function SignUpPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+
+    if (!validateForm()) return;
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      await signUp(formData.email, formData.password);
+      // Successfully created account — go straight to the app
+      router.replace('/pharmacies');
+    } catch (error: any) {
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          setErrors({ email: 'An account with this email already exists. Try logging in.' });
+          break;
+        case 'auth/weak-password':
+          setErrors({ password: 'Password is too weak. Use at least 6 characters.' });
+          break;
+        case 'auth/invalid-email':
+          setErrors({ email: 'Please enter a valid email address.' });
+          break;
+        default:
+          setErrors({ general: 'Something went wrong. Please try again.' });
+      }
+    } finally {
       setIsSubmitting(false);
-      alert('Account created successfully! Please log in.');
-      router.push('/login');
-    }, 1500);
+    }
   };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -120,6 +129,13 @@ export default function SignUpPage() {
         {/* Sign Up Form */}
         <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-12 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
+
+            {/* General Error */}
+            {(errors as any).general && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {(errors as any).general}
+              </div>
+            )}
             {/* Full Name */}
             <div>
               <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>

@@ -5,6 +5,8 @@ import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { Pharmacy } from '@/components/PharmacyMap';
+import { useRequireAuth } from '@/lib/authHooks';
+
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
 const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
@@ -117,12 +119,27 @@ const DEMO_PHARMACIES: Pharmacy[] = [
 // ─── Page Component ────────────────────────────────────────────────────────────
 
 export default function PharmaciesPage() {
+  // Require authentication — redirects to /login if not signed in
+  const { loading } = useRequireAuth();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [showOpenOnly, setShowOpenOnly] = useState(false);
   const [selectedPharmacy, setSelectedPharmacy] = useState<number | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+
+  // Show spinner while Firebase resolves auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Loading…</p>
+        </div>
+      </div>
+    );
+  }
 
   // Filter pharmacies based on search, district, and open status
   const filteredPharmacies = DEMO_PHARMACIES.filter((pharmacy) => {
