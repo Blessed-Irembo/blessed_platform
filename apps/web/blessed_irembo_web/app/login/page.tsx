@@ -71,9 +71,9 @@ export default function LoginPage() {
 
         // Redirect based on role
         if (matchedUser.role === 'pharmacy') {
-          router.push('/pharmacy/dashboard');
+          router.replace('/pharmacy/dashboard');
         } else {
-          router.push('/dashboard');
+          router.replace('/pharmacies');
         }
       } else {
         // Invalid credentials

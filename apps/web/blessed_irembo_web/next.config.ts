@@ -52,12 +52,18 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-eval' 'unsafe-inline'",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com",
-              "frame-src 'self'",
+              // Google Maps JS SDK + any inline scripts Next.js needs
+              "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://maps.googleapis.com https://maps.gstatic.com",
+              // Google Maps injects inline styles for the map UI
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://maps.googleapis.com",
+              // Map tiles and marker images come from these Google domains
+              "img-src 'self' data: https: blob:",
+              // Fonts used by the Google Maps UI
+              "font-src 'self' data: https://fonts.gstatic.com",
+              // XHR/fetch calls for tile data, geocoding, etc.
+              "connect-src 'self' https://maps.googleapis.com https://maps.gstatic.com https://*.googleapis.com",
+              // Google Maps renders some content in iframes
+              "frame-src 'self' https://www.google.com https://maps.googleapis.com",
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'self'",

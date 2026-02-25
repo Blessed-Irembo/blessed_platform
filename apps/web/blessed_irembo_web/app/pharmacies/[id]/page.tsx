@@ -4,7 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { getCurrentUser } from '@/lib/auth';
+
+const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-64 rounded-xl bg-gray-100 animate-pulse flex items-center justify-center">
+      <div className="text-gray-400 text-sm">Loading map…</div>
+    </div>
+  ),
+});
 
 /**
  * Pharmacy Detail Page
@@ -140,6 +150,30 @@ export default function PharmacyDetailPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
 
+  // ── Directions state ──────────────────────────────────────────────────────
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoStatus, setGeoStatus] = useState<'idle' | 'loading' | 'error'>('idle');
+  const [directions, setDirections] = useState<{
+    duration: string;
+    distance: string;
+    steps: { instructions: string; distance: string; duration: string }[];
+  } | null>(null);
+
+  const handleGetDirections = () => {
+    if (!navigator.geolocation) {
+      setGeoStatus('error');
+      return;
+    }
+    setGeoStatus('loading');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoStatus('idle');
+      },
+      () => setGeoStatus('error')
+    );
+  };
+
   const pharmacyId = parseInt(params.id as string);
   const pharmacy = DEMO_PHARMACIES.find(p => p.id === pharmacyId);
 
@@ -182,8 +216,8 @@ export default function PharmacyDetailPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Pharmacy Not Found</h1>
           <p className="text-gray-600 mb-4">The pharmacy you're looking for doesn't exist.</p>
-          <Link href="/dashboard" className="text-teal-600 hover:text-teal-700 font-medium">
-            Back to Dashboard
+          <Link href="/pharmacies" className="text-teal-600 hover:text-teal-700 font-medium">
+            Back to Pharmacies
           </Link>
         </div>
       </div>
@@ -223,15 +257,15 @@ export default function PharmacyDetailPage() {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Button */}
-        <Link 
-          href="/dashboard"
+        <button
+          onClick={() => router.back()}
           className="inline-flex items-center text-gray-700 hover:text-teal-600 font-medium mb-6 transition-colors"
         >
           <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
             <path d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Directory
-        </Link>
+          Back
+        </button>
 
         {/* Pharmacy Details Card */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-6">
@@ -323,60 +357,119 @@ export default function PharmacyDetailPage() {
         </div>
 
         {/* Location Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-6">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Location</h2>
-          
-          {/* Map Visualization */}
-          <div className="relative w-full h-64 bg-gradient-to-br from-blue-50 via-green-50 to-yellow-50 rounded-lg overflow-hidden mb-4">
-            <svg className="w-full h-full" viewBox="0 0 400 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-              {/* Background - Roads */}
-              <line x1="0" y1="100" x2="400" y2="100" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
-              <line x1="0" y1="200" x2="400" y2="200" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
-              <line x1="100" y1="0" x2="100" y2="300" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
-              <line x1="200" y1="0" x2="200" y2="300" stroke="#94A3B8" strokeWidth="3" opacity="0.5"/>
-              <line x1="300" y1="0" x2="300" y2="300" stroke="#CBD5E1" strokeWidth="2" opacity="0.4"/>
-              
-              {/* Districts/Areas */}
-              <rect x="50" y="50" width="150" height="100" fill="#FEF3C7" opacity="0.3" rx="10"/>
-              <rect x="220" y="120" width="130" height="130" fill="#D1FAE5" opacity="0.3" rx="10"/>
-              
-              {/* Parks */}
-              <circle cx="120" cy="100" r="20" fill="#86EFAC" opacity="0.4"/>
-              <circle cx="280" cy="180" r="25" fill="#86EFAC" opacity="0.4"/>
-              
-              {/* Main Pharmacy Marker */}
-              <g className="animate-pulse">
-                <circle cx="200" cy="150" r="25" fill="#0D9488" opacity="0.2"/>
-                <circle cx="200" cy="150" r="18" fill="#0D9488"/>
-                <circle cx="200" cy="150" r="22" fill="none" stroke="#0D9488" strokeWidth="3"/>
-                <path d="M200 140 L200 160 M190 150 L210 150" stroke="white" strokeWidth="3" strokeLinecap="round"/>
-              </g>
-            </svg>
-            
-            {/* Coordinates Badge */}
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200">
-              <div className="text-xs font-medium text-gray-500 mb-1">Coordinates</div>
-              <div className="text-sm font-semibold text-gray-900">
-                {pharmacy.latitude}, {pharmacy.longitude}
-              </div>
-            </div>
-            
-            {/* Location Pin Icon */}
-            <div className="absolute top-4 right-4 w-12 h-12 bg-teal-600 rounded-full flex items-center justify-center shadow-lg">
-              <svg className="w-7 h-7 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </div>
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
+          {/* Header bar */}
+          <div className="px-6 md:px-8 pt-6 pb-4 flex items-center justify-between">
+            <h2 className="text-xl font-bold text-gray-900">Location</h2>
+            <span className="text-xs font-mono text-gray-400">
+              {pharmacy.latitude.toFixed(4)}, {pharmacy.longitude.toFixed(4)}
+            </span>
           </div>
 
-          {/* Get Directions Button */}
-          <button className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-teal-700 transition-colors flex items-center justify-center">
-            <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-              <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-            </svg>
-            Get Directions
-          </button>
+          {/* Full-width map — 420px tall */}
+          <div className="w-full" style={{ height: 420 }}>
+            <PharmacyDetailMap
+              pharmacy={{
+                id: pharmacy.id,
+                name: pharmacy.name,
+                isOpen: pharmacy.isOpen,
+                latitude: pharmacy.latitude,
+                longitude: pharmacy.longitude,
+              }}
+              origin={userLocation}
+              onDirectionsLoaded={setDirections}
+            />
+          </div>
+
+          {/* Get Directions button / directions panel */}
+          <div className="px-6 md:px-8 py-5">
+            {/* CTA — before directions are requested */}
+            {!userLocation && (
+              <button
+                onClick={handleGetDirections}
+                disabled={geoStatus === 'loading'}
+                className="w-full bg-teal-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-teal-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-wait"
+              >
+                {geoStatus === 'loading' ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                    </svg>
+                    Getting your location…
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                    </svg>
+                    Get Directions
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Geolocation error */}
+            {geoStatus === 'error' && (
+              <p className="text-red-500 text-sm text-center">
+                Location access denied. Please enable location in your browser settings.
+              </p>
+            )}
+
+            {/* Directions panel — shown once route is computed */}
+            {userLocation && directions && (
+              <div>
+                {/* Summary row */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="flex-1 bg-teal-50 border border-teal-100 rounded-xl px-4 py-3 text-center">
+                    <div className="text-xs text-teal-600 font-medium mb-0.5">Duration</div>
+                    <div className="text-lg font-bold text-teal-700">{directions.duration}</div>
+                  </div>
+                  <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-center">
+                    <div className="text-xs text-gray-500 font-medium mb-0.5">Distance</div>
+                    <div className="text-lg font-bold text-gray-700">{directions.distance}</div>
+                  </div>
+                  <button
+                    onClick={() => { setUserLocation(null); setDirections(null); setGeoStatus('idle'); }}
+                    className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                    title="Clear route"
+                  >
+                    <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Step-by-step turns */}
+                <div className="space-y-0 border border-gray-100 rounded-xl overflow-hidden divide-y divide-gray-100 max-h-52 overflow-y-auto">
+                  {directions.steps.map((step, i) => (
+                    <div key={i} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors">
+                      <span className="w-6 h-6 rounded-full bg-teal-100 text-teal-700 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                        {i + 1}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-800 leading-snug">{step.instructions}</p>
+                        {(step.distance || step.duration) && (
+                          <p className="text-xs text-gray-400 mt-0.5">{step.distance} · {step.duration}</p>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Loading route */}
+            {userLocation && !directions && geoStatus !== 'error' && (
+              <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-400">
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                </svg>
+                Calculating route…
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Send Inquiry Card */}
