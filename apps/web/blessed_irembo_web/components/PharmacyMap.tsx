@@ -34,58 +34,76 @@ interface PharmacyMapProps {
   onSelectPharmacy: (id: number | null) => void;
 }
 
-// ─── Custom Pharmacy Pin SVG ──────────────────────────────────────────────────
-// A pharmacy building pin: rounded building silhouette with diamond logo mark
-// and a pin-point tail. Colors reflect open/closed/selected state.
+// ─── Custom Pharmacy House Pin SVG ───────────────────────────────────────────
+// A pharmacy building pin: house shape (roof + body + door + pharmacy cross)
+// with a drop shadow and a sharp point at the bottom.
 
 export function buildPharmacyPinUrl(isOpen: boolean, isSelected: boolean): string {
-  const bg = isSelected ? '#0D9488' : isOpen ? '#14B8A6' : '#6B7280';
-  const ring = isSelected ? '#0F766E' : isOpen ? '#0D9488' : '#4B5563';
-  const shadow = isSelected ? 'rgba(13,148,136,0.45)' : 'rgba(0,0,0,0.18)';
-  const w = isSelected ? 52 : 42;
-  const h = isSelected ? 66 : 54;
+  const bg = isSelected ? '#0F766E' : isOpen ? '#0D9488' : '#6B7280';
+  const roof = isSelected ? '#0D9488' : isOpen ? '#14B8A6' : '#9CA3AF';
+  const cross = '#ffffff';
+  const shadow = isSelected ? 'rgba(13,148,136,0.5)' : 'rgba(0,0,0,0.22)';
+  const w = isSelected ? 52 : 44;
+  const h = isSelected ? 64 : 56;
 
-  // The pin is a circle on top + a sharp tail below, very legible on the map
-  // Inside the circle: the Blessed Irembo diamond ◆ + small cross bars
+  // Layout constants
   const cx = w / 2;
-  const r = cx - 3;
-  const tipY = h - 2;
+  // Roof peak — top 28% of height
+  const peakY = h * 0.18;
+  // Eave (where roof meets walls) — 42% from top
+  const eaveY = h * 0.42;
+  // Wall bottom (above the pin point) — 75% from top
+  const wallBY = h * 0.75;
+  // Left / right wall x
+  const wallL = w * 0.12;
+  const wallR = w * 0.88;
+  // Door dimensions
+  const doorW = w * 0.24;
+  const doorH = h * 0.18;
+  const doorX = cx - doorW / 2;
+  const doorY = wallBY - doorH;
+  // Cross dimensions (centered on building face)
+  const crossCY = (eaveY + doorY) / 2;
+  const crossArmL = w * 0.14;   // half-length of horizontal arm
+  const crossArmT = h * 0.07;   // half-height of horizontal arm
+  const crossVL = w * 0.04;   // half-width of vertical arm
+  const crossVT = h * 0.12;   // half-height of vertical arm
 
-  // Diamond path scaled to fill the circle nicely
-  const dx = cx, dy = r + 3;
-  const ds = r * 0.42; // half-width of diamond
-  const diamondPath = `M${dx},${dy - ds * 1.1} L${dx + ds},${dy} L${dx},${dy + ds * 1.1} L${dx - ds},${dy} Z`;
-
-  const svg = `
-<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
+  const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
   <defs>
     <filter id="sh" x="-30%" y="-20%" width="160%" height="160%">
       <feDropShadow dx="0" dy="2" stdDeviation="${isSelected ? 3 : 2}" flood-color="${shadow}"/>
     </filter>
   </defs>
 
-  <!-- Pin tail -->
-  <path d="M${cx - 6},${r * 2 + 3} Q${cx},${tipY + 4} ${cx + 6},${r * 2 + 3}" fill="${bg}" filter="url(#sh)"/>
+  <!-- Pin tail (sharp bottom point) -->
+  <polygon points="${cx - 5},${wallBY} ${cx + 5},${wallBY} ${cx},${h - 1}"
+           fill="${bg}" filter="url(#sh)"/>
 
-  <!-- Outer ring (glow when selected) -->
-  <circle cx="${cx}" cy="${r + 3}" r="${r + (isSelected ? 1 : 0)}" fill="${ring}" filter="url(#sh)"/>
+  <!-- Building body -->
+  <rect x="${wallL}" y="${eaveY}" width="${wallR - wallL}" height="${wallBY - eaveY}"
+        rx="2" fill="${bg}" filter="url(#sh)"/>
 
-  <!-- Main circle body -->
-  <circle cx="${cx}" cy="${r + 3}" r="${r - 1}" fill="${bg}"/>
+  <!-- Roof (triangle) -->
+  <polygon points="${cx},${peakY} ${wallL - 2},${eaveY} ${wallR + 2},${eaveY}"
+           fill="${roof}" filter="url(#sh)"/>
 
-  <!-- Inner white disc -->
-  <circle cx="${cx}" cy="${r + 3}" r="${r * 0.72}" fill="white" opacity="0.97"/>
+  <!-- Pharmacy cross (white) -->
+  <!-- Horizontal arm -->
+  <rect x="${cx - crossArmL}" y="${crossCY - crossArmT}" width="${crossArmL * 2}" height="${crossArmT * 2}"
+        rx="1.5" fill="${cross}" opacity="0.95"/>
+  <!-- Vertical arm -->
+  <rect x="${cx - crossVL}" y="${crossCY - crossVT}" width="${crossVL * 2}" height="${crossVT * 2}"
+        rx="1.5" fill="${cross}" opacity="0.95"/>
 
-  <!-- Blessed Irembo diamond mark (teal on white) -->
-  <path d="${diamondPath}" fill="${bg}"/>
-
-  <!-- Tiny pharmacy cross below diamond -->
-  <rect x="${cx - 1.2}" y="${dy + ds * 1.1 + 2}" width="2.4" height="6" rx="1" fill="${ring}" opacity="0.7"/>
-  <rect x="${cx - 3}" y="${dy + ds * 1.1 + 4}" width="6" height="2.4" rx="1" fill="${ring}" opacity="0.7"/>
+  <!-- Door -->
+  <rect x="${doorX}" y="${doorY}" width="${doorW}" height="${doorH}"
+        rx="1.5" fill="rgba(0,0,0,0.18)"/>
 </svg>`.trim();
 
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
+
 
 // ─── Clean Map Style ──────────────────────────────────────────────────────────
 // Minimal, clinic-clean map: only roads, water, parks visible.
@@ -228,8 +246,8 @@ export default function PharmacyMap({
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     <svg width="16" height="16" viewBox="0 0 20 20" fill="white">
-                      <rect x="8" y="3" width="4" height="14" rx="1.5"/>
-                      <rect x="3" y="8" width="14" height="4" rx="1.5"/>
+                      <rect x="8" y="3" width="4" height="14" rx="1.5" />
+                      <rect x="3" y="8" width="14" height="4" rx="1.5" />
                     </svg>
                   </div>
                   <div>
@@ -239,7 +257,7 @@ export default function PharmacyMap({
                       </p>
                       {infoPharmacy.verified && (
                         <svg width="12" height="12" viewBox="0 0 20 20" fill="#0D9488">
-                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                         </svg>
                       )}
                     </div>
@@ -259,7 +277,7 @@ export default function PharmacyMap({
                       width: 6, height: 6, borderRadius: '50%',
                       background: infoPharmacy.isOpen ? '#22c55e' : '#ef4444',
                       display: 'inline-block',
-                    }}/>
+                    }} />
                     {infoPharmacy.isOpen ? 'Open Now' : 'Closed'}
                   </span>
                   <span style={{ fontSize: '12px', color: '#92400e', fontWeight: 600 }}>★ {infoPharmacy.rating}</span>
@@ -269,7 +287,7 @@ export default function PharmacyMap({
                 {/* Address */}
                 <p style={{ margin: '0 0 8px', fontSize: '11px', color: '#6b7280', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <svg width="11" height="11" viewBox="0 0 20 20" fill="#9ca3af">
-                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                   </svg>
                   {infoPharmacy.address}
                 </p>
@@ -306,11 +324,11 @@ export default function PharmacyMap({
           pointerEvents: 'none',
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#14B8A6', display: 'inline-block' }}/>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#14B8A6', display: 'inline-block' }} />
             Open
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#6B7280', display: 'inline-block' }}/>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#6B7280', display: 'inline-block' }} />
             Closed
           </span>
           <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#6b7280', fontWeight: 400 }}>

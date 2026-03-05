@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import type { Pharmacy } from '@/components/PharmacyMap';
 import { useRequireAuth } from '@/lib/authHooks';
+import { useAuth } from '@/lib/AuthContext';
 
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
@@ -121,6 +123,8 @@ const DEMO_PHARMACIES: Pharmacy[] = [
 export default function PharmaciesPage() {
   // Require authentication — redirects to /login if not signed in
   const { loading } = useRequireAuth();
+  const { currentUser, signOut } = useAuth();
+  const router = useRouter();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
@@ -128,6 +132,34 @@ export default function PharmaciesPage() {
   const [selectedPharmacy, setSelectedPharmacy] = useState<number | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.replace('/login');
+  };
+
+  // Derive display name and initials from Firebase user
+  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+  const email = currentUser?.email || '';
+  const initials = displayName
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   // Show spinner while Firebase resolves auth state
   if (loading) {
@@ -225,13 +257,124 @@ export default function PharmaciesPage() {
               </Link>
             </div>
 
-            <div className="flex items-center space-x-4">
-              <Link
-                href="/"
-                className="text-gray-700 font-medium hover:text-red-600 transition-colors"
+            {/* User profile avatar + dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                id="user-menu-btn"
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                className="flex items-center gap-2 focus:outline-none group"
+                aria-haspopup="true"
+                aria-expanded={dropdownOpen}
               >
-                Logout
-              </Link>
+                {/* Avatar circle */}
+                <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0 ring-2 ring-teal-200 group-hover:ring-teal-400 transition-all">
+                  {currentUser?.photoURL ? (
+                    <Image
+                      src={currentUser.photoURL}
+                      alt={displayName}
+                      width={36}
+                      height={36}
+                      className="rounded-full object-cover"
+                    />
+                  ) : (
+                    initials
+                  )}
+                </div>
+                {/* Name — hidden on small screens */}
+                <span className="hidden md:block text-sm font-medium text-gray-900 max-w-[120px] truncate">
+                  {displayName}
+                </span>
+                {/* Chevron */}
+                <svg
+                  className={`hidden md:block w-4 h-4 text-gray-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
+                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown panel */}
+              {dropdownOpen && (
+                <div
+                  className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden"
+                  role="menu"
+                >
+                  {/* User info header */}
+                  <div className="bg-teal-600 px-4 py-4 flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-teal-800 flex items-center justify-center text-white text-lg font-bold shrink-0">
+                      {currentUser?.photoURL ? (
+                        <Image
+                          src={currentUser.photoURL}
+                          alt={displayName}
+                          width={48}
+                          height={48}
+                          className="rounded-full object-cover"
+                        />
+                      ) : (
+                        initials
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-bold text-sm truncate uppercase">{displayName}</p>
+                      <p className="text-teal-100 text-xs truncate">{email}</p>
+                    </div>
+                  </div>
+
+                  {/* Menu items */}
+                  <div className="py-2">
+                    <Link
+                      href="/pharmacy/profile"
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                      role="menuitem"
+                    >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                      My Profile
+                    </Link>
+
+                    <Link
+                      href="/settings"
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                      role="menuitem"
+                    >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      Settings
+                    </Link>
+
+                    <Link
+                      href="/pharmacy/inquiries"
+                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setDropdownOpen(false)}
+                      role="menuitem"
+                    >
+                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                      </svg>
+                      Inquiries
+                    </Link>
+
+                    {/* Divider */}
+                    <div className="border-t border-gray-100 my-1" />
+
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                      role="menuitem"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </nav>
@@ -271,7 +414,7 @@ export default function PharmaciesPage() {
                   placeholder="Search by name or location…"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                  className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                 />
               </div>
             </div>
@@ -282,7 +425,7 @@ export default function PharmaciesPage() {
                 id="district-filter"
                 value={selectedDistrict}
                 onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="all">All Districts</option>
                 <option value="Gasabo">Gasabo</option>
@@ -377,11 +520,10 @@ export default function PharmaciesPage() {
                 <div
                   key={pharmacy.id}
                   onClick={() => setSelectedPharmacy(pharmacy.id)}
-                  className={`bg-white rounded-lg border ${
-                    selectedPharmacy === pharmacy.id
-                      ? 'border-teal-500 shadow-lg ring-1 ring-teal-500'
-                      : 'border-gray-200'
-                  } p-4 cursor-pointer hover:shadow-md transition-all`}
+                  className={`bg-white rounded-lg border ${selectedPharmacy === pharmacy.id
+                    ? 'border-teal-500 shadow-lg ring-1 ring-teal-500'
+                    : 'border-gray-200'
+                    } p-4 cursor-pointer hover:shadow-md transition-all`}
                 >
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
@@ -400,11 +542,10 @@ export default function PharmaciesPage() {
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <span
-                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                            pharmacy.isOpen
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
+                          className={`px-2 py-0.5 rounded-full text-xs font-medium ${pharmacy.isOpen
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                            }`}
                         >
                           {pharmacy.isOpen ? 'Open' : 'Closed'}
                         </span>

@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
 
 export default function SignUpPage() {
   const router = useRouter();
   const { signUp } = useAuth();
+  const [registered, setRegistered] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -71,8 +74,9 @@ export default function SignUpPage() {
 
     try {
       await signUp(formData.email, formData.password);
-      // Successfully created account — go straight to the app
-      router.replace('/pharmacies');
+      // Sign out immediately — user must log in manually after registering
+      await signOut(auth);
+      setRegistered(true);
     } catch (error: any) {
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -91,6 +95,37 @@ export default function SignUpPage() {
       setIsSubmitting(false);
     }
   };
+
+  // Show success screen after successful registration
+  if (registered) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-10 max-w-md w-full text-center">
+          {/* Checkmark */}
+          <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <svg className="w-10 h-10 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Account Created!</h1>
+          <p className="text-gray-500 text-sm mb-1">
+            Welcome to Blessed Irembo.
+          </p>
+          <p className="text-gray-500 text-sm mb-8">
+            Your account has been created successfully. Please sign in to continue.
+          </p>
+
+          <Link
+            href="/login"
+            className="block w-full py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors"
+          >
+            Go to Login
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
 
   return (
@@ -277,14 +312,12 @@ export default function SignUpPage() {
               <button
                 type="button"
                 onClick={() => setAcceptTerms(!acceptTerms)}
-                className={`relative inline-flex h-8 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${
-                  acceptTerms ? 'bg-teal-600' : 'bg-gray-300'
-                }`}
+                className={`relative inline-flex h-8 w-16 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 ${acceptTerms ? 'bg-teal-600' : 'bg-gray-300'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    acceptTerms ? 'translate-x-9' : 'translate-x-1'
-                  }`}
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${acceptTerms ? 'translate-x-9' : 'translate-x-1'
+                    }`}
                 />
               </button>
               <label className="text-base text-gray-700">
