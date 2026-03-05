@@ -1,0 +1,18 @@
+# Android Application
+
+This directory will contain the native Android application built with Kotlin and Jetpack Compose.
+
+## Setup Instructions
+
+Coming soon...
+
+## Requirements
+
+- Android Studio Hedgehog+
+- Kotlin 1.9+
+- Minimum SDK: 24
+- Target SDK: 34
+
+## Getting Started
+
+Development will begin once the web foundation is complete.

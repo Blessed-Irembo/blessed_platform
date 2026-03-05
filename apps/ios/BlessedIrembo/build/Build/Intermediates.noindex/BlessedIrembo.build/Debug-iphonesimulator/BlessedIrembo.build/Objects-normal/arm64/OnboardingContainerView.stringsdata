@@ -1,0 +1,16 @@
+{
+  "source": "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Onboarding/OnboardingContainerView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Skip",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 21
+        }
+      }
+    ]
+  },
+  "version": 1
+}

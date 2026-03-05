@@ -1,0 +1,32 @@
+{
+  "source": "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/User/QuickDetailsSheet.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "(%lld reviews)",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 71
+        }
+      },
+      {
+        "comment": "",
+        "key": "Directions",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 108
+        }
+      },
+      {
+        "comment": "",
+        "key": "Details",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 123
+        }
+      }
+    ]
+  },
+  "version": 1
+}

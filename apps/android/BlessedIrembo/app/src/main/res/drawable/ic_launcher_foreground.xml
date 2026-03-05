@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Pill 1 (blue) -->
+    <path
+        android:fillColor="#1E90FF"
+        android:pathData="M40,60 L45,55 C50,50 50,42 45,37 L40,42 C35,47 35,55 40,60Z"/>
+    <!-- Pill 2 (green) -->
+    <path
+        android:fillColor="#22C55E"
+        android:pathData="M55,65 L65,55 C70,50 70,42 65,37 L55,47 C50,52 50,60 55,65Z"/>
+    <!-- Leaf -->
+    <path
+        android:fillColor="#16A34A"
+        android:pathData="M55,35 Q60,30 65,25 Q60,35 55,40 Q52,38 55,35Z"/>
+</vector>

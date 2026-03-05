@@ -1,0 +1,23 @@
+{
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Auth/SignInView.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignInView.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignInView.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignInView.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignInView.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignInView.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Auth/SignUpPharmacyView.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpPharmacyView.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpPharmacyView.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpPharmacyView.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpPharmacyView.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpPharmacyView.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Auth/SignUpUserView.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpUserView.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpUserView.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpUserView.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpUserView.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SignUpUserView.swiftdeps"
+  }
+}

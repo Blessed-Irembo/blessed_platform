@@ -1,0 +1,23 @@
+{
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Components/SecondaryButton.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SecondaryButton.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SecondaryButton.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SecondaryButton.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SecondaryButton.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/SecondaryButton.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Onboarding/OnboardingContainerView.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingContainerView.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingContainerView.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingContainerView.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingContainerView.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingContainerView.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Onboarding/OnboardingPageView.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingPageView.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingPageView.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingPageView.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingPageView.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/OnboardingPageView.swiftdeps"
+  }
+}

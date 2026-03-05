@@ -1,0 +1,23 @@
+{
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/App/AppState.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AppState.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AppState.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AppState.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AppState.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/AppState.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/App/BlessedIremboApp.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/BlessedIremboApp.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/BlessedIremboApp.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/BlessedIremboApp.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/BlessedIremboApp.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/BlessedIremboApp.swiftdeps"
+  },
+  "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Models/Pharmacy.swift" : {
+    "const-values" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/Pharmacy.swiftconstvalues",
+    "dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/Pharmacy.d",
+    "diagnostics" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/Pharmacy.dia",
+    "object" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/Pharmacy.o",
+    "swift-dependencies" : "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/build/Build/Intermediates.noindex/BlessedIrembo.build/Debug-iphonesimulator/BlessedIrembo.build/Objects-normal/arm64/Pharmacy.swiftdeps"
+  }
+}

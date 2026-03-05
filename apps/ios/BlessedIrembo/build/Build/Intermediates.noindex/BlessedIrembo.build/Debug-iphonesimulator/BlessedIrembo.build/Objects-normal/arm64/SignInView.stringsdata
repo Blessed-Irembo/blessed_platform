@@ -1,0 +1,48 @@
+{
+  "source": "/Users/elvisbakunzi/Documents/Projects/Blessed Irembo/blessed_platform/apps/ios/BlessedIrembo/BlessedIrembo/Views/Auth/SignInView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Sign In",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 89
+        }
+      },
+      {
+        "comment": "",
+        "key": "Welcome Back",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 25
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sign in to continue",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 29
+        }
+      },
+      {
+        "comment": "",
+        "key": "Remember me",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 52
+        }
+      },
+      {
+        "comment": "",
+        "key": "Forgot?",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 58
+        }
+      }
+    ]
+  },
+  "version": 1
+}
