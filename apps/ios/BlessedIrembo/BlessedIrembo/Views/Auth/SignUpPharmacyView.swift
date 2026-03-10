@@ -4,6 +4,7 @@
 /// Includes business information, license validation, and location data.
 
 import SwiftUI
+import FirebaseAuth
 
 struct SignUpPharmacyView: View {
     @StateObject private var viewModel = AuthViewModel()

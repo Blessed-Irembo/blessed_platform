@@ -1,15 +1,21 @@
 /// Authentication ViewModel
 ///
-/// Manages authentication state, form validation, and API calls
+/// Manages authentication state, form validation, and Firebase Auth calls
 /// for user and pharmacy sign up and sign in.
 
 import SwiftUI
 import Combine
+import FirebaseAuth
+import FirebaseFirestore
 
 class AuthViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var errorMessage: String?
     @Published var showError = false
+    @Published var resetEmailSent = false
+    
+    private let db = FirebaseManager.shared.firestore
+    private let auth = FirebaseManager.shared.auth
     
     // MARK: - Sign Up User
     
@@ -22,52 +28,63 @@ class AuthViewModel: ObservableObject {
         acceptedTerms: Bool,
         completion: @escaping (Result<User, Error>) -> Void
     ) {
-        // Validate inputs
-        guard !fullName.isEmpty else {
-            showValidationError("Please enter your full name")
-            return
-        }
-        
-        guard User.isValidEmail(email) else {
-            showValidationError("Please enter a valid email address")
-            return
-        }
-        
-        guard User.isValidPhoneNumber(phoneNumber) else {
-            showValidationError("Please enter a valid phone number")
-            return
-        }
-       
-        guard password.count >= 8 else {
-            showValidationError("Password must be at least 8 characters")
-            return
-        }
-        
-        guard password == confirmPassword else {
-            showValidationError("Passwords do not match")
-            return
-        }
-        
-        guard acceptedTerms else {
-            showValidationError("Please accept the terms and conditions")
-            return
-        }
+        guard !fullName.isEmpty else { return showValidationError("Please enter your full name") }
+        guard User.isValidEmail(email) else { return showValidationError("Please enter a valid email address") }
+        guard User.isValidPhoneNumber(phoneNumber) else { return showValidationError("Please enter a valid phone number") }
+        guard password.count >= 8 else { return showValidationError("Password must be at least 8 characters") }
+        guard password == confirmPassword else { return showValidationError("Passwords do not match") }
+        guard acceptedTerms else { return showValidationError("Please accept the terms and conditions") }
         
         isLoading = true
         errorMessage = nil
         
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.isLoading = false
+        // Create Firebase Auth account
+        auth.createUser(withEmail: email, password: password) { [weak self] result, error in
+            guard let self = self else { return }
             
-            // Create user
-            let user = User(
-                fullName: fullName,
-                email: email,
-                phoneNumber: User.normalizePhoneNumber(phoneNumber)
-            )
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showValidationError(self.friendlyAuthError(error))
+                }
+                return
+            }
             
-            completion(.success(user))
+            guard let uid = result?.user.uid else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showValidationError("Sign up failed. Please try again.")
+                }
+                return
+            }
+            
+            let normalizedPhone = User.normalizePhoneNumber(phoneNumber)
+            
+            // Write user profile to Firestore
+            let userData: [String: Any] = [
+                "fullName": fullName,
+                "email": email,
+                "phoneNumber": normalizedPhone,
+                "role": "user",
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+            
+            self.db.collection("users").document(uid).setData(userData) { error in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    if let error = error {
+                        self.showValidationError("Profile save failed: \(error.localizedDescription)")
+                        return
+                    }
+                    let user = User(
+                        id: uid,
+                        fullName: fullName,
+                        email: email,
+                        phoneNumber: normalizedPhone
+                    )
+                    completion(.success(user))
+                }
+            }
         }
     }
     
@@ -86,67 +103,83 @@ class AuthViewModel: ObservableObject {
         confirmPassword: String,
         completion: @escaping (Result<Pharmacy, Error>) -> Void
     ) {
-        // Validate inputs
-        guard !pharmacyName.isEmpty else {
-            showValidationError("Please enter pharmacy name")
-            return
-        }
-        
-        guard !ownerName.isEmpty else {
-            showValidationError("Please enter owner name")
-            return
-        }
-        
-        guard User.isValidEmail(email) else {
-            showValidationError("Please enter a valid email address")
-            return
-        }
-        
-        guard User.isValidPhoneNumber(phoneNumber) else {
-            showValidationError("Please enter a valid phone number")
-            return
-        }
-        
-        guard Pharmacy.isValidLicenseNumber(licenseNumber) else {
-            showValidationError("Please enter a valid license number")
-            return
-        }
-        
-        guard !address.isEmpty else {
-            showValidationError("Please enter pharmacy address")
-            return
-        }
-        
-        guard password.count >= 8 else {
-            showValidationError("Password must be at least 8 characters")
-            return
-        }
-        
-        guard password == confirmPassword else {
-            showValidationError("Passwords do not match")
-            return
-        }
+        guard !pharmacyName.isEmpty else { return showValidationError("Please enter pharmacy name") }
+        guard !ownerName.isEmpty else { return showValidationError("Please enter owner name") }
+        guard User.isValidEmail(email) else { return showValidationError("Please enter a valid email address") }
+        guard User.isValidPhoneNumber(phoneNumber) else { return showValidationError("Please enter a valid phone number") }
+        guard Pharmacy.isValidLicenseNumber(licenseNumber) else { return showValidationError("Please enter a valid license number") }
+        guard !address.isEmpty else { return showValidationError("Please enter pharmacy address") }
+        guard password.count >= 8 else { return showValidationError("Password must be at least 8 characters") }
+        guard password == confirmPassword else { return showValidationError("Passwords do not match") }
         
         isLoading = true
         errorMessage = nil
         
-        // Simulate API call
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.isLoading = false
+        // Create Firebase Auth account
+        auth.createUser(withEmail: email, password: password) { [weak self] result, error in
+            guard let self = self else { return }
             
-            // Create pharmacy
-            let pharmacy = Pharmacy(
-                name: pharmacyName,
-                ownerName: ownerName,
-                email: email,
-                phoneNumber: User.normalizePhoneNumber(phoneNumber),
-                licenseNumber: licenseNumber.uppercased(),
-                address: address,
-                latitude: latitude,
-                longitude: longitude
-            )
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showValidationError(self.friendlyAuthError(error))
+                }
+                return
+            }
             
-            completion(.success(pharmacy))
+            guard let uid = result?.user.uid else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showValidationError("Registration failed. Please try again.")
+                }
+                return
+            }
+            
+            let normalizedPhone = User.normalizePhoneNumber(phoneNumber)
+            let normalizedLicense = licenseNumber.uppercased()
+            
+            // Write pharmacy profile to Firestore
+            let pharmacyData: [String: Any] = [
+                "name": pharmacyName,
+                "ownerName": ownerName,
+                "email": email,
+                "phoneNumber": normalizedPhone,
+                "licenseNumber": normalizedLicense,
+                "address": address,
+                "latitude": latitude,
+                "longitude": longitude,
+                "role": "pharmacy",
+                "isVerified": false,
+                "rating": 0.0,
+                "reviewCount": 0,
+                "description": "",
+                "services": [],
+                "operatingHours": "Mon-Fri: 8:00 AM - 8:00 PM",
+                "createdAt": FieldValue.serverTimestamp()
+            ]
+            
+            self.db.collection("pharmacies").document(uid).setData(pharmacyData) { error in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    if let error = error {
+                        self.showValidationError("Profile save failed: \(error.localizedDescription)")
+                        return
+                    }
+                    let pharmacy = Pharmacy(
+                        id: uid,
+                        name: pharmacyName,
+                        ownerName: ownerName,
+                        email: email,
+                        phoneNumber: normalizedPhone,
+                        licenseNumber: normalizedLicense,
+                        address: address,
+                        latitude: latitude,
+                        longitude: longitude,
+                        isVerified: false
+                    )
+                    completion(.success(pharmacy))
+                }
+            }
         }
     }
     
@@ -158,59 +191,92 @@ class AuthViewModel: ObservableObject {
         rememberMe: Bool,
         completion: @escaping (Result<(user: User?, pharmacy: Pharmacy?), Error>) -> Void
     ) {
-        // Only validate email format - password can be anything for demo
-        guard !email.isEmpty else {
-            showValidationError("Please enter an email address")
-            return
-        }
+        guard !email.isEmpty else { return showValidationError("Please enter an email address") }
+        guard !password.isEmpty else { return showValidationError("Please enter your password") }
         
         isLoading = true
         errorMessage = nil
         
-        // Simulate API call with short delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.isLoading = false
+        auth.signIn(withEmail: email, password: password) { [weak self] result, error in
+            guard let self = self else { return }
             
-            if email.lowercased().contains("pharmacy") {
-                // Sign in as pharmacy if email contains "pharmacy"
-                let pharmacy = Pharmacy(
-                    id: "demo-pharmacy-001",
-                    name: "Demo Pharmacy",
-                    ownerName: "Jane Smith",
-                    email: email,
-                    phoneNumber: "+250788000002",
-                    licenseNumber: "DEMO-PH-001",
-                    address: "Kigali City Center",
-                    latitude: -1.9536,
-                    longitude: 30.0606,
-                    isVerified: true,
-                    rating: 4.8,
-                    reviewCount: 100,
-                    description: "Demo pharmacy for testing purposes",
-                    services: ["Prescription Medications", "Health Consultations"],
-                    operatingHours: "Mon-Sun: 24 Hours"
-                )
-                
-                if rememberMe {
-                    UserDefaults.standard.set(email, forKey: UserDefaultsKeys.rememberedEmail)
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showValidationError(self.friendlyAuthError(error))
                 }
-                
-                print("DEBUG: Signing in as PHARMACY")
-                completion(.success((user: nil, pharmacy: pharmacy)))
-            } else {
-                // Sign in as user for any other email
-                let user = User(
-                    fullName: "Demo User",
-                    email: email,
-                    phoneNumber: "+250788123456"
-                )
-                
-                if rememberMe {
-                    UserDefaults.standard.set(email, forKey: UserDefaultsKeys.rememberedEmail)
+                return
+            }
+            
+            guard let uid = result?.user.uid else {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    self.showValidationError("Sign in failed. Please try again.")
                 }
-                
-                print("DEBUG: Signing in as USER")
-                completion(.success((user: user, pharmacy: nil)))
+                return
+            }
+            
+            if rememberMe {
+                UserDefaults.standard.set(email, forKey: UserDefaultsKeys.rememberedEmail)
+            }
+            
+            // Fetch user role from Firestore
+            FirebaseManager.shared.fetchUserRole(uid: uid) { role in
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    switch role {
+                    case .user(let data):
+                        let user = User(
+                            id: uid,
+                            fullName: data["fullName"] as? String ?? "",
+                            email: email,
+                            phoneNumber: data["phoneNumber"] as? String ?? ""
+                        )
+                        completion(.success((user: user, pharmacy: nil)))
+                    case .pharmacy(let data):
+                        let pharmacy = Pharmacy(
+                            id: uid,
+                            name: data["name"] as? String ?? "",
+                            ownerName: data["ownerName"] as? String ?? "",
+                            email: email,
+                            phoneNumber: data["phoneNumber"] as? String ?? "",
+                            licenseNumber: data["licenseNumber"] as? String ?? "",
+                            address: data["address"] as? String ?? "",
+                            latitude: data["latitude"] as? Double ?? -1.9536,
+                            longitude: data["longitude"] as? Double ?? 30.0606,
+                            isVerified: data["isVerified"] as? Bool ?? false,
+                            rating: data["rating"] as? Double ?? 0.0,
+                            reviewCount: data["reviewCount"] as? Int ?? 0,
+                            description: data["description"] as? String ?? "",
+                            services: data["services"] as? [String] ?? [],
+                            operatingHours: data["operatingHours"] as? String ?? ""
+                        )
+                        completion(.success((user: nil, pharmacy: pharmacy)))
+                    case nil:
+                        self.showValidationError("Account not found. Please sign up first.")
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Reset Password
+    
+    func resetPassword(email: String) {
+        guard User.isValidEmail(email) else {
+            showValidationError("Please enter a valid email address")
+            return
+        }
+        isLoading = true
+        auth.sendPasswordReset(withEmail: email) { [weak self] error in
+            DispatchQueue.main.async {
+                self?.isLoading = false
+                if let error = error {
+                    self?.showValidationError(self?.friendlyAuthError(error) ?? error.localizedDescription)
+                } else {
+                    self?.resetEmailSent = true
+                    self?.errorMessage = nil
+                }
             }
         }
     }
@@ -220,5 +286,31 @@ class AuthViewModel: ObservableObject {
     private func showValidationError(_ message: String) {
         errorMessage = message
         showError = true
+    }
+    
+    /// Translate Firebase error codes to clear user-facing messages
+    private func friendlyAuthError(_ error: Error) -> String {
+        let nsError = error as NSError
+        let code = AuthErrorCode(rawValue: nsError.code)
+        switch code {
+        case .emailAlreadyInUse:
+            return "This email is already in use. Try signing in instead."
+        case .invalidEmail:
+            return "Please enter a valid email address."
+        case .weakPassword:
+            return "Password is too weak. Use at least 8 characters."
+        case .wrongPassword, .invalidCredential:
+            return "Incorrect email or password. Please try again."
+        case .userNotFound:
+            return "No account found with this email. Please sign up."
+        case .userDisabled:
+            return "This account has been disabled. Contact support."
+        case .networkError:
+            return "Network error. Check your connection and try again."
+        case .tooManyRequests:
+            return "Too many attempts. Please wait a moment and try again."
+        default:
+            return error.localizedDescription
+        }
     }
 }

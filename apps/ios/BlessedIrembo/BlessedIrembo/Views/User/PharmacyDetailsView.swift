@@ -5,7 +5,7 @@
 
 import SwiftUI
 import CoreLocation
-import MapKit
+import GoogleMaps
 
 struct PharmacyDetailsView: View {
     let pharmacy: Pharmacy
@@ -54,21 +54,15 @@ struct PharmacyDetailsView: View {
     // MARK: - Header Map Section
     
     private var mapHeaderSection: some View {
-        Map(coordinateRegion: .constant(MKCoordinateRegion(
-            center: pharmacy.coordinate,
-            span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-        )), annotationItems: [pharmacy]) { pharmacy in
-            MapMarker(coordinate: pharmacy.coordinate, tint: .blue)
-        }
-        .frame(height: 200)
-        .disabled(true)
-        .overlay(
-            LinearGradient(
-                colors: [Color.black.opacity(0.3), Color.clear],
-                startPoint: .bottom,
-                endPoint: .top
+        GoogleMapsDetailView(pharmacy: pharmacy)
+            .frame(height: 200)
+            .overlay(
+                LinearGradient(
+                    colors: [Color.black.opacity(0.3), Color.clear],
+                    startPoint: .bottom,
+                    endPoint: .top
+                )
             )
-        )
     }
     
     // MARK: - Main Info Card
@@ -318,12 +312,16 @@ struct PharmacyDetailsView: View {
     }
     
     private func openMaps() {
-        let latitude = pharmacy.latitude
-        let longitude = pharmacy.longitude
-        let url = URL(string: "maps://?saddr=&daddr=\(latitude),\(longitude)")
+        let lat = pharmacy.latitude
+        let lon = pharmacy.longitude
+        // Open Google Maps with directions - mirrors web's PharmacyDetailMap.tsx
+        let googleMapsURL = URL(string: "comgooglemaps://?daddr=\(lat),\(lon)&directionsmode=driving")
+        let webURL = URL(string: "https://maps.google.com/?daddr=\(lat),\(lon)&travelmode=driving")
         
-        if let url = url, UIApplication.shared.canOpenURL(url) {
-            UIApplication.shared.open(url)
+        if let googleURL = googleMapsURL, UIApplication.shared.canOpenURL(googleURL) {
+            UIApplication.shared.open(googleURL)
+        } else if let webURL = webURL {
+            UIApplication.shared.open(webURL)
         }
     }
     

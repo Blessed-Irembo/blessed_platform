@@ -4,6 +4,7 @@
 /// Includes email/password authentication, remember me, and forgot password.
 
 import SwiftUI
+import FirebaseAuth
 
 struct SignInView: View {
     @StateObject private var viewModel = AuthViewModel()
@@ -13,6 +14,8 @@ struct SignInView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var rememberMe = false
+    @State private var showResetAlert = false
+    @State private var resetEmailInput = ""
     
     var body: some View {
         ScrollView {
@@ -56,7 +59,8 @@ struct SignInView: View {
                         Spacer()
                         
                         Button("Forgot?") {
-                            // Forgot password action
+                            resetEmailInput = email
+                            showResetAlert = true
                         }
                         .font(.subheadline)
                         .foregroundColor(.primaryTeal)
@@ -88,6 +92,22 @@ struct SignInView: View {
         }
         .navigationTitle("Sign In")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Reset Password", isPresented: $showResetAlert) {
+            TextField("Enter your email", text: $resetEmailInput)
+                .keyboardType(.emailAddress)
+                .autocapitalization(.none)
+            Button("Send Reset Email") {
+                viewModel.resetPassword(email: resetEmailInput)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("We'll send a password reset link to your email.")
+        }
+        .alert("Email Sent", isPresented: $viewModel.resetEmailSent) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Check your inbox for a password reset link.")
+        }
     }
     
     private func signIn() {

@@ -4,16 +4,14 @@
 /// a scrollable list of pharmacies below. Includes search and filtering.
 
 import SwiftUI
-import MapKit
+import GoogleMaps
+import CoreLocation
 import Combine
 
 struct UserMapView: View {
     @StateObject private var viewModel = PharmacyMapViewModel()
     @StateObject private var locationManager = LocationManager()
-    @State private var region = MKCoordinateRegion(
-        center: MockData.defaultLocation,
-        span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-    )
+    @State private var cameraTarget = MockData.defaultLocation
     @State private var selectedPharmacy: Pharmacy?
     @State private var cancellables = Set<AnyCancellable>()
     
@@ -42,21 +40,15 @@ struct UserMapView: View {
     
     private var mapSection: some View {
         ZStack(alignment: .topTrailing) {
-            Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: viewModel.filteredPharmacies) { pharmacy in
-                MapAnnotation(coordinate: pharmacy.coordinate) {
-                    NavigationLink(destination: PharmacyDetailsView(pharmacy: pharmacy, userLocation: locationManager.location ?? MockData.defaultLocation)) {
-                        CompactPharmacyMarker(
-                            pharmacy: pharmacy,
-                            isSelected: selectedPharmacy?.id == pharmacy.id
-                        )
-                    }
-                    .simultaneousGesture(TapGesture().onEnded {
-                        selectPharmacy(pharmacy)
-                    })
-                }
+            GoogleMapsView(
+                pharmacies: viewModel.filteredPharmacies,
+                selectedPharmacy: $selectedPharmacy,
+                cameraTarget: $cameraTarget,
+                userLocation: locationManager.location
+            ) { pharmacy in
+                selectPharmacy(pharmacy)
             }
             .frame(height: 280)
-            .cornerRadius(0)
             
             locationButton
         }
@@ -133,7 +125,7 @@ struct UserMapView: View {
     private func selectPharmacy(_ pharmacy: Pharmacy) {
         selectedPharmacy = pharmacy
         withAnimation {
-            region.center = pharmacy.coordinate
+            cameraTarget = pharmacy.coordinate
         }
     }
     
@@ -145,7 +137,7 @@ struct UserMapView: View {
         
         if let location = locationManager.location {
             withAnimation {
-                region.center = location
+                cameraTarget = location
             }
         }
     }

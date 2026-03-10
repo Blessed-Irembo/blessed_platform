@@ -4,6 +4,7 @@
 /// Includes form validation and terms & conditions acceptance.
 
 import SwiftUI
+import FirebaseAuth
 
 struct SignUpUserView: View {
     @StateObject private var viewModel = AuthViewModel()

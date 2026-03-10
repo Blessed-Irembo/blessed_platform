@@ -4,10 +4,20 @@
 /// Manages app-wide state and initial navigation flow.
 
 import SwiftUI
+import FirebaseCore
+import GoogleMaps
 
 @main
 struct BlessedIremboApp: App {
     @StateObject private var appState = AppState()
+    
+    init() {
+        // Configure Firebase
+        FirebaseApp.configure()
+        
+        // Configure Google Maps
+        GMSServices.provideAPIKey("AIzaSyA-0elDxTyX8mwO5oOsNClv9G-JZPu8BdI")
+    }
     
     var body: some Scene {
         WindowGroup {
@@ -20,7 +30,7 @@ struct BlessedIremboApp: App {
                     } else if !appState.isAuthenticated {
                         RoleSelectionView()
                     } else if appState.currentUser != nil {
-                        // User signed in - show opening screen then map
+                        // User signed in - show map
                         UserMainView()
                     } else if appState.currentPharmacy != nil {
                         // Pharmacy signed in
