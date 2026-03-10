@@ -1,0 +1,43 @@
+# Firebase / Google Cloud credentials — NEVER commit these
+apps/web/serviceAccountKey.json
+**/serviceAccountKey.json
+**/*.json.bak
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+
+# Node
+node_modules/
+.next/
+dist/
+build/
+.npm
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Xcode
+*.xcuserstate
+*.xcworkspace/xcuserdata/
+xcuserdata/
+DerivedData/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/

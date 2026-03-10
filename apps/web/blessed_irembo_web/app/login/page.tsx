@@ -35,9 +35,13 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      await signIn(email, password);
-      // Redirect to pharmacy finder after successful login
-      router.replace('/pharmacies');
+      const role = await signIn(email, password);
+      // Role-based redirect: pharmacies go to dashboard, users go to map
+      if (role === 'pharmacy') {
+        router.replace('/pharmacy/dashboard');
+      } else {
+        router.replace('/pharmacies');
+      }
     } catch (error: any) {
       // Map Firebase error codes to friendly messages
       switch (error.code) {

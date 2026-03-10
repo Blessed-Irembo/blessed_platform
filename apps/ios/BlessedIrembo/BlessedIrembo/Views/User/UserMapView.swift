@@ -115,7 +115,7 @@ struct UserMapView: View {
     private func setupLocationTracking() {
         viewModel.userLocation = locationManager.location
         if let location = locationManager.location {
-            region.center = location
+            cameraTarget = location
         }
         locationManager.$location.sink { newLocation in
             viewModel.userLocation = newLocation
