@@ -251,11 +251,6 @@ export default function PharmaciesPage() {
               </Link>
             </div>
 
-            <div className="hidden md:flex items-center space-x-8">
-              <Link href="/pharmacies" className="text-teal-600 font-medium">
-                Find Pharmacies
-              </Link>
-            </div>
 
             {/* User profile avatar + dropdown */}
             <div className="relative" ref={dropdownRef}>
