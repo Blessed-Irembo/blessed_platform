@@ -6,9 +6,10 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import type { Pharmacy } from '@/components/PharmacyMap';
-import { useRequireAuth } from '@/lib/authHooks';
+import { useRequireUserRole } from '@/lib/authHooks';
 import { useAuth } from '@/lib/AuthContext';
-
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
 const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
@@ -23,117 +24,66 @@ const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
   ),
 });
 
-// ─── Mock pharmacy data (replace with API call once backend is ready) ──────────
-
-const DEMO_PHARMACIES: Pharmacy[] = [
-  {
-    id: 1,
-    name: 'City Central Pharmacy',
-    address: 'KN 4 Ave, Kigali',
-    district: 'Gasabo',
-    phone: '+250 788 123 456',
-    email: 'contact@citypharmacy.rw',
-    isOpen: true,
-    hours: 'Mon-Sat: 8AM-8PM, Sun: 9AM-5PM',
-    rating: 4.8,
-    distance: '0.5 km',
-    verified: true,
-    latitude: -1.9536,
-    longitude: 30.0605,
-  },
-  {
-    id: 2,
-    name: 'Health Plus Pharmacy',
-    address: 'KG 11 Ave, Kigali',
-    district: 'Kicukiro',
-    phone: '+250 788 234 567',
-    email: 'info@healthplus.rw',
-    isOpen: true,
-    hours: 'Mon-Sun: 24/7',
-    rating: 4.9,
-    distance: '1.2 km',
-    verified: true,
-    latitude: -1.9659,
-    longitude: 30.1046,
-  },
-  {
-    id: 3,
-    name: 'MediCare Pharmacy',
-    address: 'KN 3 Rd, Kigali',
-    district: 'Nyarugenge',
-    phone: '+250 788 345 678',
-    email: 'contact@medicare.rw',
-    isOpen: false,
-    hours: 'Mon-Sat: 8AM-6PM',
-    rating: 4.6,
-    distance: '2.1 km',
-    verified: true,
-    latitude: -1.9441,
-    longitude: 30.0619,
-  },
-  {
-    id: 4,
-    name: 'Wellness Pharmacy',
-    address: 'KK 15 Ave, Kigali',
-    district: 'Gasabo',
-    phone: '+250 788 456 789',
-    email: 'info@wellness.rw',
-    isOpen: true,
-    hours: 'Mon-Fri: 8AM-7PM, Sat: 9AM-5PM',
-    rating: 4.7,
-    distance: '3.0 km',
-    verified: true,
-    latitude: -1.9403,
-    longitude: 30.0677,
-  },
-  {
-    id: 5,
-    name: 'LifeCare Pharmacy',
-    address: 'KG 7 Ave, Kigali',
-    district: 'Kicukiro',
-    phone: '+250 788 567 890',
-    email: 'contact@lifecare.rw',
-    isOpen: true,
-    hours: 'Mon-Sun: 7AM-10PM',
-    rating: 4.5,
-    distance: '3.5 km',
-    verified: true,
-    latitude: -1.9706,
-    longitude: 30.1261,
-  },
-  {
-    id: 6,
-    name: 'Green Cross Pharmacy',
-    address: 'KN 8 St, Kigali',
-    district: 'Nyarugenge',
-    phone: '+250 788 678 901',
-    email: 'info@greencross.rw',
-    isOpen: false,
-    hours: 'Mon-Sat: 8AM-8PM',
-    rating: 4.4,
-    distance: '4.2 km',
-    verified: true,
-    latitude: -1.9578,
-    longitude: 30.0944,
-  },
-];
-
 // ─── Page Component ────────────────────────────────────────────────────────────
 
 export default function PharmaciesPage() {
   // Require authentication — redirects to /login if not signed in
-  const { loading } = useRequireAuth();
+  // useRequireUserRole: redirects to /login if unauthenticated, to /pharmacy/dashboard if pharmacy
+  const { loading, userRole } = useRequireUserRole();
   const { currentUser, signOut } = useAuth();
   const router = useRouter();
 
+  const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
+  const [pharmaciesLoading, setPharmaciesLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDistrict, setSelectedDistrict] = useState('all');
   const [showOpenOnly, setShowOpenOnly] = useState(false);
-  const [selectedPharmacy, setSelectedPharmacy] = useState<number | null>(null);
+  const [selectedPharmacy, setSelectedPharmacy] = useState<string | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // ── Fetch pharmacies from Firestore on mount ──────────────────────────────
+  useEffect(() => {
+    async function loadPharmacies() {
+      try {
+        const snapshot = await getDocs(collection(db, 'pharmacies'));
+        const list: Pharmacy[] = snapshot.docs.map((docSnap) => {
+          const data = docSnap.data();
+          // Normalize district to Title Case so it matches dropdown values
+          // e.g. 'muhanga' stored in Firestore → 'Muhanga' in the dropdown
+          const rawDistrict: string = data.district ?? '';
+          const district = rawDistrict
+            .split(' ')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ');
+          return {
+            id: docSnap.id,
+            name: data.name ?? 'Unknown Pharmacy',
+            address: data.address ?? '',
+            district,
+            phone: data.phoneNumber ?? '',
+            email: data.email ?? '',
+            isOpen: true,
+            hours: data.hours ?? '',
+            rating: data.rating ?? 0,
+            distance: '',
+            verified: data.isVerified ?? false,
+            latitude: data.latitude ?? 0,
+            longitude: data.longitude ?? 0,
+          };
+        });
+        // Only show pharmacies that have valid coordinates on the map
+        setPharmacies(list.filter((p) => p.latitude !== 0 && p.longitude !== 0));
+      } catch (err) {
+        console.error('Failed to load pharmacies from Firestore:', err);
+      } finally {
+        setPharmaciesLoading(false);
+      }
+    }
+    loadPharmacies();
+  }, []);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -161,30 +111,8 @@ export default function PharmaciesPage() {
     .toUpperCase()
     .slice(0, 2);
 
-  // Show spinner while Firebase resolves auth state
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Loading…</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Filter pharmacies based on search, district, and open status
-  const filteredPharmacies = DEMO_PHARMACIES.filter((pharmacy) => {
-    const matchesSearch =
-      pharmacy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      pharmacy.address.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDistrict =
-      selectedDistrict === 'all' || pharmacy.district === selectedDistrict;
-    const matchesOpen = !showOpenOnly || pharmacy.isOpen;
-    return matchesSearch && matchesDistrict && matchesOpen;
-  });
-
   // Request the user's GPS location and select the nearest pharmacy
+  // Must be defined before any early returns (Rules of Hooks)
   const handleNearMe = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationError('Geolocation is not supported by your browser.');
@@ -200,10 +128,10 @@ export default function PharmaciesPage() {
         const { latitude, longitude } = position.coords;
 
         // Find nearest pharmacy using Haversine-like approximation
-        let nearestId: number | null = null;
+        let nearestId: string | null = null;
         let minDist = Infinity;
 
-        DEMO_PHARMACIES.forEach((p) => {
+        pharmacies.forEach((p) => {
           const dlat = p.latitude - latitude;
           const dlng = p.longitude - longitude;
           const dist = Math.sqrt(dlat * dlat + dlng * dlng);
@@ -230,7 +158,35 @@ export default function PharmaciesPage() {
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
-  }, []);
+  }, [pharmacies]);
+
+  // Show spinner while:
+  //  - Firebase is resolving auth (loading)
+  //  - Pharmacy data is loading
+  //  - User is a pharmacy role (redirect is in-flight, hide map completely)
+  if (loading || pharmaciesLoading || userRole === 'pharmacy') {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Redirecting…</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Filter pharmacies based on search, district, and open status
+  const filteredPharmacies = pharmacies.filter((pharmacy) => {
+    const matchesSearch =
+      pharmacy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      pharmacy.address.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDistrict =
+      selectedDistrict === 'all' ||
+      pharmacy.district.toLowerCase() === selectedDistrict.toLowerCase();
+    const matchesOpen = !showOpenOnly || pharmacy.isOpen;
+    return matchesSearch && matchesDistrict && matchesOpen;
+  });
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -423,9 +379,46 @@ export default function PharmaciesPage() {
                 className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
                 <option value="all">All Districts</option>
-                <option value="Gasabo">Gasabo</option>
-                <option value="Kicukiro">Kicukiro</option>
-                <option value="Nyarugenge">Nyarugenge</option>
+                <optgroup label="Kigali City">
+                  <option value="Gasabo">Gasabo</option>
+                  <option value="Kicukiro">Kicukiro</option>
+                  <option value="Nyarugenge">Nyarugenge</option>
+                </optgroup>
+                <optgroup label="Northern Province">
+                  <option value="Burera">Burera</option>
+                  <option value="Gakenke">Gakenke</option>
+                  <option value="Gicumbi">Gicumbi</option>
+                  <option value="Musanze">Musanze</option>
+                  <option value="Rulindo">Rulindo</option>
+                </optgroup>
+                <optgroup label="Southern Province">
+                  <option value="Gisagara">Gisagara</option>
+                  <option value="Huye">Huye</option>
+                  <option value="Kamonyi">Kamonyi</option>
+                  <option value="Muhanga">Muhanga</option>
+                  <option value="Nyamagabe">Nyamagabe</option>
+                  <option value="Nyanza">Nyanza</option>
+                  <option value="Nyaruguru">Nyaruguru</option>
+                  <option value="Ruhango">Ruhango</option>
+                </optgroup>
+                <optgroup label="Eastern Province">
+                  <option value="Bugesera">Bugesera</option>
+                  <option value="Gatsibo">Gatsibo</option>
+                  <option value="Kayonza">Kayonza</option>
+                  <option value="Kirehe">Kirehe</option>
+                  <option value="Ngoma">Ngoma</option>
+                  <option value="Nyagatare">Nyagatare</option>
+                  <option value="Rwamagana">Rwamagana</option>
+                </optgroup>
+                <optgroup label="Western Province">
+                  <option value="Karongi">Karongi</option>
+                  <option value="Ngororero">Ngororero</option>
+                  <option value="Nyabihu">Nyabihu</option>
+                  <option value="Nyamasheke">Nyamasheke</option>
+                  <option value="Rubavu">Rubavu</option>
+                  <option value="Rutsiro">Rutsiro</option>
+                  <option value="Rusizi">Rusizi</option>
+                </optgroup>
               </select>
             </div>
 

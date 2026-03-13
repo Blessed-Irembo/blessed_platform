@@ -19,7 +19,7 @@ export default function RegisterPharmacyPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [registered, setRegistered] = useState(false);
+
 
   const [formData, setFormData] = useState({
     pharmacyName: '',
@@ -162,7 +162,9 @@ export default function RegisterPharmacyPage() {
         latitude: location?.lat ?? 0,
         longitude: location?.lng ?? 0,
       });
-      setRegistered(true);
+      // signUpPharmacy() creates the Firebase Auth session automatically.
+      // Redirect straight to the pharmacy dashboard — no need to log in again.
+      router.replace('/pharmacy/dashboard');
     } catch (error: any) {
       const msg: string = error.message ?? '';
       if (msg.includes('INVALID_LICENSE')) {
@@ -176,38 +178,11 @@ export default function RegisterPharmacyPage() {
       } else {
         setErrors({ general: 'Something went wrong. Please try again.' });
       }
-    } finally {
       setIsSubmitting(false);
     }
   };
 
-  // ── Success screen ───────────────────────────────────────────────────────
-  if (registered) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-10 max-w-md w-full text-center">
-          <div className="w-20 h-20 bg-teal-50 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-10 h-10 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Pharmacy Registered!</h1>
-          <p className="text-gray-500 text-sm mb-1">
-            <span className="font-semibold text-teal-700">{formData.pharmacyName}</span> is now live on Blessed Irembo.
-          </p>
-          <p className="text-gray-500 text-sm mb-8">
-            Your Rwanda FDA registration has been verified. Sign in to access your pharmacy dashboard.
-          </p>
-          <Link
-            href="/login"
-            className="block w-full py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors"
-          >
-            Go to Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
+
 
   // ── License badge helper ─────────────────────────────────────────────────
   const LicenseBadge = () => {
@@ -310,15 +285,14 @@ export default function RegisterPharmacyPage() {
                   value={formData.registrationNumber}
                   onChange={handleChange}
                   placeholder="NPC/A0000"
-                  className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border uppercase font-mono ${
-                    licenseStatus === 'valid'
+                  className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border uppercase font-mono ${licenseStatus === 'valid'
                       ? 'border-green-400 bg-green-50'
                       : licenseStatus === 'invalid' || licenseStatus === 'already_taken'
-                      ? 'border-red-300'
-                      : errors.registrationNumber
-                      ? 'border-red-300'
-                      : 'border-gray-300'
-                  } rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
+                        ? 'border-red-300'
+                        : errors.registrationNumber
+                          ? 'border-red-300'
+                          : 'border-gray-300'
+                    } rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
               <LicenseBadge />
@@ -439,11 +413,10 @@ export default function RegisterPharmacyPage() {
                     key={tab}
                     type="button"
                     onClick={() => setLocationTab(tab)}
-                    className={`flex-1 py-2.5 transition-colors ${
-                      locationTab === tab
+                    className={`flex-1 py-2.5 transition-colors ${locationTab === tab
                         ? 'bg-teal-600 text-white'
                         : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
+                      }`}
                   >
                     {tab === 'gps' && '📍 Use My Location'}
                     {tab === 'coordinates' && '🗺️ Enter Coordinates'}
@@ -462,13 +435,12 @@ export default function RegisterPharmacyPage() {
                     type="button"
                     onClick={handleGetLocation}
                     disabled={locationStatus === 'locating'}
-                    className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 font-medium text-sm transition-all ${
-                      locationStatus === 'success'
+                    className={`w-full flex items-center justify-center gap-2 py-3 px-4 rounded-lg border-2 font-medium text-sm transition-all ${locationStatus === 'success'
                         ? 'border-green-500 bg-green-50 text-green-700'
                         : locationStatus === 'error'
-                        ? 'border-red-300 bg-red-50 text-red-700'
-                        : 'border-teal-400 bg-teal-50 text-teal-700 hover:bg-teal-100'
-                    } disabled:opacity-60`}
+                          ? 'border-red-300 bg-red-50 text-red-700'
+                          : 'border-teal-400 bg-teal-50 text-teal-700 hover:bg-teal-100'
+                      } disabled:opacity-60`}
                   >
                     {locationStatus === 'locating' ? (
                       <><span className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />Getting your location…</>

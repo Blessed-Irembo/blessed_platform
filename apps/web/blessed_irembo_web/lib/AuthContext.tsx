@@ -85,6 +85,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // Re-enable loading for every auth change (including mid-session login).
+      // This ensures {!loading && children} hides all pages during the brief
+      // window between setCurrentUser() and setUserRole() resolving.
+      setLoading(true);
       setCurrentUser(user);
       if (user) {
         const role = await fetchRole(user.uid);
@@ -166,7 +170,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function signIn(email: string, password: string): Promise<UserRole> {
     const { user } = await signInWithEmailAndPassword(auth, email, password);
     const role = await fetchRole(user.uid);
-    
+
     // If no Firestore doc yet (e.g. signed up via web before this system),
     // create a user doc and default to 'user' role
     if (!role) {
@@ -230,7 +234,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         verifyLicenseNumber,
       }}
     >
-      {!loading && children}
+      {loading ? (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        children
+      )}
     </AuthContext.Provider>
   );
 }
