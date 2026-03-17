@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { getCurrentUser } from '@/lib/auth';
+import { useRequireUserRole } from '@/lib/authHooks';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -32,7 +32,7 @@ const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap')
 export default function PharmacyDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const [user, setUser] = useState<any>(null);
+  const { currentUser: user, loading: authLoading } = useRequireUserRole();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -69,14 +69,6 @@ export default function PharmacyDetailPage() {
     );
   };
 
-  useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/login');
-      return;
-    }
-    setUser(currentUser);
-  }, [router]);
 
   useEffect(() => {
     async function fetchPharmacy() {
@@ -148,7 +140,7 @@ export default function PharmacyDetailPage() {
     }, 1000);
   };
 
-  if (loading || !user) {
+  if (loading || authLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>

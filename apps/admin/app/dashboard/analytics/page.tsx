@@ -5,17 +5,14 @@ import { useRouter } from 'next/navigation';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
-import { getCurrentAdmin } from '@/lib/auth';
+import { useRequireAdmin } from '@/lib/adminAuthHooks';
 
 export default function AnalyticsPage() {
   const router = useRouter();
 
-  useEffect(() => {
-    const admin = getCurrentAdmin();
-    if (!admin) {
-      router.push('/login');
-    }
-  }, [router]);
+  const { loading: authLoading } = useRequireAdmin();
+
+  if (authLoading) return null;
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />

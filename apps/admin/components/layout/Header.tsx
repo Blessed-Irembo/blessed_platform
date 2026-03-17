@@ -3,13 +3,14 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { logout } from '@/lib/auth';
+import { useAdminAuth } from '@/lib/AdminAuthContext';
 
 export default function Header() {
   const router = useRouter();
+  const { signOut } = useAdminAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     router.push('/login');
   };
 
