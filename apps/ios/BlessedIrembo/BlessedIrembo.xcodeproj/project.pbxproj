@@ -6,13 +6,32 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		93581B032F602B9A00D9C377 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 93581B022F602B9A00D9C377 /* FirebaseAuth */; };
+		93581B052F602B9A00D9C377 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 93581B042F602B9A00D9C377 /* FirebaseFirestore */; };
+		93581B082F602D5C00D9C377 /* GoogleMaps in Frameworks */ = {isa = PBXBuildFile; productRef = 93581B072F602D5C00D9C377 /* GoogleMaps */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		93E326522EF05A05006BAB1C /* BlessedIrembo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlessedIrembo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		93581B0A2F6036B000D9C377 /* Exceptions for "BlessedIrembo" folder in "BlessedIrembo" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 93E326512EF05A05006BAB1C /* BlessedIrembo */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		93E326542EF05A05006BAB1C /* BlessedIrembo */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				93581B0A2F6036B000D9C377 /* Exceptions for "BlessedIrembo" folder in "BlessedIrembo" target */,
+			);
 			path = BlessedIrembo;
 			sourceTree = "<group>";
 		};
@@ -23,6 +42,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				93581B032F602B9A00D9C377 /* FirebaseAuth in Frameworks */,
+				93581B052F602B9A00D9C377 /* FirebaseFirestore in Frameworks */,
+				93581B082F602D5C00D9C377 /* GoogleMaps in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +87,9 @@
 			);
 			name = BlessedIrembo;
 			packageProductDependencies = (
+				93581B022F602B9A00D9C377 /* FirebaseAuth */,
+				93581B042F602B9A00D9C377 /* FirebaseFirestore */,
+				93581B072F602D5C00D9C377 /* GoogleMaps */,
 			);
 			productName = BlessedIrembo;
 			productReference = 93E326522EF05A05006BAB1C /* BlessedIrembo.app */;
@@ -94,6 +119,10 @@
 			);
 			mainGroup = 93E326492EF05A05006BAB1C;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				93581B012F602B9A00D9C377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				93581B062F602D5C00D9C377 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 93E326532EF05A05006BAB1C /* Products */;
 			projectDirPath = "";
@@ -253,6 +282,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlessedIrembo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -284,6 +314,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = BlessedIrembo/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -328,6 +359,43 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		93581B012F602B9A00D9C377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.10.0;
+			};
+		};
+		93581B062F602D5C00D9C377 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googlemaps/ios-maps-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 10.10.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		93581B022F602B9A00D9C377 /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93581B012F602B9A00D9C377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		93581B042F602B9A00D9C377 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93581B012F602B9A00D9C377 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		93581B072F602D5C00D9C377 /* GoogleMaps */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 93581B062F602D5C00D9C377 /* XCRemoteSwiftPackageReference "ios-maps-sdk" */;
+			productName = GoogleMaps;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 93E3264A2EF05A05006BAB1C /* Project object */;
 }

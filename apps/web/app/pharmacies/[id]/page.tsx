@@ -5,7 +5,9 @@ import { useRouter, useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { getCurrentUser } from '@/lib/auth';
+import { useRequireUserRole } from '@/lib/authHooks';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap'), {
   ssr: false,
@@ -25,122 +27,12 @@ const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap')
  * - Inquiry form for contacting pharmacy
  */
 
-// Demo pharmacy data
-const DEMO_PHARMACIES = [
-  {
-    id: 1,
-    name: 'City Central Pharmacy',
-    address: 'KN 4 Ave, Kigali',
-    district: 'Gasabo',
-    phone: '+250 788 123 456',
-    email: 'contact@citypharmacy.rw',
-    isOpen: true,
-    hours: 'Mon-Sat: 8AM-8PM, Sun: 9AM-5PM',
-    rating: 4.8,
-    distance: '0.5 km',
-    verified: true,
-    is24_7: false,
-    isPremium: true,
-    description: 'Full-service pharmacy with 24/7 availability in the heart of Kigali.',
-    latitude: -1.9536,
-    longitude: 30.0605,
-  },
-  {
-    id: 2,
-    name: 'Health Plus Pharmacy',
-    address: 'KG 11 Ave, Kigali',
-    district: 'Kicukiro',
-    phone: '+250 788 234 567',
-    email: 'info@healthplus.rw',
-    isOpen: true,
-    hours: 'Open 24 Hours',
-    rating: 4.9,
-    distance: '1.2 km',
-    verified: true,
-    is24_7: true,
-    isPremium: true,
-    description: 'Professional pharmacy services available round the clock for all your medical needs.',
-    latitude: -1.9659,
-    longitude: 30.1046,
-  },
-  {
-    id: 3,
-    name: 'MediCare Pharmacy',
-    address: 'KN 3 Rd, Kigali',
-    district: 'Nyarugenge',
-    phone: '+250 788 345 678',
-    email: 'contact@medicare.rw',
-    isOpen: false,
-    hours: 'Mon-Sat: 8AM-6PM',
-    rating: 4.6,
-    distance: '2.1 km',
-    verified: true,
-    is24_7: false,
-    isPremium: false,
-    description: 'Trusted pharmacy offering quality medications and health consultation services.',
-    latitude: -1.9441,
-    longitude: 30.0619,
-  },
-  {
-    id: 4,
-    name: 'Wellness Pharmacy',
-    address: 'KK 15 Ave, Kigali',
-    district: 'Gasabo',
-    phone: '+250 788 456 789',
-    email: 'info@wellness.rw',
-    isOpen: true,
-    hours: 'Mon-Fri: 8AM-7PM, Sat: 9AM-5PM',
-    rating: 4.7,
-    distance: '3.0 km',
-    verified: true,
-    is24_7: false,
-    isPremium: false,
-    description: 'Your neighborhood pharmacy providing personalized healthcare solutions.',
-    latitude: -1.9403,
-    longitude: 30.0677,
-  },
-  {
-    id: 5,
-    name: 'LifeCare Pharmacy',
-    address: 'KG 7 Ave, Kigali',
-    district: 'Kicukiro',
-    phone: '+250 788 567 890',
-    email: 'contact@lifecare.rw',
-    isOpen: true,
-    hours: 'Mon-Sun: 7AM-10PM',
-    rating: 4.5,
-    distance: '3.5 km',
-    verified: true,
-    is24_7: false,
-    isPremium: true,
-    description: 'Comprehensive pharmacy services with extended hours for your convenience.',
-    latitude: -1.9706,
-    longitude: 30.1261,
-  },
-  {
-    id: 6,
-    name: 'Green Cross Pharmacy',
-    address: 'KN 8 St, Kigali',
-    district: 'Nyarugenge',
-    phone: '+250 788 678 901',
-    email: 'info@greencross.rw',
-    isOpen: false,
-    hours: 'Mon-Sat: 8AM-8PM',
-    rating: 4.4,
-    distance: '4.2 km',
-    verified: true,
-    is24_7: false,
-    isPremium: false,
-    description: 'Community pharmacy dedicated to providing affordable healthcare solutions.',
-    latitude: -1.9578,
-    longitude: 30.0944,
-  },
-];
+// Removed DEMO_PHARMACIES
 
 export default function PharmacyDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const [user, setUser] = useState<any>(null);
+  const { currentUser: user, loading: authLoading } = useRequireUserRole();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -149,6 +41,9 @@ export default function PharmacyDetailPage() {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+
+  const [pharmacy, setPharmacy] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // ── Directions state ──────────────────────────────────────────────────────
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -174,17 +69,52 @@ export default function PharmacyDetailPage() {
     );
   };
 
-  const pharmacyId = parseInt(params.id as string);
-  const pharmacy = DEMO_PHARMACIES.find(p => p.id === pharmacyId);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      router.push('/login');
-      return;
+    async function fetchPharmacy() {
+      if (!params.id) return;
+      try {
+        const docRef = doc(db, 'pharmacies', params.id as string);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+
+          // Normalize district to title case for display
+          const rawDistrict: string = data.district ?? '';
+          const district = rawDistrict
+            .split(' ')
+            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+            .join(' ');
+
+          setPharmacy({
+            id: docSnap.id,
+            name: data.name ?? 'Unknown Pharmacy',
+            address: data.address ?? '',
+            district,
+            phone: data.phoneNumber ?? '',
+            email: data.email ?? '',
+            isOpen: true, // Default
+            hours: data.hours ?? '',
+            rating: data.rating ?? 0,
+            distance: '',
+            verified: data.isVerified ?? false,
+            is24_7: data.is24_7 ?? false,
+            isPremium: data.isPremium ?? false,
+            description: data.description ?? 'A verified pharmacy on Blessed Irembo.',
+            latitude: data.latitude ?? 0,
+            longitude: data.longitude ?? 0,
+          });
+        } else {
+          setPharmacy(null);
+        }
+      } catch (err) {
+        console.error('Error fetching pharmacy:', err);
+      } finally {
+        setLoading(false);
+      }
     }
-    setUser(currentUser);
-  }, [router]);
+    fetchPharmacy();
+  }, [params.id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -196,13 +126,13 @@ export default function PharmacyDetailPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       setSubmitSuccess(true);
       setFormData({ name: '', email: '', phone: '', message: '' });
-      
+
       // Reset success message after 3 seconds
       setTimeout(() => {
         setSubmitSuccess(false);
@@ -210,7 +140,15 @@ export default function PharmacyDetailPage() {
     }, 1000);
   };
 
-  if (!pharmacy) {
+  if (loading || authLoading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
+      </div>
+    );
+  }
+
+  if (!pharmacy && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -224,13 +162,6 @@ export default function PharmacyDetailPage() {
     );
   }
 
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -271,7 +202,7 @@ export default function PharmacyDetailPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8 mb-6">
           {/* Pharmacy Name and Badges */}
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{pharmacy.name}</h1>
-          
+
           <div className="flex flex-wrap gap-2 mb-4">
             {pharmacy.verified && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-teal-600 text-white">
@@ -393,8 +324,8 @@ export default function PharmacyDetailPage() {
                 {geoStatus === 'loading' ? (
                   <>
                     <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
                     Getting your location…
                   </>
@@ -463,8 +394,8 @@ export default function PharmacyDetailPage() {
             {userLocation && !directions && geoStatus !== 'error' && (
               <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-400">
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
                 Calculating route…
               </div>
@@ -475,7 +406,7 @@ export default function PharmacyDetailPage() {
         {/* Send Inquiry Card */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Send Inquiry</h2>
-          
+
           {submitSuccess && (
             <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
               Your inquiry has been sent successfully! The pharmacy will respond via email or phone.

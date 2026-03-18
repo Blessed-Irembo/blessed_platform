@@ -1,14 +1,17 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
+import { usePharmacyData } from '@/lib/usePharmacyData';
 
 export default function ProfilePage() {
   const { loading } = useRequireAuth();
   const { currentUser, signOut } = useAuth();
+  const { pharmacy, loading: pharmacyLoading } = usePharmacyData();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -16,9 +19,11 @@ export default function ProfilePage() {
     router.replace('/login');
   };
 
-  const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
+  // Prefer pharmacy name from Firestore; fall back to Firebase Auth display name
+  const displayName = pharmacy?.name || pharmacy?.ownerName || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
   const email = currentUser?.email || 'No email on record';
-  const phone = currentUser?.phoneNumber || 'Not provided';
+  // phoneNumber is stored in Firestore 'pharmacies/{uid}' — NOT on Firebase Auth
+  const phone = pharmacy?.phoneNumber || 'Not provided';
   const initials = displayName
     .split(' ')
     .map((n: string) => n[0])
@@ -26,7 +31,7 @@ export default function ProfilePage() {
     .toUpperCase()
     .slice(0, 2);
 
-  if (loading) {
+  if (loading || pharmacyLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin" />

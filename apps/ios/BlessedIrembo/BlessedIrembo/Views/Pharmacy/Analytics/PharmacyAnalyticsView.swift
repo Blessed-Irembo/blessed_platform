@@ -5,20 +5,17 @@
 import SwiftUI
 
 struct PharmacyAnalyticsView: View {
+    @EnvironmentObject var appState: AppState
+    @ObservedObject var viewModel: PharmacyDashboardViewModel
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Summary Cards
                 analyticsSummary
                 
-                // Chart Placeholder (Views)
-                chartSection(title: "Profile Views", height: 200, color: .primaryTeal)
-                
-                // Chart Placeholder (Inquiries)
-                chartSection(title: "Inquiries Over Time", height: 200, color: .purple)
-                
-                // Top Products? or Top Questions
-                topQuestionsSection
+                // Real Data Metric Visualization
+                inquiriesBreakdownSection
                 
                 Spacer()
             }
@@ -30,59 +27,66 @@ struct PharmacyAnalyticsView: View {
     
     private var analyticsSummary: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-            AnalyticsCard(title: "Total Visits", value: "3,450", trend: "+15%")
-            AnalyticsCard(title: "Impressions", value: "12.5k", trend: "+8%")
-            AnalyticsCard(title: "Click Rate", value: "4.2%", trend: "-1%")
-            AnalyticsCard(title: "Avg Time", value: "1m 30s", trend: "+12%")
+            AnalyticsCard(title: "Total Inquiries", value: "\(viewModel.totalInquiries)", trend: "")
+            AnalyticsCard(title: "Unread Messages", value: "\(viewModel.unreadInquiries)", trend: viewModel.unreadInquiries > 0 ? "Action needed" : "")
+            AnalyticsCard(title: "Total Reviews", value: "\(appState.currentPharmacy?.reviewCount ?? 0)", trend: "")
+            AnalyticsCard(title: "Avg Rating", value: String(format: "%.1f", appState.currentPharmacy?.rating ?? 0.0), trend: "")
         }
     }
     
-    private func chartSection(title: String, height: CGFloat, color: Color) -> some View {
+    private var inquiriesBreakdownSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(title)
+            Text("Inquiries Breakdown")
                 .font(.headline)
                 .foregroundColor(.textPrimary)
             
-            // Mock Chart - just a rounded rect with visual flair for now
-            ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.white)
-                    .frame(height: height)
-                    .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-                
-                // Visual bars
-                HStack(alignment: .bottom, spacing: 12) {
-                    ForEach(0..<7) { _ in
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(color.opacity(Double.random(in: 0.3...1.0)))
-                            .frame(height: CGFloat.random(in: 40...140))
+            let total = max(1, viewModel.totalInquiries)
+            let unread = viewModel.unreadInquiries
+            let read = viewModel.totalInquiries - unread
+            
+            let readRatio = CGFloat(read) / CGFloat(total)
+            let unreadRatio = CGFloat(unread) / CGFloat(total)
+            
+            VStack(spacing: 20) {
+                // Visual Bar
+                GeometryReader { geo in
+                    HStack(spacing: 0) {
+                        Rectangle()
+                            .fill(Color.primaryTeal)
+                            .frame(width: geo.size.width * readRatio)
+                        Rectangle()
+                            .fill(Color.orange)
+                            .frame(width: geo.size.width * unreadRatio)
                     }
+                    .cornerRadius(8)
                 }
-                .padding(.bottom, 20)
+                .frame(height: 24)
+                
+                // Legend
+                HStack(spacing: 24) {
+                    HStack(spacing: 8) {
+                        Circle().fill(Color.primaryTeal).frame(width: 8, height: 8)
+                        Text("Read (\(read))")
+                            .font(.subheadline)
+                            .foregroundColor(.textSecondary)
+                    }
+                    
+                    HStack(spacing: 8) {
+                        Circle().fill(Color.orange).frame(width: 8, height: 8)
+                        Text("Unread (\(unread))")
+                            .font(.subheadline)
+                            .foregroundColor(.textSecondary)
+                    }
+                    Spacer()
+                }
             }
-        }
-    }
-    
-    private var topQuestionsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Top User Questions")
-                .font(.headline)
-                .foregroundColor(.textPrimary)
-            
-            VStack(spacing: 0) {
-                TopQuestionRow(question: "Do you have Amoxicillin?", percentage: "35%")
-                Divider()
-                TopQuestionRow(question: "Are you open on Sundays?", percentage: "25%")
-                Divider()
-                TopQuestionRow(question: "Do you accept insurance?", percentage: "15%")
-            }
+            .padding()
             .background(Color.white)
             .cornerRadius(12)
             .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
         }
     }
 }
-
 struct AnalyticsCard: View {
     let title: String
     let value: String
@@ -117,24 +121,5 @@ struct AnalyticsCard: View {
         .background(Color.white)
         .cornerRadius(12)
         .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
-    }
-}
-
-struct TopQuestionRow: View {
-    let question: String
-    let percentage: String
-    
-    var body: some View {
-        HStack {
-            Text(question)
-                .font(.subheadline)
-                .foregroundColor(.textPrimary)
-            Spacer()
-            Text(percentage)
-                .font(.subheadline)
-                .bold()
-                .foregroundColor(.primaryTeal)
-        }
-        .padding()
     }
 }

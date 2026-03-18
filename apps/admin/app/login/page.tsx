@@ -4,6 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useAdminAuth } from '@/lib/AdminAuthContext';
+import { useRedirectAdminIfAuth } from '@/lib/adminAuthHooks';
 
 /**
  * Admin Login Page
@@ -11,14 +13,13 @@ import { useRouter } from 'next/navigation';
  * Admin authentication page with email/password login.
  */
 
-// Demo admin credentials
-const DEMO_ADMIN_CREDENTIALS = [
-  { email: 'admin@blessedirembo.rw', password: 'admin123', name: 'Admin User' },
-  { email: 'superadmin@blessedirembo.rw', password: 'super123', name: 'Super Admin' },
-];
+// Removed DEMO_ADMIN_CREDENTIALS
 
 export default function LoginPage() {
   const router = useRouter();
+  const { signIn } = useAdminAuth();
+  const { loading: authLoading } = useRedirectAdminIfAuth();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -45,39 +46,20 @@ export default function LoginPage() {
         return;
       }
 
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Authenticate with Firebase via Context
+      await signIn(email, password);
 
-      // Check against demo credentials
-      const matchedAdmin = DEMO_ADMIN_CREDENTIALS.find(
-        u => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-      );
-
-      if (matchedAdmin) {
-        // Store admin session
-        const adminSession = {
-          email: matchedAdmin.email,
-          name: matchedAdmin.name,
-          role: 'admin',
-          loggedInAt: new Date().toISOString(),
-        };
-        
-        if (rememberMe) {
-          localStorage.setItem('adminUser', JSON.stringify(adminSession));
-        } else {
-          sessionStorage.setItem('adminUser', JSON.stringify(adminSession));
-        }
-
-        // Redirect to admin dashboard
-        router.push('/dashboard');
-      } else {
-        // Invalid credentials
-        setErrors({ general: 'Invalid email or password. Please use admin credentials.' });
-        setIsLoading(false);
-      }
+      // Redirect to admin dashboard immediately after context has verified the role
+      router.push('/dashboard');
 
     } catch (error: any) {
-      setErrors({ general: 'An error occurred. Please try again.' });
+      console.error('Login error:', error);
+      if (error.message?.includes('Unauthorized')) {
+        setErrors({ general: error.message });
+      } else {
+        // Show the actual Firebase error message for debugging
+        setErrors({ general: error.message || 'Invalid email or password. Please check your credentials.' });
+      }
       setIsLoading(false);
     }
   };

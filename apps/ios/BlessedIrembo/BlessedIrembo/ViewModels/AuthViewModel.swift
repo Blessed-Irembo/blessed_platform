@@ -233,6 +233,7 @@ class AuthViewModel: ObservableObject {
                             phoneNumber: data["phoneNumber"] as? String ?? ""
                         )
                         completion(.success((user: user, pharmacy: nil)))
+                        
                     case .pharmacy(let data):
                         let pharmacy = Pharmacy(
                             id: uid,
@@ -252,8 +253,26 @@ class AuthViewModel: ObservableObject {
                             operatingHours: data["operatingHours"] as? String ?? ""
                         )
                         completion(.success((user: nil, pharmacy: pharmacy)))
+                        
                     case nil:
-                        self.showValidationError("Account not found. Please sign up first.")
+                        // No Firestore document — account was likely created via the web app.
+                        // Treat as a regular user and create the document for future logins.
+                        let userData: [String: Any] = [
+                            "fullName": result?.user.displayName ?? "",
+                            "email": email,
+                            "phoneNumber": "",
+                            "role": "user",
+                            "createdAt": FieldValue.serverTimestamp()
+                        ]
+                        FirebaseManager.shared.usersCollection.document(uid).setData(userData)
+                        
+                        let user = User(
+                            id: uid,
+                            fullName: result?.user.displayName ?? "",
+                            email: email,
+                            phoneNumber: ""
+                        )
+                        completion(.success((user: user, pharmacy: nil)))
                     }
                 }
             }

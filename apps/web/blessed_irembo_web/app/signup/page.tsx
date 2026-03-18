@@ -73,7 +73,7 @@ export default function SignUpPage() {
     setIsSubmitting(true);
 
     try {
-      await signUp(formData.email, formData.password);
+      await signUp(formData.email, formData.password, formData.fullName, formData.phone);
       // Sign out immediately — user must log in manually after registering
       await signOut(auth);
       setRegistered(true);

@@ -6,6 +6,7 @@
 import Foundation
 import CoreLocation
 import Combine
+import FirebaseFirestore
 
 class PharmacyMapViewModel: ObservableObject {
     @Published var pharmacies: [Pharmacy] = []
@@ -20,10 +21,44 @@ class PharmacyMapViewModel: ObservableObject {
         loadPharmacies()
     }
     
-    /// Load pharmacy data (currently using mock data)
+    /// Load pharmacy data from Firestore
     func loadPharmacies() {
-        // In production, this would be an API call
-        pharmacies = MockData.pharmacies
+        FirebaseManager.shared.pharmaciesCollection.whereField("isVerified", isEqualTo: true).getDocuments { [weak self] snapshot, error in
+            guard let self = self else { return }
+            
+            if let error = error {
+                print("Error loading pharmacies: \(error.localizedDescription)")
+                return
+            }
+            
+            guard let documents = snapshot?.documents else { return }
+            
+            let loadedPharmacies: [Pharmacy] = documents.compactMap { doc in
+                let data = doc.data()
+                return Pharmacy(
+                    id: doc.documentID,
+                    name: data["name"] as? String ?? "",
+                    ownerName: data["ownerName"] as? String ?? "",
+                    email: data["email"] as? String ?? "",
+                    phoneNumber: data["phoneNumber"] as? String ?? "",
+                    licenseNumber: data["licenseNumber"] as? String ?? "",
+                    address: data["address"] as? String ?? "",
+                    latitude: data["latitude"] as? Double ?? 0.0,
+                    longitude: data["longitude"] as? Double ?? 0.0,
+                    isVerified: data["isVerified"] as? Bool ?? false,
+                    rating: data["rating"] as? Double ?? 0.0,
+                    reviewCount: data["reviewCount"] as? Int ?? 0,
+                    description: data["description"] as? String ?? "",
+                    services: data["services"] as? [String] ?? [],
+                    operatingHours: data["operatingHours"] as? String ?? "Mon-Fri: 8:00 AM - 8:00 PM",
+                    imageUrls: data["imageUrls"] as? [String] ?? []
+                )
+            }
+            
+            DispatchQueue.main.async {
+                self.pharmacies = loadedPharmacies
+            }
+        }
     }
     
     /// Filter pharmacies based on search text

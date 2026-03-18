@@ -2,94 +2,51 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useRequireAdmin } from '@/lib/adminAuthHooks';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
-import { getCurrentAdmin } from '@/lib/auth';
-
-// Demo pharmacy data
-const DEMO_PHARMACIES = [
-  {
-    id: 1,
-    name: 'Kigali Central Pharmacy',
-    address: 'KN 3 Ave, Kigali, Kigali',
-    phone: '+250 788 123 456',
-    email: 'info@kigalicentral.rw',
-    license: 'RW-PH-2024-001',
-    subscription: 'active',
-    status: 'approved',
-    verified: true,
-  },
-  {
-    id: 2,
-    name: 'Nyarugenge Health Pharmacy',
-    address: 'KG 7 Ave, Nyarugenge, Kigali',
-    phone: '+250 788 234 567',
-    email: 'contact@nyarugenge.rw',
-    license: 'RW-PH-2024-002',
-    subscription: 'Free Trial',
-    status: 'approved',
-    verified: true,
-  },
-  {
-    id: 3,
-    name: 'Remera Medical Pharmacy',
-    address: 'KG 17 Ave, Remera, Kigali',
-    phone: '+250 788 345 678',
-    email: 'info@remera.rw',
-    license: 'RW-PH-2024-003',
-    subscription: 'active',
-    status: 'approved',
-    verified: true,
-  },
-  {
-    id: 4,
-    name: 'Huye District Pharmacy',
-    address: 'Huye District, Southern Province',
-    phone: '+250 788 456 789',
-    email: 'contact@huye.rw',
-    license: 'RW-PH-2024-004',
-    subscription: 'Free Trial',
-    status: 'pending',
-    verified: false,
-  },
-  {
-    id: 5,
-    name: 'Musanze Health Center Pharmacy',
-    address: 'Musanze District, Northern Province',
-    phone: '+250 788 567 890',
-    email: 'info@musanze.rw',
-    license: 'RW-PH-2024-005',
-    subscription: 'active',
-    status: 'approved',
-    verified: true,
-  },
-  {
-    id: 6,
-    name: 'Rubavu Medical Pharmacy',
-    address: 'Rubavu District, Western Province',
-    phone: '+250 788 678 901',
-    email: 'contact@rubavu.rw',
-    license: 'RW-PH-2024-006',
-    subscription: 'active',
-    status: 'approved',
-    verified: true,
-  },
-];
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+// Removed DEMO_PHARMACIES
 
 export default function PharmaciesPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const admin = getCurrentAdmin();
-    if (!admin) {
-      router.push('/login');
-    }
-  }, [router]);
+  const [pharmacies, setPharmacies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredPharmacies = DEMO_PHARMACIES.filter(pharmacy => {
+  const { loading: authLoading } = useRequireAdmin();
+
+  useEffect(() => {
+    async function loadPharmacies() {
+      try {
+        const snapshot = await getDocs(collection(db, 'pharmacies'));
+        const list = snapshot.docs.map(doc => ({
+          id: doc.id,
+          name: doc.data().name || 'Unknown',
+          address: doc.data().address || '',
+          phone: doc.data().phoneNumber || '',
+          email: doc.data().email || '',
+          license: doc.data().licenseNumber || 'N/A',
+          subscription: doc.data().subscriptionStatus || 'Free Trial',
+          status: doc.data().status || 'pending',
+          verified: doc.data().isVerified || false,
+          ...doc.data()
+        }));
+        setPharmacies(list);
+      } catch (error) {
+        console.error('Error fetching pharmacies:', error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadPharmacies();
+  }, []);
+
+  const filteredPharmacies = pharmacies.filter(pharmacy => {
     const matchesSearch = pharmacy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          pharmacy.address.toLowerCase().includes(searchQuery.toLowerCase());
     
@@ -102,9 +59,11 @@ export default function PharmaciesPage() {
   });
 
   const getTabCount = (tab: string) => {
-    if (tab === 'all') return DEMO_PHARMACIES.length;
-    return DEMO_PHARMACIES.filter(p => p.status === tab).length;
+    if (tab === 'all') return pharmacies.length;
+    return pharmacies.filter(p => p.status === tab).length;
   };
+
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -186,6 +145,11 @@ export default function PharmaciesPage() {
             </div>
 
             {/* Pharmacy List */}
+            {loading ? (
+              <div className="py-12 flex justify-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+              </div>
+            ) : (
             <div className="space-y-4">
               {filteredPharmacies.map((pharmacy) => (
                 <div key={pharmacy.id} className="border border-gray-200 rounded-xl p-6">
@@ -246,6 +210,7 @@ export default function PharmaciesPage() {
                 </div>
               )}
             </div>
+            )}
           </div>
         </main>
       </div>

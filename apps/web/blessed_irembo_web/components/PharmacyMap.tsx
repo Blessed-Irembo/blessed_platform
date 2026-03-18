@@ -8,12 +8,13 @@ import {
   InfoWindow,
   useMap,
 } from '@vis.gl/react-google-maps';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Pharmacy {
-  id: number;
+  id: string;
   name: string;
   address: string;
   district: string;
@@ -30,8 +31,8 @@ export interface Pharmacy {
 
 interface PharmacyMapProps {
   pharmacies: Pharmacy[];
-  selectedId: number | null;
-  onSelectPharmacy: (id: number | null) => void;
+  selectedId: string | null;
+  onSelectPharmacy: (id: string | null) => void;
 }
 
 // ─── Custom Pharmacy House Pin SVG ───────────────────────────────────────────
@@ -174,8 +175,9 @@ export default function PharmacyMap({
   selectedId,
   onSelectPharmacy,
 }: PharmacyMapProps) {
+  const router = useRouter();
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY ?? '';
-  const [infoWindowId, setInfoWindowId] = useState<number | null>(null);
+  const [infoWindowId, setInfoWindowId] = useState<string | null>(null);
 
   const selectedPharmacy = pharmacies.find((p) => p.id === selectedId) ?? null;
   const infoPharmacy = pharmacies.find((p) => p.id === infoWindowId) ?? null;
@@ -293,19 +295,19 @@ export default function PharmacyMap({
                 </p>
 
                 {/* CTA */}
-                <Link
-                  href={`/pharmacies/${infoPharmacy.id}`}
+                <button
+                  onClick={() => router.push(`/pharmacies/${infoPharmacy.id}`)}
                   style={{
-                    display: 'block', textAlign: 'center',
+                    display: 'block', width: '100%', textAlign: 'center', cursor: 'pointer',
                     background: 'linear-gradient(135deg, #0D9488, #14B8A6)',
                     color: '#ffffff', fontSize: '12px',
-                    padding: '7px 14px', borderRadius: '8px',
+                    padding: '7px 14px', borderRadius: '8px', border: 'none',
                     fontWeight: 600, textDecoration: 'none',
                     boxShadow: '0 1px 4px rgba(13,148,136,0.35)',
                   }}
                 >
                   View Details →
-                </Link>
+                </button>
               </div>
             </InfoWindow>
           )}

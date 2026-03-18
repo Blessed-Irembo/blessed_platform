@@ -5,19 +5,23 @@
 import SwiftUI
 
 struct PharmacyInquiriesView: View {
+    @ObservedObject var viewModel: PharmacyDashboardViewModel
     @State private var searchText = ""
     @State private var selectedFilter = 0
     
-    // Mock Data
-    private let inquiries: [MockInquiry] = [
-        MockInquiry(name: "John Doe", message: "Do you have Amoxicillin 500mg in stock?", time: "2m ago", initials: "JD"),
-        MockInquiry(name: "Sarah Smith", message: "What are your opening hours on Sunday?", time: "15m ago", initials: "SS"),
-        MockInquiry(name: "David N.", message: "I need a prescription refilled.", time: "1h ago", initials: "DN"),
-        MockInquiry(name: "Alice M.", message: "Do you deliver to Kacyiru?", time: "2h ago", initials: "AM"),
-        MockInquiry(name: "Peter K.", message: "Price for Vitamin C supplements?", time: "3h ago", initials: "PK"),
-        MockInquiry(name: "Mary J.", message: "Is the flu vaccine available?", time: "1d ago", initials: "MJ"),
-        MockInquiry(name: "Tom H.", message: "Can I pre-order my medication?", time: "1d ago", initials: "TH")
-    ]
+    private var filteredInquiries: [Inquiry] {
+        var result = viewModel.inquiries
+        if selectedFilter == 1 { // Unread
+            result = result.filter { !$0.isRead }
+        } else if selectedFilter == 2 { // Read
+            result = result.filter { $0.isRead }
+        }
+        
+        if !searchText.isEmpty {
+            result = result.filter { $0.userName.localizedCaseInsensitiveContains(searchText) || $0.message.localizedCaseInsensitiveContains(searchText) }
+        }
+        return result
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -29,9 +33,9 @@ struct PharmacyInquiriesView: View {
             
             // List
             List {
-                ForEach(inquiries) { inquiry in
+                ForEach(filteredInquiries) { inquiry in
                     ZStack {
-                        NavigationLink(destination: Text("Chat with \(inquiry.name)")) {
+                        NavigationLink(destination: Text("Chat with \(inquiry.userName)")) {
                             EmptyView()
                         }
                         .opacity(0)

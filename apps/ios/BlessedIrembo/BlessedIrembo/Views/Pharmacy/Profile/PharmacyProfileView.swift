@@ -55,7 +55,7 @@ struct PharmacyProfileView: View {
         
             // Business Info
             Section("Business Information") {
-                NavigationLink(destination: Text("Edit Profile")) {
+                NavigationLink(destination: PharmacyProfileSettingsView()) {
                     Label {
                         Text("Edit Profile")
                     } icon: {

@@ -7,15 +7,7 @@ import SwiftUI
 
 struct PharmacyDashboardView: View {
     @EnvironmentObject var appState: AppState
-    
-    // Mock Data for UI
-    private let recentInquiries: [MockInquiry] = [
-        MockInquiry(name: "John Doe", message: "Do you have Amoxicillin 500mg in stock?", time: "2m ago", initials: "JD"),
-        MockInquiry(name: "Sarah Smith", message: "What are your opening hours on Sunday?", time: "15m ago", initials: "SS"),
-        MockInquiry(name: "David N.", message: "I need a prescription refilled.", time: "1h ago", initials: "DN"),
-        MockInquiry(name: "Alice M.", message: "Do you deliver to Kacyiru?", time: "2h ago", initials: "AM"),
-        MockInquiry(name: "Peter K.", message: "Price for Vitamin C supplements?", time: "3h ago", initials: "PK")
-    ]
+    @ObservedObject var viewModel: PharmacyDashboardViewModel
     
     var body: some View {
         ScrollView {
@@ -25,9 +17,6 @@ struct PharmacyDashboardView: View {
                 
                 // Stats Grid
                 statsGrid
-                
-                // Quick Actions
-                quickActionsSection
                 
                 // Recent Inquiries
                 recentInquiriesSection
@@ -45,7 +34,7 @@ struct PharmacyDashboardView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Dashboard")
+                Text("Blessed Irembo")
                     .font(.system(size: 34, weight: .bold))
                     .foregroundColor(.textPrimary)
                 
@@ -77,64 +66,41 @@ struct PharmacyDashboardView: View {
         .padding(.top, 20)
     }
     
-    // MARK: - Stats Grid
-    
     private var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
             DashboardStatCard(
                 title: "Total Inquiries",
-                value: "125",
-                trend: "+12%",
+                value: "\(viewModel.totalInquiries)",
+                trend: "",
                 icon: "bubble.left.fill",
                 color: .blue
             )
             
             DashboardStatCard(
-                title: "Profile Views",
-                value: "1,240",
-                trend: "+5%",
-                icon: "eye.fill",
-                color: .green
+                title: "Unread Messages",
+                value: "\(viewModel.unreadInquiries)",
+                trend: viewModel.unreadInquiries > 0 ? "Action Needed" : "",
+                icon: "envelope.badge.fill",
+                color: .red
             )
             
             DashboardStatCard(
                 title: "Avg. Rating",
-                value: String(format: "%.1f", appState.currentPharmacy?.rating ?? 4.8),
-                trend: "4.8", // Using trend for secondary info
+                value: String(format: "%.1f", appState.currentPharmacy?.rating ?? 0.0),
+                trend: "",
                 icon: "star.fill",
                 color: .orange
             )
             
             DashboardStatCard(
-                title: "Response Rate",
-                value: "98%",
-                trend: "High",
-                icon: "arrow.turn.up.left",
+                title: "Total Reviews",
+                value: "\(appState.currentPharmacy?.reviewCount ?? 0)",
+                trend: "",
+                icon: "person.2.fill",
                 color: .purple
             )
         }
         .padding(.horizontal, 20)
-    }
-    
-    // MARK: - Quick Actions
-    
-    private var quickActionsSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Quick Actions")
-                .font(.headline)
-                .foregroundColor(.textPrimary)
-                .padding(.horizontal, 20)
-            
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 16) {
-                    QuickActionButton(title: "Log Sale", icon: "plus.circle.fill", color: .primaryTeal)
-                    QuickActionButton(title: "Update Stock", icon: "scribble.variable", color: .green) // box.truck.badge.clock.fill unavailable in iOS 14
-                    QuickActionButton(title: "Add Promotion", icon: "megaphone.fill", color: .orange)
-                    QuickActionButton(title: "Support", icon: "questionmark.circle.fill", color: .blue)
-                }
-                .padding(.horizontal, 20)
-            }
-        }
     }
     
     // MARK: - Recent Inquiries
@@ -158,7 +124,7 @@ struct PharmacyDashboardView: View {
             .padding(.horizontal, 20)
             
             VStack(spacing: 12) {
-                ForEach(recentInquiries) { inquiry in
+                ForEach(viewModel.inquiries.prefix(5)) { inquiry in
                     InquiryRow(inquiry: inquiry)
                 }
             }
@@ -232,34 +198,8 @@ struct DashboardStatCard: View {
     }
 }
 
-struct QuickActionButton: View {
-    let title: String
-    let icon: String
-    let color: Color
-    
-    var body: some View {
-        Button(action: {}) {
-            VStack(spacing: 12) {
-                Image(systemName: icon)
-                    .font(.system(size: 24))
-                    .foregroundColor(.white)
-                    .frame(width: 50, height: 50)
-                    .background(color)
-                    .clipShape(Circle())
-                    .shadow(color: color.opacity(0.3), radius: 5, x: 0, y: 3)
-                
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(.textPrimary)
-            }
-            .frame(width: 80)
-        }
-    }
-}
-
 struct InquiryRow: View {
-    let inquiry: MockInquiry
+    let inquiry: Inquiry
     
     var body: some View {
         HStack(alignment: .top, spacing: 16) {
@@ -276,14 +216,14 @@ struct InquiryRow: View {
             // Content
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(inquiry.name)
+                    Text(inquiry.userName)
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.textPrimary)
                     
                     Spacer()
                     
-                    Text(inquiry.time)
+                    Text(inquiry.timeAgoString)
                         .font(.caption)
                         .foregroundColor(.textSecondary)
                 }
