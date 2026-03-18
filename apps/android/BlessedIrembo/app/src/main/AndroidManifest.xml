@@ -18,6 +18,10 @@
         android:theme="@style/Theme.BlessedIrembo"
         tools:targetApi="31">
 
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyA-0elDxTyX8mwO5oOsNClv9G-JZPu8BdI" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"

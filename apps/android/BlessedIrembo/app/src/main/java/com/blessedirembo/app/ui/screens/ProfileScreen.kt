@@ -44,6 +44,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +53,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.ui.components.SettingsListItem
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
@@ -63,7 +67,8 @@ val LogoutRed = Color(0xFFFF6B6B)
 
 /**
  * Profile Screen
- * Shows user information, settings, about sections, and logout button
+ * Displays real Firebase user data: display name, email, and UID.
+ * Logout is handled via AuthViewModel.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,11 +76,18 @@ fun ProfileScreen(
     onBackClick: () -> Unit,
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
-    userName: String = "John Doe",
-    userEmail: String = "user@demo.com",
-    userPhone: String = "+250788000001"
+    authViewModel: AuthViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
+    val currentUser = remember { authViewModel.currentUser }
+
+    // Derive display values from FirebaseUser
+    val userName = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "No name set"
+    val userEmail = currentUser?.email ?: "No email"
+    val userPhone = currentUser?.phoneNumber ?: "Not set"
+    val userId = currentUser?.uid?.take(8)?.let { "UID: $it…" } ?: ""
+
+
     
     Scaffold(
         topBar = {
@@ -290,7 +302,10 @@ fun ProfileScreen(
             
             // Logout Button
             Button(
-                onClick = onLogoutClick,
+                onClick = {
+                    authViewModel.signOut()
+                    onLogoutClick()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)

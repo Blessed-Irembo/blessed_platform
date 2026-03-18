@@ -81,7 +81,9 @@ fun FindPharmaciesScreen(
                 reviewCount = 127,
                 address = "KN 5 Ave, Kigali",
                 isOpen = true,
-                isVerified = true
+                isVerified = true,
+                latitude = -1.9441,
+                longitude = 30.0619
             ),
             PharmacyInfo(
                 id = "2",
@@ -91,7 +93,9 @@ fun FindPharmaciesScreen(
                 reviewCount = 89,
                 address = "Kimironko, Kigali",
                 isOpen = true,
-                isVerified = true
+                isVerified = true,
+                latitude = -1.9497,
+                longitude = 30.1261
             ),
             PharmacyInfo(
                 id = "3",
@@ -101,7 +105,9 @@ fun FindPharmaciesScreen(
                 reviewCount = 156,
                 address = "Nyarutarama, Kigali",
                 isOpen = true,
-                isVerified = true
+                isVerified = true,
+                latitude = -1.9360,
+                longitude = 30.1031
             )
         )
     }
@@ -166,39 +172,28 @@ fun FindPharmaciesScreen(
                 singleLine = true
             )
             
-            // Map Placeholder
+            // Google Map View
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
+                    .height(260.dp)
                     .padding(horizontal = 16.dp, vertical = 8.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(Color(0xFFE8F5E9)),
+                    .background(Gray100),
                 contentAlignment = Alignment.Center
             ) {
-                // Map placeholder content
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Text(
-                        text = "Kigali",
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Gray900
-                    )
-                    Text(
-                        text = "Map View",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Gray500
-                    )
-                }
+                com.blessedirembo.app.ui.components.GoogleMapView(
+                    pharmacies = pharmacies,
+                    selectedPharmacyId = null, // TODO: Link to list selection
+                    onPharmacyClick = { id -> onPharmacyClick(id) },
+                    modifier = Modifier.fillMaxSize()
+                )
                 
-                // Location button
+                // Location button overlay
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
-                        .padding(8.dp)
+                        .padding(12.dp)
                         .size(40.dp)
                         .clip(CircleShape)
                         .background(White)

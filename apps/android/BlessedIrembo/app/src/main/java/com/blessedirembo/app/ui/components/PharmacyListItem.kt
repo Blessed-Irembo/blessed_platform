@@ -45,7 +45,9 @@ data class PharmacyInfo(
     val reviewCount: Int,
     val address: String,
     val isOpen: Boolean,
-    val isVerified: Boolean = true
+    val isVerified: Boolean = true,
+    val latitude: Double = -1.9441, // Default to Kigali center if not provided
+    val longitude: Double = 30.0619
 )
 
 /**

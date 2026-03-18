@@ -8,9 +8,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.blessedirembo.app.ui.screens.FindPharmaciesScreen
 import com.blessedirembo.app.ui.screens.HomeScreen
+import com.blessedirembo.app.ui.screens.OnboardingScreen
 import com.blessedirembo.app.ui.screens.PharmacyDetailScreen
 import com.blessedirembo.app.ui.screens.PharmacyRegistrationScreen
 import com.blessedirembo.app.ui.screens.ProfileScreen
+import com.blessedirembo.app.ui.screens.SignInScreen
 import com.blessedirembo.app.ui.screens.SplashScreen
 import com.blessedirembo.app.ui.screens.UserSignUpScreen
 import com.blessedirembo.app.ui.screens.WelcomeScreen
@@ -21,6 +23,7 @@ import com.blessedirembo.app.ui.screens.owner.PharmacyOwnerMainScreen
  */
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
+    data object Onboarding : Screen("onboarding")
     data object Welcome : Screen("welcome")
     data object UserSignUp : Screen("user_signup")
     data object PharmacyRegistration : Screen("pharmacy_registration")
@@ -52,8 +55,21 @@ fun NavGraph(
         composable(route = Screen.Splash.route) {
             SplashScreen(
                 onNavigateToWelcome = {
-                    navController.navigate(Screen.Welcome.route) {
+                    // Navigate to Onboarding by default
+                    // In a real app, we would check if onboarding was already seen
+                    navController.navigate(Screen.Onboarding.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        // Onboarding Screen
+        composable(route = Screen.Onboarding.route) {
+            OnboardingScreen(
+                onFinish = {
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.Onboarding.route) { inclusive = true }
                     }
                 }
             )
@@ -69,11 +85,26 @@ fun NavGraph(
                     navController.navigate(Screen.PharmacyRegistration.route)
                 },
                 onSignIn = {
-                    // TODO: Navigate to sign in screen
-                    // For now, navigate to home as placeholder
+                    navController.navigate(Screen.SignIn.route)
+                }
+            )
+        }
+
+        // Sign In Screen
+        composable(route = Screen.SignIn.route) {
+            SignInScreen(
+                onBackClick = {
+                    navController.popBackStack()
+                },
+                onSignInSuccess = {
+                    // TODO: Differentiate user vs pharmacy owner routing based on auth result
                     navController.navigate(Screen.Home.route) {
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
+                },
+                onNavigateToSignUp = {
+                    // Go back to Welcome to choose role
+                    navController.popBackStack()
                 }
             )
         }
@@ -91,9 +122,9 @@ fun NavGraph(
                     }
                 },
                 onSignInClick = {
-                    // Navigate to Home for now (sign in placeholder)
-                    navController.navigate(Screen.Home.route) {
-                        popUpTo(Screen.Welcome.route) { inclusive = true }
+                    navController.navigate(Screen.SignIn.route) {
+                        // Avoid stacking auth screens
+                        popUpTo(Screen.Welcome.route)
                     }
                 }
             )
@@ -112,9 +143,9 @@ fun NavGraph(
                     }
                 },
                 onSignInClick = {
-                    // Navigate to Pharmacy Owner Dashboard for now
-                    navController.navigate(Screen.PharmacyOwnerMain.route) {
-                        popUpTo(Screen.Welcome.route) { inclusive = true }
+                    navController.navigate(Screen.SignIn.route) {
+                        // Avoid stacking auth screens
+                        popUpTo(Screen.Welcome.route)
                     }
                 }
             )

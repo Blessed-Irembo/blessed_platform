@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import com.blessedirembo.app.ui.theme.Gray300
+import com.blessedirembo.app.ui.theme.Gray200
 import com.blessedirembo.app.ui.theme.Gray400
 import com.blessedirembo.app.ui.theme.Gray50
 
@@ -106,10 +106,12 @@ fun CustomTextField(
         shape = RoundedCornerShape(12.dp),
         colors = OutlinedTextFieldDefaults.colors(
             focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = Gray300,
+            unfocusedBorderColor = Gray200,
             focusedContainerColor = Gray50,
-            unfocusedContainerColor = Gray50
+            unfocusedContainerColor = Gray50,
+            focusedPlaceholderColor = Gray400,
+            unfocusedPlaceholderColor = Gray400
         ),
-        textStyle = MaterialTheme.typography.bodyMedium
+        textStyle = MaterialTheme.typography.bodyLarge
     )
 }
