@@ -66,7 +66,7 @@ import com.blessedirembo.app.auth.AuthViewModel
 @Composable
 fun UserSignUpScreen(
     onBackClick: () -> Unit,
-    onSignUpClick: () -> Unit,
+    onSignUpSuccess: () -> Unit,
     onSignInClick: () -> Unit,
     authViewModel: AuthViewModel = viewModel()
 ) {
@@ -83,7 +83,7 @@ fun UserSignUpScreen(
     // React to auth state changes
     LaunchedEffect(authState) {
         when (val state = authState) {
-            is AuthState.Success -> onSignUpClick()
+            is AuthState.Success -> onSignUpSuccess()
             is AuthState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 authViewModel.clearError()
@@ -245,9 +245,15 @@ fun UserSignUpScreen(
                 text = "Sign Up",
                 onClick = {
                     if (password == confirmPassword) {
-                        authViewModel.signUp(email, password)
+                        authViewModel.signUpWithProfile(
+                            email = email,
+                            password = password,
+                            fullName = fullName,
+                            phone = phoneNumber,
+                            role = com.blessedirembo.app.data.model.UserRole.USER
+                        )
                     } else {
-                        // show error inline - handled by snackbar via a temp approach
+                        // Show password mismatch — handled via snackbar mechanism below
                     }
                 },
                 enabled = acceptTerms && fullName.isNotBlank() && email.isNotBlank() && !isLoading,

@@ -38,13 +38,11 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.ui.components.InquiryInfo
 import com.blessedirembo.app.ui.components.InquiryListItem
 import com.blessedirembo.app.ui.components.QuickActionButton
@@ -55,6 +53,13 @@ import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.ui.viewmodel.InquiryViewModel
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 
 // Color palette for dashboard elements
 val BlueAccent = Color(0xFF3B82F6)
@@ -67,7 +72,6 @@ val PurpleAccent = Color(0xFFA855F7)
  */
 @Composable
 fun PharmacyOwnerDashboardScreen(
-    pharmacyName: String = "Demo Pharmacy",
     onNotificationClick: () -> Unit = {},
     onLogSaleClick: () -> Unit = {},
     onUpdateStockClick: () -> Unit = {},
@@ -75,28 +79,43 @@ fun PharmacyOwnerDashboardScreen(
     onSupportClick: () -> Unit = {},
     onViewAllInquiriesClick: () -> Unit = {},
     onInquiryClick: (String) -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    inquiryViewModel: InquiryViewModel = viewModel(),
+    authViewModel: com.blessedirembo.app.auth.AuthViewModel = viewModel(),
+    pharmacyViewModel: com.blessedirembo.app.ui.viewmodel.PharmacyViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
-    
-    // Sample inquiries data
-    val recentInquiries = remember {
-        listOf(
-            InquiryInfo(
-                id = "1",
-                senderName = "John Doe",
-                message = "Do you have Amoxicillin 500mg in stock?",
-                timeAgo = "2m ago"
-            ),
-            InquiryInfo(
-                id = "2",
-                senderName = "Sarah Smith",
-                message = "What are your opening hours on Sunday?",
-                timeAgo = "15m ago"
-            )
+    val allInquiries by inquiryViewModel.inquiries.collectAsState()
+    val unreadCount = inquiryViewModel.unreadCount
+    val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
+
+    LaunchedEffect(Unit) {
+        val uid = authViewModel.currentUser?.uid
+        if (uid != null) {
+            pharmacyViewModel.loadPharmacyByOwnerId(uid)
+        }
+    }
+
+    // Subscribe to real-time inquiries for this pharmacy once loaded
+    LaunchedEffect(pharmacy?.id) {
+        pharmacy?.id?.let { id ->
+            if (id.isNotBlank()) {
+                inquiryViewModel.observeInquiries(id)
+            }
+        }
+    }
+
+    // Show the 3 most recent inquiries on the dashboard
+    val recentInquiries = allInquiries.take(3).map { inquiry ->
+        InquiryInfo(
+            id = inquiry.id,
+            senderName = inquiry.senderName,
+            message = inquiry.message,
+            timeAgo = formatDashboardTimestamp(inquiry.timestamp),
+            isRead = inquiry.isRead
         )
     }
-    
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -112,16 +131,31 @@ fun PharmacyOwnerDashboardScreen(
         ) {
             Column {
                 Text(
-                    text = "Dashboard",
+                    text = "Blessed Irembo",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = Gray900
                 )
                 Text(
-                    text = pharmacyName,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Gray500
+                    text = pharmacy?.name ?: "Loading...",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Gray500,
+                    modifier = Modifier.padding(top = 4.dp)
                 )
+                if (pharmacy?.phone?.isNotBlank() == true) {
+                    Text(
+                        text = "Tel: ${pharmacy!!.phone}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Gray500
+                    )
+                }
+                if (pharmacy?.email?.isNotBlank() == true) {
+                    Text(
+                        text = "Email: ${pharmacy!!.email}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Gray500
+                    )
+                }
             }
             
             // Notification bell with badge
@@ -288,5 +322,17 @@ fun PharmacyOwnerDashboardScreen(
         }
         
         Spacer(modifier = Modifier.height(80.dp)) // Bottom nav spacing
+    }
+}
+
+/** Format a Firestore timestamp for the dashboard card's recent inquiries. */
+private fun formatDashboardTimestamp(date: java.util.Date?): String {
+    if (date == null) return "just now"
+    val diff = System.currentTimeMillis() - date.time
+    return when {
+        diff < 60_000 -> "just now"
+        diff < 3_600_000 -> "${diff / 60_000}m ago"
+        diff < 86_400_000 -> "${diff / 3_600_000}h ago"
+        else -> "${diff / 86_400_000}d ago"
     }
 }

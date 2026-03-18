@@ -46,6 +46,15 @@ import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.blessedirembo.app.auth.AuthState
+import com.blessedirembo.app.auth.AuthViewModel
+import com.blessedirembo.app.data.model.UserRole
 
 /**
  * Pharmacy Registration Screen
@@ -56,7 +65,8 @@ import com.blessedirembo.app.ui.theme.White
 fun PharmacyRegistrationScreen(
     onBackClick: () -> Unit,
     onRegisterClick: () -> Unit,
-    onSignInClick: () -> Unit
+    onSignInClick: () -> Unit,
+    authViewModel: AuthViewModel = viewModel()
 ) {
     // Form state
     var pharmacyName by remember { mutableStateOf("") }
@@ -67,6 +77,21 @@ fun PharmacyRegistrationScreen(
     var physicalAddress by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    val authState by authViewModel.authState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(authState) {
+        when (val state = authState) {
+            is AuthState.Success -> onRegisterClick()
+            is AuthState.Error -> {
+                snackbarHostState.showSnackbar(state.message)
+                authViewModel.clearError()
+            }
+            else -> Unit
+        }
+    }
+    val isLoading = authState is AuthState.Loading
 
     Scaffold(
         topBar = {
@@ -90,6 +115,9 @@ fun PharmacyRegistrationScreen(
                     containerColor = White
                 )
             )
+        },
+        snackbarHost = {
+            SnackbarHost(snackbarHostState) { data -> Snackbar(snackbarData = data) }
         },
         containerColor = White
     ) { paddingValues ->
@@ -184,8 +212,19 @@ fun PharmacyRegistrationScreen(
             // Register Button
             PrimaryButton(
                 text = "Register Pharmacy",
-                onClick = onRegisterClick,
-                enabled = pharmacyName.isNotBlank() && email.isNotBlank() && licenseNumber.isNotBlank()
+                onClick = {
+                    if (password == confirmPassword) {
+                        authViewModel.signUpWithProfile(
+                            email = email,
+                            password = password,
+                            fullName = ownerName,
+                            phone = phoneNumber,
+                            role = UserRole.PHARMACY_OWNER
+                        )
+                    }
+                },
+                enabled = pharmacyName.isNotBlank() && email.isNotBlank() && licenseNumber.isNotBlank() && !isLoading,
+                isLoading = isLoading
             )
 
             Spacer(modifier = Modifier.height(24.dp))

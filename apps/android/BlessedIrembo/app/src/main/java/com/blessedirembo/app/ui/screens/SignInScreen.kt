@@ -62,7 +62,7 @@ import com.blessedirembo.app.ui.theme.White
 @Composable
 fun SignInScreen(
     onBackClick: () -> Unit,
-    onSignInSuccess: () -> Unit,
+    onSignInSuccess: (role: String) -> Unit,
     onNavigateToSignUp: () -> Unit,
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel = viewModel()
@@ -75,7 +75,7 @@ fun SignInScreen(
     // React to auth state changes
     LaunchedEffect(authState) {
         when (val state = authState) {
-            is AuthState.Success -> onSignInSuccess()
+            is AuthState.Success -> onSignInSuccess(state.role)
             is AuthState.Error -> {
                 snackbarHostState.showSnackbar(state.message)
                 authViewModel.clearError()

@@ -87,6 +87,10 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Location services (for nearby pharmacy detection)
+    implementation("com.google.android.gms:play-services-location:21.3.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")

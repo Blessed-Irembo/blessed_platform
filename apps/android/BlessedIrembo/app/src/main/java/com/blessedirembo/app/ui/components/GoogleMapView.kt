@@ -43,6 +43,42 @@ fun GoogleMapView(
         position = CameraPosition.fromLatLngZoom(kigali, 13f)
     }
 
+    androidx.compose.runtime.LaunchedEffect(pharmacies) {
+        if (pharmacies.isNotEmpty()) {
+            if (pharmacies.size == 1) {
+                cameraPositionState.animate(
+                    com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                        LatLng(pharmacies.first().latitude, pharmacies.first().longitude),
+                        14f
+                    )
+                )
+            } else {
+                val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
+                pharmacies.forEach { pharmacy ->
+                    builder.include(LatLng(pharmacy.latitude, pharmacy.longitude))
+                }
+                try {
+                    cameraPositionState.animate(
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngBounds(
+                            builder.build(),
+                            150 // pixel padding
+                        )
+                    )
+                } catch (e: Exception) {
+                    // Fallback if map layout is not yet sized properly for bounds
+                    val avgLat = pharmacies.map { it.latitude }.average()
+                    val avgLng = pharmacies.map { it.longitude }.average()
+                    cameraPositionState.animate(
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                            LatLng(avgLat, avgLng),
+                            12f
+                        )
+                    )
+                }
+            }
+        }
+    }
+
     // Load custom map style
     val mapProperties = remember {
         MapProperties(
