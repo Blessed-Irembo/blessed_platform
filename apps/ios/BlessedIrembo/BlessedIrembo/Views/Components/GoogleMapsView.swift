@@ -28,9 +28,13 @@ struct GoogleMapsView: UIViewRepresentable {
     // MARK: UIViewRepresentable
     
     func makeUIView(context: Context) -> GMSMapView {
+        // Kigali city center — hard-coded so the SDK NEVER shows San Francisco
+        let kigaliLat: CLLocationDegrees = -1.9536
+        let kigaliLng: CLLocationDegrees = 30.0606
+        
         let camera = GMSCameraPosition.camera(
-            withLatitude: cameraTarget.latitude,
-            longitude: cameraTarget.longitude,
+            withLatitude: kigaliLat,
+            longitude: kigaliLng,
             zoom: 13.5
         )
         
@@ -38,106 +42,71 @@ struct GoogleMapsView: UIViewRepresentable {
         options.camera = camera
         let mapView = GMSMapView(options: options)
         
-        // Style settings
-        mapView.isMyLocationEnabled = true
-        mapView.settings.myLocationButton = false
-        mapView.delegate = context.coordinator
-        
-        // Apply custom map style (optional – can be nil for default)
+        // Apply custom map style
         if let styleURL = Bundle.main.url(forResource: "map_style", withExtension: "json"),
            let style = try? GMSMapStyle(contentsOfFileURL: styleURL) {
             mapView.mapStyle = style
         }
         
-        // Initial markers
-        addMarkers(to: mapView)
+        mapView.isMyLocationEnabled = true
+        mapView.settings.myLocationButton = false
+        mapView.delegate = context.coordinator
+        
+        // Force move to Kigali synchronously (without animation)
+        // This overrides any SDK internal default before first render
+        mapView.moveCamera(GMSCameraUpdate.setTarget(CLLocationCoordinate2D(latitude: kigaliLat, longitude: kigaliLng), zoom: 13.5))
+        
+        // Draw initial markers
+        context.coordinator.updateMarkers(on: mapView, pharmacies: pharmacies, selected: selectedPharmacy?.id)
+        context.coordinator.lastPharmacyIds = pharmacies.map { $0.id }
         
         return mapView
     }
     
     func updateUIView(_ mapView: GMSMapView, context: Context) {
-        // Update camera if cameraTarget changed significantly
-        let currentCenter = mapView.camera.target
-        let threshold = 0.001
-        if abs(currentCenter.latitude - cameraTarget.latitude) > threshold ||
-           abs(currentCenter.longitude - cameraTarget.longitude) > threshold {
-            let newCamera = GMSCameraPosition.camera(
+        // Only move camera if cameraTarget changed meaningfully
+        let current = mapView.camera.target
+        let threshold: Double = 0.0001
+        if abs(current.latitude - cameraTarget.latitude) > threshold ||
+           abs(current.longitude - cameraTarget.longitude) > threshold {
+            mapView.animate(to: GMSCameraPosition.camera(
                 withLatitude: cameraTarget.latitude,
                 longitude: cameraTarget.longitude,
                 zoom: mapView.camera.zoom
-            )
-            mapView.animate(to: newCamera)
+            ))
         }
         
-        // Refresh markers when pharmacies change
-        mapView.clear()
-        addMarkers(to: mapView)
-    }
-    
-    // MARK: - Marker Helpers
-    
-    private func addMarkers(to mapView: GMSMapView) {
-        for pharmacy in pharmacies {
-            let marker = GMSMarker()
-            marker.position = CLLocationCoordinate2D(
-                latitude: pharmacy.latitude,
-                longitude: pharmacy.longitude
-            )
-            marker.title = pharmacy.name
-            marker.snippet = pharmacy.address
-            marker.icon = makeMarkerIcon(isVerified: pharmacy.isVerified,
-                                         isSelected: selectedPharmacy?.id == pharmacy.id)
-            marker.userData = pharmacy.id
-            marker.map = mapView
+        // Only redraw markers if the pharmacy list changed — not on every render
+        let newIds = pharmacies.map { $0.id }
+        let selectedId = selectedPharmacy?.id
+        if newIds != context.coordinator.lastPharmacyIds || selectedId != context.coordinator.lastSelectedId {
+            mapView.clear()
+            context.coordinator.updateMarkers(on: mapView, pharmacies: pharmacies, selected: selectedId)
+            context.coordinator.lastPharmacyIds = newIds
+            context.coordinator.lastSelectedId = selectedId
         }
-    }
-    
-    /// Render a teal circle with a cross icon that mirrors CompactPharmacyMarker
-    static func makeMarkerIcon(isVerified: Bool, isSelected: Bool) -> UIImage {
-        let size: CGFloat = isSelected ? 44 : 32
-        let color = isVerified ? UIColor(red: 0.051, green: 0.580, blue: 0.533, alpha: 1) : UIColor.systemGray
-        
-        let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
-        return renderer.image { ctx in
-            // Circle
-            let rect = CGRect(x: 0, y: 0, width: size, height: size)
-            ctx.cgContext.setFillColor(color.cgColor)
-            ctx.cgContext.fillEllipse(in: rect)
-            
-            // White cross
-            let lineWidth: CGFloat = size * 0.12
-            let inset: CGFloat = size * 0.28
-            ctx.cgContext.setStrokeColor(UIColor.white.cgColor)
-            ctx.cgContext.setLineWidth(lineWidth)
-            ctx.cgContext.setLineCap(.round)
-            
-            // Vertical bar
-            ctx.cgContext.move(to: CGPoint(x: size / 2, y: inset))
-            ctx.cgContext.addLine(to: CGPoint(x: size / 2, y: size - inset))
-            
-            // Horizontal bar
-            ctx.cgContext.move(to: CGPoint(x: inset, y: size / 2))
-            ctx.cgContext.addLine(to: CGPoint(x: size - inset, y: size / 2))
-            
-            ctx.cgContext.strokePath()
-        }
-    }
-    
-    func makeMarkerIcon(isVerified: Bool, isSelected: Bool) -> UIImage {
-        return Self.makeMarkerIcon(isVerified: isVerified, isSelected: isSelected)
     }
     
     // MARK: - Coordinator
     
     class Coordinator: NSObject, GMSMapViewDelegate {
         var parent: GoogleMapsView
-        private var pharmacyMap: [String: Pharmacy] = [:]
+        var lastPharmacyIds: [String] = []
+        var lastSelectedId: String? = nil
         
         init(_ parent: GoogleMapsView) {
             self.parent = parent
-            // Build quick lookup
-            for pharmacy in parent.pharmacies {
-                pharmacyMap[pharmacy.id] = pharmacy
+        }
+        
+        func updateMarkers(on mapView: GMSMapView, pharmacies: [Pharmacy], selected selectedId: String?) {
+            for pharmacy in pharmacies {
+                let marker = GMSMarker()
+                marker.position = CLLocationCoordinate2D(latitude: pharmacy.latitude, longitude: pharmacy.longitude)
+                marker.title = pharmacy.name
+                marker.snippet = pharmacy.address
+                marker.icon = GoogleMapsView.makeMarkerIcon(isVerified: pharmacy.isVerified, isSelected: pharmacy.id == selectedId)
+                marker.userData = pharmacy.id
+                marker.map = mapView
             }
         }
         
@@ -158,6 +127,78 @@ struct GoogleMapsView: UIViewRepresentable {
             }
         }
     }
+    
+    // MARK: - Static Marker Icon Generator
+    
+    static func makeMarkerIcon(isVerified: Bool, isSelected: Bool) -> UIImage {
+        let size: CGFloat = isSelected ? 48 : 36
+        let color = UIColor.white
+        let strokeColor = isVerified ? UIColor(red: 0.051, green: 0.580, blue: 0.533, alpha: 1) : UIColor.systemGray
+        
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: size + 8, height: size + size * 0.3 + 8))
+        return renderer.image { ctx in
+            // Move drawing area to accommodate shadow (4px offset from top-left)
+            ctx.cgContext.translateBy(x: 4, y: 4)
+            
+            // Apply subtle drop shadow
+            ctx.cgContext.setShadow(offset: CGSize(width: 0, height: 2), blur: 4, color: UIColor.black.withAlphaComponent(0.2).cgColor)
+            
+            // Bubble rect
+            let rect = CGRect(x: 0, y: 0, width: size, height: size)
+            let path = UIBezierPath(roundedRect: rect, cornerRadius: size * 0.3)
+            
+            // Pointer
+            let pointerPath = UIBezierPath()
+            pointerPath.move(to: CGPoint(x: size * 0.4, y: size))
+            pointerPath.addLine(to: CGPoint(x: size * 0.5, y: size + size * 0.25))
+            pointerPath.addLine(to: CGPoint(x: size * 0.6, y: size))
+            pointerPath.close()
+            
+            path.append(pointerPath)
+            
+            // Fill
+            color.setFill()
+            path.fill()
+            
+            // Clear drop shadow to prevent stroke from being doubled
+            ctx.cgContext.setShadow(offset: .zero, blur: 0, color: nil)
+            
+            // Stroke
+            strokeColor.setStroke()
+            path.lineWidth = 1.5
+            path.stroke()
+            
+            // Draw logo image inside
+            if let logoImage = UIImage(named: "logo1") {
+                let imageInset: CGFloat = size * 0.15
+                let imageRect = CGRect(x: imageInset, y: imageInset, width: size - imageInset * 2, height: size - imageInset * 2)
+                
+                ctx.cgContext.saveGState()
+                let clipPath = UIBezierPath(roundedRect: imageRect, cornerRadius: (size - imageInset * 2) / 2)
+                clipPath.addClip()
+                logoImage.draw(in: imageRect)
+                ctx.cgContext.restoreGState()
+            } else {
+                // Fallback white cross
+                let lineWidth: CGFloat = size * 0.12
+                let crossInset: CGFloat = size * 0.25
+                ctx.cgContext.setStrokeColor(UIColor.white.cgColor)
+                ctx.cgContext.setLineWidth(lineWidth)
+                ctx.cgContext.setLineCap(.round)
+                
+                // Vertical bar
+                ctx.cgContext.move(to: CGPoint(x: size / 2, y: crossInset))
+                ctx.cgContext.addLine(to: CGPoint(x: size / 2, y: size - crossInset))
+                
+                // Horizontal bar
+                ctx.cgContext.move(to: CGPoint(x: crossInset, y: size / 2))
+                ctx.cgContext.addLine(to: CGPoint(x: size - crossInset, y: size / 2))
+                
+                ctx.cgContext.strokePath()
+            }
+        }
+    }
+    
 }
 
 // MARK: - Detail Map View (PharmacyDetailsView usage)
@@ -174,8 +215,14 @@ struct GoogleMapsDetailView: UIViewRepresentable {
         let options = GMSMapViewOptions()
         options.camera = camera
         let mapView = GMSMapView(options: options)
-        mapView.isUserInteractionEnabled = false
-        mapView.isMyLocationEnabled = false
+        mapView.isUserInteractionEnabled = true
+        mapView.isMyLocationEnabled = true
+        mapView.settings.compassButton = true
+        
+        if let styleURL = Bundle.main.url(forResource: "map_style", withExtension: "json"),
+           let style = try? GMSMapStyle(contentsOfFileURL: styleURL) {
+            mapView.mapStyle = style
+        }
         
         // Add single pharmacy marker
         let marker = GMSMarker()

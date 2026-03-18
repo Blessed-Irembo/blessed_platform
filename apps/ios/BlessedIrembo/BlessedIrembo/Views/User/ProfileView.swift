@@ -93,10 +93,18 @@ struct ProfileView: View {
     
     private var userInfoSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Personal Information")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(.textPrimary)
-                .padding(.horizontal, 4)
+            HStack {
+                Text("Personal Information")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.textPrimary)
+                Spacer()
+                NavigationLink(destination: UserProfileSettingsView().environmentObject(appState)) {
+                    Text("Edit")
+                        .font(.subheadline)
+                        .foregroundColor(.primaryTeal)
+                }
+            }
+            .padding(.horizontal, 4)
             
             VStack(spacing: 12) {
                 ProfileInfoRow(icon: "person.fill", label: "Full Name", value: (appState.currentUser ?? demoUser).fullName)

@@ -14,16 +14,83 @@ struct UserMapView: View {
     @State private var cameraTarget = MockData.defaultLocation
     @State private var selectedPharmacy: Pharmacy?
     @State private var cancellables = Set<AnyCancellable>()
+    @State private var isSheetExpanded: Bool = false
+    @State private var hasInitialLocationSet: Bool = false
     
     var body: some View {
-        VStack(spacing: 0) {
-            searchSection
-            mapSection
-            pharmacyHeader
-            Divider()
-            pharmacyList
+        ZStack(alignment: .top) {
+            // Full screen Map Backdrop
+            GoogleMapsView(
+                pharmacies: viewModel.filteredPharmacies,
+                selectedPharmacy: $selectedPharmacy,
+                cameraTarget: $cameraTarget,
+                userLocation: locationManager.location
+            ) { pharmacy in
+                selectPharmacy(pharmacy)
+            }
+            .ignoresSafeArea()
+
+            // Floating Search & Header
+            VStack(spacing: 8) {
+                searchSection
+                    .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+                
+                HStack {
+                    Spacer()
+                    locationButton
+                }
+            }
+            .padding(.top, 8)
+            
+            // Bottom Sheet
+            VStack {
+                Spacer()
+                
+                if let selected = selectedPharmacy {
+                    QuickDetailsSheet(
+                        pharmacy: selected,
+                        userLocation: locationManager.location ?? MockData.defaultLocation,
+                        onClose: {
+                            withAnimation(.spring()) {
+                                self.selectedPharmacy = nil
+                            }
+                        }
+                    )
+                    .transition(.move(edge: .bottom))
+                } else {
+                    VStack(spacing: 0) {
+                        // Drag Handle
+                        Capsule()
+                            .fill(Color.gray.opacity(0.4))
+                            .frame(width: 40, height: 5)
+                            .padding(.vertical, 12)
+                            
+                        pharmacyHeader
+                        Divider()
+                        pharmacyList
+                    }
+                    .frame(height: isSheetExpanded ? UIScreen.main.bounds.height * 0.75 : 250)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
+                    .shadow(color: Color.black.opacity(0.15), radius: 12, x: 0, y: -4)
+                    .transition(.move(edge: .bottom))
+                    .gesture(
+                        DragGesture().onEnded { value in
+                            if value.translation.height < -50 {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    isSheetExpanded = true
+                                }
+                            } else if value.translation.height > 50 {
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    isSheetExpanded = false
+                                }
+                            }
+                        }
+                    )
+                }
+            }
+            .ignoresSafeArea(edges: .bottom)
         }
-        .background(Color.white)
         .navigationTitle("Find Pharmacies")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
@@ -36,22 +103,6 @@ struct UserMapView: View {
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(Color.white)
-    }
-    
-    private var mapSection: some View {
-        ZStack(alignment: .topTrailing) {
-            GoogleMapsView(
-                pharmacies: viewModel.filteredPharmacies,
-                selectedPharmacy: $selectedPharmacy,
-                cameraTarget: $cameraTarget,
-                userLocation: locationManager.location
-            ) { pharmacy in
-                selectPharmacy(pharmacy)
-            }
-            .frame(height: 280)
-            
-            locationButton
-        }
     }
     
     private var locationButton: some View {
@@ -113,10 +164,14 @@ struct UserMapView: View {
     }
     
     private func setupLocationTracking() {
+        if !cancellables.isEmpty { return } // Already set up
+        
+        // Pass user location to ViewModel for distance calculations only.
+        // Do NOT move the camera to user GPS — the simulator defaults to
+        // San Francisco; we always want to start over Kigali where the
+        // pharmacies are located.
         viewModel.userLocation = locationManager.location
-        if let location = locationManager.location {
-            cameraTarget = location
-        }
+        
         locationManager.$location.sink { newLocation in
             viewModel.userLocation = newLocation
         }.store(in: &cancellables)

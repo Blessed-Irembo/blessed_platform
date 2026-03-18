@@ -4,31 +4,36 @@
 /// Shows Dashboard, Inquiries, Analytics, and Profile tabs.
 
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct PharmacyMainView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var dashboardViewModel = PharmacyDashboardViewModel()
     @State private var selectedTab = 0
     
     var body: some View {
         TabView(selection: $selectedTab) {
             // Dashboard
-            PharmacyDashboardView()
+            PharmacyDashboardView(viewModel: dashboardViewModel)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }
                 .tag(0)
             
             // Inquiries
-            PharmacyInquiriesView()
+            PharmacyInquiriesView(viewModel: dashboardViewModel)
                 .tabItem {
                     Label("Inquiries", systemImage: "bubble.left.and.bubble.right.fill")
                 }
                 .tag(1)
             
             // Analytics
-            PharmacyAnalyticsView()
+            PharmacyAnalyticsView(viewModel: dashboardViewModel)
                 .tabItem {
-                    Label("Analytics", systemImage: "chart.bar.fill")
+                    Image(systemName: "chart.bar.fill")
+                    Text("Analytics")
                 }
                 .tag(2)
             
@@ -41,13 +46,21 @@ struct PharmacyMainView: View {
         }
         .tint(.primaryTeal)
         .onAppear {
+            if let pharmacyId = appState.currentPharmacy?.id {
+                dashboardViewModel.fetchInquiries(for: pharmacyId)
+            }
+            
+#if canImport(UIKit)
             // Ensure UITabBar appearance matches app style
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
             appearance.backgroundColor = .white
             
             UITabBar.appearance().standardAppearance = appearance
-            UITabBar.appearance().scrollEdgeAppearance = appearance
+            if #available(iOS 15.0, *) {
+                UITabBar.appearance().scrollEdgeAppearance = appearance
+            }
+#endif
         }
     }
 }
