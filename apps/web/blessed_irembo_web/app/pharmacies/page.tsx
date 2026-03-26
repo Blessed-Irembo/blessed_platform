@@ -24,6 +24,8 @@ const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
   ),
 });
 
+import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
+
 // ─── Page Component ────────────────────────────────────────────────────────────
 
 export default function PharmaciesPage() {
@@ -65,8 +67,8 @@ export default function PharmaciesPage() {
             district,
             phone: data.phoneNumber ?? '',
             email: data.email ?? '',
-            isOpen: true,
-            hours: data.hours ?? '',
+            isOpen: checkIfPharmacyIsOpen(data.operatingHours),
+            hours: formatOperatingHours(data.operatingHours, data.hours),
             rating: data.rating ?? 0,
             distance: '',
             verified: data.isVerified ?? false,
@@ -566,6 +568,14 @@ export default function PharmaciesPage() {
                     </span>
                   </div>
 
+                  {/* Hours */}
+                  <div className="flex items-center text-sm text-gray-600 mb-2">
+                    <svg className="w-4 h-4 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>{pharmacy.hours}</span>
+                  </div>
+
                   {/* Phone */}
                   <div className="flex items-center text-sm text-gray-600 mb-3">
                     <svg
@@ -592,13 +602,27 @@ export default function PharmaciesPage() {
                       View Details
                     </Link>
                     <a
-                      href={`tel:${pharmacy.phone.replace(/\s/g, '')}`}
-                      className="bg-gray-100 text-gray-700 text-sm py-2 px-3 rounded-md font-medium hover:bg-gray-200 transition-colors"
+                      href={`tel:${pharmacy.phone.replace(/\D/g, '')}`}
+                      className="bg-gray-100 text-gray-700 text-sm py-2 px-3 rounded-md font-medium hover:bg-gray-200 transition-colors flex items-center justify-center w-10 shrink-0"
                       onClick={(e) => e.stopPropagation()}
-                      aria-label={`Call ${pharmacy.name}`}
+                      title={`Call ${pharmacy.name}`}
                     >
                       <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                         <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                    </a>
+                    <a
+                      href={`https://wa.me/${pharmacy.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello, I found your pharmacy via the Blessed Irembo platform.')}`}
+                      target="_blank" rel="noopener noreferrer"
+                      className="bg-[#dcfce7] text-[#16a34a] text-sm py-2 px-3 rounded-md font-medium hover:bg-[#bbf7d0] transition-colors flex items-center justify-center w-10 shrink-0"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        fetch(`/api/pharmacies/${pharmacy.id}/track-whatsapp`, { method: 'POST' }).catch(console.error);
+                      }}
+                      title={`WhatsApp ${pharmacy.name}`}
+                    >
+                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                        <path fillRule="evenodd" clipRule="evenodd" d="M2.004 22l1.352-4.968A9.992 9.992 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.989 9.989 0 01-5.02-1.341L2.004 22zm10-18.3A8.309 8.309 0 003.7 12c0 1.458.375 2.874 1.085 4.108l-.87 3.2 3.275-.86A8.286 8.309 0 0012 20.3c4.586 0 8.3-3.714 8.3-8.3S16.586 3.7 12 3.7zm4.27 11.517c-.234-.117-1.385-.685-1.599-.763-.214-.078-.37-.117-.526.117-.156.234-.606.763-.742.92-.136.156-.273.175-.507.058-.234-.117-.988-.363-1.882-1.026-.694-.515-1.163-1.15-1.3-1.384-.136-.234-.015-.36.102-.477.105-.105.234-.273.351-.409.117-.136.156-.234.234-.39.078-.156.039-.293-.02-.409-.058-.117-.526-1.27-.721-1.74-.191-.46-.386-.398-.526-.405-.136-.007-.292-.007-.448-.007s-.409.058-.624.293c-.214.234-.818.8-.818 1.95s.838 2.264.954 2.42c.117.156 1.652 2.52 3.998 3.513 1.956.826 2.535.79 3.003.738.537-.06 1.385-.566 1.58-1.112.195-.546.195-1.015.136-1.112-.058-.098-.214-.156-.448-.273z" />
                       </svg>
                     </a>
                   </div>

@@ -30,6 +30,10 @@ export default function RegisterPharmacyPage() {
     address: '',
     password: '',
     confirmPassword: '',
+    is24Hours: false,
+    operatingDays: 'Everyday',
+    openTime: '08:00',
+    closeTime: '20:00',
   });
 
   // ── GPS location state ───────────────────────────────────────────────────
@@ -108,8 +112,10 @@ export default function RegisterPharmacyPage() {
   }, [formData.registrationNumber, verifyLicenseNumber]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, type } = e.target;
+    // @ts-ignore
+    const value = type === 'checkbox' ? e.target.checked : e.target.value;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
@@ -123,6 +129,12 @@ export default function RegisterPharmacyPage() {
     else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
     if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
     if (!formData.address.trim()) newErrors.address = 'Physical address is required';
+    
+    if (!formData.is24Hours) {
+      if (!formData.openTime) newErrors.openTime = 'Opening time required';
+      if (!formData.closeTime) newErrors.closeTime = 'Closing time required';
+    }
+
     if (!location && locationTab !== 'description') {
       newErrors.location = locationTab === 'gps'
         ? 'Click "Use My Location" to capture your GPS coordinates.'
@@ -161,6 +173,12 @@ export default function RegisterPharmacyPage() {
         registrationNumber: formData.registrationNumber,
         latitude: location?.lat ?? 0,
         longitude: location?.lng ?? 0,
+        operatingHours: {
+          is24Hours: formData.is24Hours,
+          days: formData.operatingDays,
+          openTime: formData.openTime,
+          closeTime: formData.closeTime,
+        }
       });
       // signUpPharmacy() creates the Firebase Auth session automatically.
       // Redirect straight to the pharmacy dashboard — no need to log in again.
@@ -339,25 +357,6 @@ export default function RegisterPharmacyPage() {
               {errors.ownerName && <p className="mt-2 text-sm text-red-600 font-medium">{errors.ownerName}</p>}
             </div>
 
-            {/* ── Email ── */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                  <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <input
-                  type="email" id="email" name="email"
-                  value={formData.email} onChange={handleChange}
-                  placeholder="pharmacy@example.com"
-                  className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
-                />
-              </div>
-              {errors.email && <p className="mt-2 text-sm text-red-600 font-medium">{errors.email}</p>}
-            </div>
-
             {/* ── Phone ── */}
             <div>
               <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
@@ -375,6 +374,25 @@ export default function RegisterPharmacyPage() {
                 />
               </div>
               {errors.phone && <p className="mt-2 text-sm text-red-600 font-medium">{errors.phone}</p>}
+            </div>
+
+            {/* ── Email ── */}
+            <div>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <input
+                  type="email" id="email" name="email"
+                  value={formData.email} onChange={handleChange}
+                  placeholder="pharmacy@example.com"
+                  className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
+                />
+              </div>
+              {errors.email && <p className="mt-2 text-sm text-red-600 font-medium">{errors.email}</p>}
             </div>
 
             {/* ── Address ── */}
@@ -395,6 +413,65 @@ export default function RegisterPharmacyPage() {
                 />
               </div>
               {errors.address && <p className="mt-2 text-sm text-red-600 font-medium">{errors.address}</p>}
+            </div>
+
+            {/* ── Operating Hours ── */}
+            <div className="border-t border-gray-100 pt-6 mt-6 mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-3">Operating Hours <span className="text-teal-600">*</span></label>
+              
+              <div className="flex items-center mb-4">
+                <input
+                  type="checkbox"
+                  id="is24Hours"
+                  name="is24Hours"
+                  checked={formData.is24Hours}
+                  onChange={handleChange as any}
+                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded cursor-pointer"
+                />
+                <label htmlFor="is24Hours" className="ml-2 block text-sm text-gray-900 cursor-pointer">
+                  Open 24/7 (Always open)
+                </label>
+              </div>
+
+              {!formData.is24Hours && (
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Days Open</label>
+                    <select
+                      name="operatingDays"
+                      value={formData.operatingDays}
+                      onChange={handleChange}
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500"
+                    >
+                      <option value="Everyday">Everyday (Mon-Sun)</option>
+                      <option value="Monday - Friday">Monday - Friday</option>
+                      <option value="Monday - Saturday">Monday - Saturday</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Opening Time</label>
+                    <input
+                      type="time"
+                      name="openTime"
+                      value={formData.openTime}
+                      onChange={handleChange}
+                      className={`block w-full px-3 py-2 border ${errors.openTime ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500`}
+                    />
+                    {errors.openTime && <p className="mt-1 text-xs text-red-600">{errors.openTime}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Closing Time</label>
+                    <input
+                      type="time"
+                      name="closeTime"
+                      value={formData.closeTime}
+                      onChange={handleChange}
+                      className={`block w-full px-3 py-2 border ${errors.closeTime ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500`}
+                    />
+                    {errors.closeTime && <p className="mt-1 text-xs text-red-600">{errors.closeTime}</p>}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* ── Location (3-way picker) ── */}

@@ -7,7 +7,7 @@
  * Firestore path: pharmacies/{uid}
  */
 import { useEffect, useState } from 'react';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -23,6 +23,13 @@ export interface PharmacyData {
     isVerified: boolean;
     subscriptionPlan?: string;
     createdAt?: { toDate: () => Date } | null;
+    whatsappClicks?: number;
+    operatingHours?: {
+        is24Hours: boolean;
+        days: string[];
+        openTime: string;
+        closeTime: string;
+    };
 }
 
 export function usePharmacyData() {
@@ -37,24 +44,22 @@ export function usePharmacyData() {
             return;
         }
 
-        async function fetchPharmacy() {
-            try {
-                const ref = doc(db, 'pharmacies', currentUser!.uid);
-                const snap = await getDoc(ref);
-                if (snap.exists()) {
-                    setPharmacy(snap.data() as PharmacyData);
-                } else {
-                    setError('Pharmacy profile not found.');
-                }
-            } catch (err) {
-                console.error('Failed to load pharmacy data:', err);
-                setError('Failed to load pharmacy data.');
-            } finally {
-                setLoading(false);
+        const ref = doc(db, 'pharmacies', currentUser.uid);
+        
+        const unsubscribe = onSnapshot(ref, (snap) => {
+            if (snap.exists()) {
+                setPharmacy(snap.data() as PharmacyData);
+            } else {
+                setError('Pharmacy profile not found.');
             }
-        }
+            setLoading(false);
+        }, (err) => {
+            console.error('Failed to load pharmacy data:', err);
+            setError('Failed to load pharmacy data.');
+            setLoading(false);
+        });
 
-        fetchPharmacy();
+        return () => unsubscribe();
     }, [currentUser]);
 
     return { pharmacy, loading, error };

@@ -20,26 +20,7 @@ const DEMO_PHARMACY = {
   subscriptionStatus: 'active',
 };
 
-const DEMO_INQUIRIES = [
-  {
-    id: '1',
-    customerName: 'Jean Pierre Mugabo',
-    email: 'jpmugabo@email.com',
-    phone: '+250 788 111 222',
-    message: 'Do you have insulin in stock? I need to refill my prescription.',
-    date: '10/9/2025, 12:30:00 PM',
-    status: 'new',
-  },
-  {
-    id: '2',
-    customerName: 'Marie Claire Uwase',
-    email: 'mcuwase@email.com',
-    phone: '+250 788 222 333',
-    message: 'What are your opening hours on Sunday?',
-    date: '10/8/2025, 4:15:00 PM',
-    status: 'read',
-  },
-];
+
 
 export default function PharmacyDashboard() {
   const router = useRouter();
@@ -80,9 +61,7 @@ export default function PharmacyDashboard() {
   const displayName = pharmacy?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Pharmacy';
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
   const memberSince = pharmacy?.createdAt ? new Date(pharmacy.createdAt.toDate()).toLocaleDateString() : 'N/A';
-  // Inquiry counts will be fetched by the inquiries page; show — here
-  const totalInquiries = '—';
-  const newInquiries = '—';
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -209,15 +188,7 @@ export default function PharmacyDashboard() {
                 <span className="font-medium">Overview</span>
               </Link>
 
-              <Link
-                href="/pharmacy/inquiries"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                </svg>
-                <span className="font-medium">Inquiries</span>
-              </Link>
+
 
               <Link
                 href="/pharmacy/subscription"
@@ -268,33 +239,19 @@ export default function PharmacyDashboard() {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              {/* Total Inquiries */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {/* WhatsApp Clicks */}
               <div className="bg-white rounded-xl border border-gray-200 p-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-gray-600 font-medium">Total Inquiries</h3>
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  <h3 className="text-gray-600 font-medium">WhatsApp Clicks</h3>
+                  <div className="w-10 h-10 bg-[#dcfce7] rounded-lg flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#16a34a]" fill="currentColor" viewBox="0 0 24 24">
+                      <path fillRule="evenodd" clipRule="evenodd" d="M2.004 22l1.352-4.968A9.992 9.992 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.989 9.989 0 01-5.02-1.341L2.004 22zm10-18.3A8.309 8.309 0 003.7 12c0 1.458.375 2.874 1.085 4.108l-.87 3.2 3.275-.86A8.286 8.309 0 0012 20.3c4.586 0 8.3-3.714 8.3-8.3S16.586 3.7 12 3.7zm4.27 11.517c-.234-.117-1.385-.685-1.599-.763-.214-.078-.37-.117-.526.117-.156.234-.606.763-.742.92-.136.156-.273.175-.507.058-.234-.117-.988-.363-1.882-1.026-.694-.515-1.163-1.15-1.3-1.384-.136-.234-.015-.36.102-.477.105-.105.234-.273.351-.409.117-.136.156-.234.234-.39.078-.156.039-.293-.02-.409-.058-.117-.526-1.27-.721-1.74-.191-.46-.386-.398-.526-.405-.136-.007-.292-.007-.448-.007s-.409.058-.624.293c-.214.234-.818.8-.818 1.95s.838 2.264.954 2.42c.117.156 1.652 2.52 3.998 3.513 1.956.826 2.535.79 3.003.738.537-.06 1.385-.566 1.58-1.112.195-.546.195-1.015.136-1.112-.058-.098-.214-.156-.448-.273z" />
                     </svg>
                   </div>
                 </div>
-                <p className="text-4xl font-bold text-gray-900">{totalInquiries}</p>
-                <p className="text-sm text-gray-500 mt-2">All time</p>
-              </div>
-
-              {/* New Inquiries */}
-              <div className="bg-white rounded-xl border border-gray-200 p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-gray-600 font-medium">New Inquiries</h3>
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                </div>
-                <p className="text-4xl font-bold text-gray-900">{newInquiries}</p>
-                <p className="text-sm text-gray-500 mt-2">Need response</p>
+                <p className="text-4xl font-bold text-gray-900">{pharmacy?.whatsappClicks || 0}</p>
+                <p className="text-sm text-gray-500 mt-2">Platform redirections</p>
               </div>
 
               {/* Subscription Status */}
@@ -369,17 +326,7 @@ export default function PharmacyDashboard() {
               </div>
             </div>
 
-            {/* Recent Inquiries */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Inquiries</h2>
-              <p className="text-gray-500 text-center py-8">
-                Visit the{' '}
-                <Link href="/pharmacy/inquiries" className="text-teal-600 hover:underline font-medium">
-                  Inquiries page
-                </Link>{' '}
-                to view and manage messages from users.
-              </p>
-            </div>
+
           </div>
         </main>
       </div>

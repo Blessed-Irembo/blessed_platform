@@ -8,6 +8,7 @@ import dynamic from 'next/dynamic';
 import { useRequireUserRole } from '@/lib/authHooks';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
 
 const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap'), {
   ssr: false,
@@ -33,14 +34,6 @@ export default function PharmacyDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { currentUser: user, loading: authLoading } = useRequireUserRole();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: '',
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
 
   const [pharmacy, setPharmacy] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -93,8 +86,8 @@ export default function PharmacyDetailPage() {
             district,
             phone: data.phoneNumber ?? '',
             email: data.email ?? '',
-            isOpen: true, // Default
-            hours: data.hours ?? '',
+            isOpen: checkIfPharmacyIsOpen(data.operatingHours),
+            hours: formatOperatingHours(data.operatingHours, data.hours),
             rating: data.rating ?? 0,
             distance: '',
             verified: data.isVerified ?? false,
@@ -115,30 +108,6 @@ export default function PharmacyDetailPage() {
     }
     fetchPharmacy();
   }, [params.id]);
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setSubmitSuccess(true);
-      setFormData({ name: '', email: '', phone: '', message: '' });
-
-      // Reset success message after 3 seconds
-      setTimeout(() => {
-        setSubmitSuccess(false);
-      }, 3000);
-    }, 1000);
-  };
 
   if (loading || authLoading || !user) {
     return (
@@ -229,6 +198,33 @@ export default function PharmacyDetailPage() {
 
           {/* Description */}
           <p className="text-gray-600 mb-6">{pharmacy.description}</p>
+
+          {/* Quick Actions Bar */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+            <a
+              href={`tel:${pharmacy.phone.replace(/\D/g, '')}`}
+              className="bg-teal-50 border border-teal-200 text-teal-800 py-3 px-4 rounded-xl flex items-center justify-center font-semibold hover:bg-teal-100 transition-colors shadow-sm"
+            >
+              <svg className="w-5 h-5 mr-3 text-teal-600" fill="none" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
+              Call Pharmacy
+            </a>
+            <a
+              href={`https://wa.me/${pharmacy.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello, I found your pharmacy via the Blessed Irembo platform.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                fetch(`/api/pharmacies/${pharmacy.id}/track-whatsapp`, { method: 'POST' }).catch(console.error);
+              }}
+              className="bg-[#25D366] hover:bg-[#20BE5A] text-white py-3 px-4 rounded-xl flex items-center justify-center font-semibold transition-colors shadow-sm"
+            >
+              <svg className="w-5 h-5 mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
+                 <path fillRule="evenodd" clipRule="evenodd" d="M2.004 22l1.352-4.968A9.992 9.992 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.989 9.989 0 01-5.02-1.341L2.004 22zm10-18.3A8.309 8.309 0 003.7 12c0 1.458.375 2.874 1.085 4.108l-.87 3.2 3.275-.86A8.286 8.309 0 0012 20.3c4.586 0 8.3-3.714 8.3-8.3S16.586 3.7 12 3.7zm4.27 11.517c-.234-.117-1.385-.685-1.599-.763-.214-.078-.37-.117-.526.117-.156.234-.606.763-.742.92-.136.156-.273.175-.507.058-.234-.117-.988-.363-1.882-1.026-.694-.515-1.163-1.15-1.3-1.384-.136-.234-.015-.36.102-.477.105-.105.234-.273.351-.409.117-.136.156-.234.234-.39.078-.156.039-.293-.02-.409-.058-.117-.526-1.27-.721-1.74-.191-.46-.386-.398-.526-.405-.136-.007-.292-.007-.448-.007s-.409.058-.624.293c-.214.234-.818.8-.818 1.95s.838 2.264.954 2.42c.117.156 1.652 2.52 3.998 3.513 1.956.826 2.535.79 3.003.738.537-.06 1.385-.566 1.58-1.112.195-.546.195-1.015.136-1.112-.058-.098-.214-.156-.448-.273z" />
+              </svg>
+              Chat on WhatsApp
+            </a>
+          </div>
 
           {/* Contact Information */}
           <div className="space-y-4">
@@ -401,112 +397,6 @@ export default function PharmacyDetailPage() {
               </div>
             )}
           </div>
-        </div>
-
-        {/* Send Inquiry Card */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 md:p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Send Inquiry</h2>
-
-          {submitSuccess && (
-            <div className="mb-4 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg">
-              Your inquiry has been sent successfully! The pharmacy will respond via email or phone.
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Your Name */}
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Your Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Enter your name"
-                required
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 placeholder-gray-400"
-              />
-            </div>
-
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                placeholder="your.email@example.com"
-                required
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 placeholder-gray-400"
-              />
-            </div>
-
-            {/* Phone */}
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleInputChange}
-                placeholder="+250 788 123 456"
-                required
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-gray-900 placeholder-gray-400"
-              />
-            </div>
-
-            {/* Message */}
-            <div>
-              <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-2">
-                Message
-              </label>
-              <textarea
-                id="message"
-                name="message"
-                value={formData.message}
-                onChange={handleInputChange}
-                placeholder="What would you like to know?"
-                rows={4}
-                required
-                className="block w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 resize-none text-gray-900 placeholder-gray-400"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                  Send Inquiry
-                </>
-              )}
-            </button>
-          </form>
-
-          <p className="text-sm text-gray-500 text-center mt-4">
-            The pharmacy will receive your inquiry and respond via email or phone
-          </p>
         </div>
       </main>
     </div>

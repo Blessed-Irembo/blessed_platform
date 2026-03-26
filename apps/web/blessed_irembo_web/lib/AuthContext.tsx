@@ -21,6 +21,11 @@ import {
   setDoc,
   updateDoc,
   serverTimestamp,
+  collection,
+  query,
+  where,
+  getDocs,
+  limit,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
 
@@ -36,6 +41,12 @@ interface PharmacySignUpData {
   registrationNumber: string; // NPC/Axxxx
   latitude: number;
   longitude: number;
+  operatingHours?: {
+    is24Hours: boolean;
+    days: string;
+    openTime: string;
+    closeTime: string;
+  };
 }
 
 interface AuthContextType {
@@ -44,7 +55,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, fullName: string, phone: string) => Promise<void>;
   signUpPharmacy: (email: string, password: string, data: PharmacySignUpData) => Promise<void>;
-  signIn: (email: string, password: string) => Promise<UserRole>;
+  signIn: (identifier: string, password: string) => Promise<UserRole>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   verifyLicenseNumber: (regNumber: string) => Promise<{ valid: boolean; name?: string; alreadyRegistered?: boolean }>;
@@ -158,6 +169,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       rating: 0,
       reviewCount: 0,
       createdAt: serverTimestamp(),
+      operatingHours: data.operatingHours || {
+        is24Hours: false,
+        days: 'Everyday',
+        openTime: '08:00',
+        closeTime: '20:00'
+      }
     });
 
     // 4. Mark license as registered (prevents duplicate signups)
@@ -167,8 +184,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   // ── Sign-in (returns role for immediate redirect) ────────────────────────
-  async function signIn(email: string, password: string): Promise<UserRole> {
-    const { user } = await signInWithEmailAndPassword(auth, email, password);
+  async function signIn(identifier: string, password: string): Promise<UserRole> {
+    let loginEmail = identifier.trim();
+
+    // If it doesn't contain an '@', treat it as a phone number and lookup the user's email
+    if (!loginEmail.includes('@')) {
+      try {
+        const res = await fetch('/api/auth/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phoneNumber: loginEmail }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.email) {
+          loginEmail = data.email;
+        } else {
+          throw { code: 'auth/user-not-found', message: data.error || 'No account found with this phone number.' };
+        }
+      } catch (err: any) {
+        // preserve the thrown object if we created it
+        if (err.code === 'auth/user-not-found') throw err;
+        // otherwise throw a network/server issue
+        throw { code: 'auth/internal-error', message: 'Could not connect to authentication server.' };
+      }
+    }
+
+    const { user } = await signInWithEmailAndPassword(auth, loginEmail, password);
     const role = await fetchRole(user.uid);
 
     // If no Firestore doc yet (e.g. signed up via web before this system),
@@ -176,7 +219,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!role) {
       await setDoc(doc(db, 'users', user.uid), {
         fullName: user.displayName ?? '',
-        email,
+        email: loginEmail,
         phoneNumber: '',
         role: 'user',
         createdAt: serverTimestamp(),

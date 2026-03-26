@@ -1,13 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/lib/AuthContext';
+import { useRequireAuth } from '@/lib/authHooks';
+import { usePharmacyData } from '@/lib/usePharmacyData';
+import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from 'firebase/auth';
 
 export default function PharmacySettings() {
   const router = useRouter();
+  const { loading: authLoading } = useRequireAuth();
+  const { currentUser, signOut } = useAuth();
+  const { pharmacy, loading: pharmacyLoading } = usePharmacyData();
+
   const [activeTab, setActiveTab] = useState('account');
+  
+  // Password State
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -16,10 +28,46 @@ export default function PharmacySettings() {
     newPassword: '',
     confirmPassword: '',
   });
-  const newInquiries = 1;
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
 
-  const handleLogout = () => {
-    router.push('/');
+  // Delete State
+  const [showDeletePrompt, setShowDeletePrompt] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  
+  // Working Hours State
+  const [hoursData, setHoursData] = useState({
+    is24Hours: false,
+    days: [] as string[],
+    openTime: '',
+    closeTime: ''
+  });
+  const [isUpdatingHours, setIsUpdatingHours] = useState(false);
+  const [hoursSuccess, setHoursSuccess] = useState('');
+  const [hoursError, setHoursError] = useState('');
+
+  const DAYS_OF_WEEK = [
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
+  ];
+
+  // Populate hoursData when pharmacy loads
+  useEffect(() => {
+    if (pharmacy && pharmacy.operatingHours) {
+      setHoursData({
+        is24Hours: pharmacy.operatingHours.is24Hours || false,
+        days: pharmacy.operatingHours.days || [],
+        openTime: pharmacy.operatingHours.openTime || '',
+        closeTime: pharmacy.operatingHours.closeTime || ''
+      });
+    }
+  }, [pharmacy]);
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace('/login');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -29,20 +77,114 @@ export default function PharmacySettings() {
     });
   };
 
-  const handleUpdatePassword = (e: React.FormEvent) => {
+  const handleUpdatePassword = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert('Password updated successfully!');
-  };
+    setPasswordError('');
+    setPasswordSuccess('');
 
-  const handleEnable2FA = () => {
-    alert('2FA setup will be implemented');
-  };
+    if (formData.newPassword !== formData.confirmPassword) {
+      return setPasswordError('New passwords do not match.');
+    }
+    if (formData.newPassword.length < 6) {
+      return setPasswordError('Password must be at least 6 characters.');
+    }
+    if (!currentUser?.email) return;
 
-  const handleDeleteAccount = () => {
-    if (confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      alert('Account deletion requested');
+    setIsUpdatingPassword(true);
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, formData.currentPassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      await updatePassword(currentUser, formData.newPassword);
+      setPasswordSuccess('Password successfully updated!');
+      setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/invalid-credential') {
+        setPasswordError('Incorrect current password.');
+      } else {
+        setPasswordError('Failed to update password. Please try again.');
+      }
+    } finally {
+      setIsUpdatingPassword(false);
     }
   };
+
+  const handleUpdateHours = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setHoursError('');
+    setHoursSuccess('');
+
+    if (!hoursData.is24Hours && (!hoursData.openTime || !hoursData.closeTime || hoursData.days.length === 0)) {
+      return setHoursError('Please fill out all operating hours fields or select 24/7.');
+    }
+
+    setIsUpdatingHours(true);
+    try {
+      await updateDoc(doc(db, 'pharmacies', currentUser.uid), {
+        operatingHours: {
+          is24Hours: hoursData.is24Hours,
+          days: hoursData.is24Hours ? DAYS_OF_WEEK : hoursData.days,
+          openTime: hoursData.is24Hours ? '00:00' : hoursData.openTime,
+          closeTime: hoursData.is24Hours ? '23:59' : hoursData.closeTime
+        }
+      });
+      setHoursSuccess('Operating hours updated successfully!');
+      setTimeout(() => setHoursSuccess(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setHoursError('Failed to update operating hours.');
+    } finally {
+      setIsUpdatingHours(false);
+    }
+  };
+
+  const toggleDay = (day: string) => {
+    setHoursData(prev => ({
+      ...prev,
+      days: prev.days.includes(day)
+        ? prev.days.filter(d => d !== day)
+        : [...prev.days, day]
+    }));
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!deletePassword) return setDeleteError('Please enter your password to confirm.');
+    if (!currentUser?.email) return;
+
+    setIsDeleting(true);
+    setDeleteError('');
+    try {
+      const credential = EmailAuthProvider.credential(currentUser.email, deletePassword);
+      await reauthenticateWithCredential(currentUser, credential);
+      
+      // Delete Firestore document
+      await deleteDoc(doc(db, 'pharmacies', currentUser.uid));
+      // Delete Auth user
+      await deleteUser(currentUser);
+      
+      router.replace('/');
+    } catch (err: any) {
+      console.error(err);
+      if (err.code === 'auth/invalid-credential') {
+        setDeleteError('Incorrect password.');
+      } else {
+        setDeleteError('Failed to delete account. Please try again.');
+      }
+      setIsDeleting(false);
+    }
+  };
+
+  if (authLoading || pharmacyLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Loading settings…</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -100,22 +242,7 @@ export default function PharmacySettings() {
                 <span className="font-medium">Overview</span>
               </Link>
 
-              <Link
-                href="/pharmacy/inquiries"
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  <span className="font-medium">Inquiries</span>
-                </div>
-                {newInquiries > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {newInquiries}
-                  </span>
-                )}
-              </Link>
+
 
               <Link
                 href="/pharmacy/subscription"
@@ -273,6 +400,12 @@ export default function PharmacySettings() {
                     {/* Change Password */}
                     <div className="bg-white rounded-xl border border-gray-200 p-6">
                       <h2 className="text-xl font-bold text-gray-900 mb-6">Change Password</h2>
+                      {passwordSuccess && (
+                        <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200">{passwordSuccess}</div>
+                      )}
+                      {passwordError && (
+                        <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{passwordError}</div>
+                      )}
                       <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-2xl">
                         <div>
                           <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-700 mb-2">
@@ -354,9 +487,10 @@ export default function PharmacySettings() {
 
                         <button
                           type="submit"
-                          className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold"
+                          disabled={isUpdatingPassword}
+                          className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50"
                         >
-                          Update Password
+                          {isUpdatingPassword ? 'Updating...' : 'Update Password'}
                         </button>
                       </form>
                     </div>
@@ -366,7 +500,7 @@ export default function PharmacySettings() {
                       <h2 className="text-xl font-bold text-gray-900 mb-2">Two-Factor Authentication</h2>
                       <p className="text-gray-600 mb-6">Add an extra layer of security to your account</p>
                       <button
-                        onClick={handleEnable2FA}
+                        onClick={() => alert('2FA setup will be implemented')}
                         className="flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -382,20 +516,134 @@ export default function PharmacySettings() {
                       <p className="text-gray-600 mb-6">
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
-                      <button
-                        onClick={handleDeleteAccount}
-                        className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        Delete Account
-                      </button>
+                      
+                      {!showDeletePrompt ? (
+                        <button
+                          onClick={() => setShowDeletePrompt(true)}
+                          className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
+                        >
+                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                          Delete Account
+                        </button>
+                      ) : (
+                        <div className="bg-red-50 p-4 rounded-lg border border-red-200 max-w-2xl">
+                          <p className="text-red-800 font-semibold mb-4">Please confirm your current password to delete your account.</p>
+                          
+                          {deleteError && (
+                            <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{deleteError}</div>
+                          )}
+                          
+                          <input
+                            type="password"
+                            placeholder="Current Password"
+                            value={deletePassword}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                            className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                          />
+                          <div className="flex gap-3">
+                            <button
+                              onClick={handleDeleteAccount}
+                              disabled={isDeleting}
+                              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:opacity-50"
+                            >
+                              {isDeleting ? 'Deleting...' : 'Confirm Deletion'}
+                            </button>
+                            <button
+                              onClick={() => { setShowDeletePrompt(false); setDeletePassword(''); setDeleteError(''); }}
+                              disabled={isDeleting}
+                              className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
 
-                {activeTab !== 'account' && (
+                {activeTab === 'general' && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">Working Hours</h2>
+                    {hoursSuccess && (
+                      <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200">{hoursSuccess}</div>
+                    )}
+                    {hoursError && (
+                      <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{hoursError}</div>
+                    )}
+                    
+                    <form onSubmit={handleUpdateHours} className="space-y-6 max-w-2xl">
+                      {/* Checkbox for 24/7 */}
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id="is24Hours"
+                          checked={hoursData.is24Hours}
+                          onChange={(e) => setHoursData({ ...hoursData, is24Hours: e.target.checked })}
+                          className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                        />
+                        <label htmlFor="is24Hours" className="font-semibold text-gray-700">Open 24/7</label>
+                      </div>
+
+                      {!hoursData.is24Hours && (
+                        <div className="space-y-6">
+                          <div className="space-y-3">
+                            <label className="block text-sm font-semibold text-gray-700">Operating Days</label>
+                            <div className="flex flex-wrap gap-2">
+                              {DAYS_OF_WEEK.map((day) => (
+                                <button
+                                  type="button"
+                                  key={day}
+                                  onClick={() => toggleDay(day)}
+                                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
+                                    hoursData.days.includes(day)
+                                      ? 'bg-teal-600 text-white border-teal-600'
+                                      : 'bg-white text-gray-600 border-gray-300 hover:border-teal-600 hover:text-teal-600'
+                                  }`}
+                                >
+                                  {day}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Opening Time</label>
+                              <input
+                                type="time"
+                                value={hoursData.openTime}
+                                onChange={(e) => setHoursData({ ...hoursData, openTime: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">Closing Time</label>
+                              <input
+                                type="time"
+                                value={hoursData.closeTime}
+                                onChange={(e) => setHoursData({ ...hoursData, closeTime: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      <button
+                        type="submit"
+                        disabled={isUpdatingHours}
+                        className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50"
+                      >
+                        {isUpdatingHours ? 'Saving...' : 'Save Working Hours'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+                
+                {activeTab !== 'account' && activeTab !== 'general' && (
                   <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
                     <p className="text-gray-500 text-lg">
                       {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} settings coming soon

@@ -13,18 +13,18 @@ export default function LoginPage() {
   // Redirect already-logged-in users straight to the app
   useRedirectIfAuth();
 
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; general?: string }>({});
+  const [errors, setErrors] = useState<{ identifier?: string; password?: string; general?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
     // Basic client-side validation
-    if (!email.trim()) {
-      setErrors({ email: 'Email is required' });
+    if (!identifier.trim()) {
+      setErrors({ identifier: 'Email Address or Phone Number is required' });
       return;
     }
     if (!password || password.length < 6) {
@@ -35,7 +35,7 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const role = await signIn(email, password);
+      const role = await signIn(identifier, password);
       // Role-based redirect: pharmacies go to dashboard, users go to map
       if (role === 'pharmacy') {
         router.replace('/pharmacy/dashboard');
@@ -57,7 +57,8 @@ export default function LoginPage() {
           setErrors({ general: 'This account has been disabled. Please contact support.' });
           break;
         default:
-          setErrors({ general: 'Something went wrong. Please try again.' });
+          console.error("Login error:", error);
+          setErrors({ general: error.message || 'Something went wrong. Please try again.' });
       }
     } finally {
       setIsLoading(false);
@@ -154,10 +155,10 @@ export default function LoginPage() {
               </div>
             )}
 
-            {/* Email Address Field */}
+            {/* Email or Phone Address Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+              <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address or Phone Number
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -174,21 +175,21 @@ export default function LoginPage() {
                   </svg>
                 </div>
                 <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  autoComplete="email"
+                  id="identifier"
+                  name="identifier"
+                  type="text"
+                  autoComplete="username"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                   className={`block w-full pl-10 pr-3 py-3 border ${
-                    errors.email ? 'border-red-300' : 'border-gray-300'
+                    errors.identifier ? 'border-red-300' : 'border-gray-300'
                   } rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm`}
-                  placeholder="your.email@example.com"
+                  placeholder="name@example.com or +250 788..."
                 />
               </div>
-              {errors.email && (
-                <p className="mt-2 text-sm text-red-600">{errors.email}</p>
+              {errors.identifier && (
+                <p className="mt-2 text-sm text-red-600">{errors.identifier}</p>
               )}
             </div>
 
