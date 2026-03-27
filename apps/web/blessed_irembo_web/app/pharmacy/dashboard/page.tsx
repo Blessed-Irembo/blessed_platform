@@ -33,7 +33,7 @@ export default function PharmacyDashboard() {
 
   const handleLogout = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   // Close dropdown when clicking outside — must be before any early return
@@ -69,18 +69,13 @@ export default function PharmacyDashboard() {
       <header className="bg-white border-b border-gray-200">
         <div className="mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            {/* Logo + nav */}
+            {/* Logo — non-clickable for logged-in pharmacy users */}
             <div className="flex items-center gap-12">
-              <Link href="/">
+              <div className="flex items-center cursor-default">
                 <Image src="/logo1.png" alt="Blessed Irembo" width={50} height={50} />
-              </Link>
+              </div>
               <nav className="flex gap-8">
-                <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Home
-                </Link>
-                <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold">
-                  Dashboard
-                </Link>
+                <span className="text-teal-600 font-semibold">My Pharmacy</span>
               </nav>
             </div>
 
@@ -234,7 +229,7 @@ export default function PharmacyDashboard() {
         <main className="flex-1 p-8">
           <div className="max-w-7xl">
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Pharmacy Dashboard</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{pharmacy?.name || 'My Pharmacy'}</h1>
               <p className="text-gray-600 mt-2">Manage your pharmacy profile and subscriptions</p>
             </div>
 

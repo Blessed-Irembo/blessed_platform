@@ -46,7 +46,7 @@ export default function InquiriesPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';

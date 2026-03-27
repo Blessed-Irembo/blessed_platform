@@ -27,6 +27,12 @@ export interface Pharmacy {
   verified: boolean;
   latitude: number;
   longitude: number;
+  operatingHours?: {
+    is24Hours: boolean;
+    days: string[];
+    openTime: string;
+    closeTime: string;
+  } | null;
 }
 
 interface PharmacyMapProps {

@@ -18,7 +18,7 @@ export default function PharmacySettings() {
   const { pharmacy, loading: pharmacyLoading } = usePharmacyData();
 
   const [activeTab, setActiveTab] = useState('account');
-  
+
   // Password State
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -37,7 +37,7 @@ export default function PharmacySettings() {
   const [deletePassword, setDeletePassword] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
-  
+
   // Working Hours State
   const [hoursData, setHoursData] = useState({
     is24Hours: false,
@@ -67,7 +67,7 @@ export default function PharmacySettings() {
 
   const handleLogout = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,12 +157,12 @@ export default function PharmacySettings() {
     try {
       const credential = EmailAuthProvider.credential(currentUser.email, deletePassword);
       await reauthenticateWithCredential(currentUser, credential);
-      
+
       // Delete Firestore document
       await deleteDoc(doc(db, 'pharmacies', currentUser.uid));
       // Delete Auth user
       await deleteUser(currentUser);
-      
+
       router.replace('/');
     } catch (err: any) {
       console.error(err);
@@ -193,18 +193,13 @@ export default function PharmacySettings() {
         <div className="mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-12">
-              <Link href="/">
+              {/* Non-clickable logo */}
+              <div className="flex items-center cursor-default">
                 <Image src="/logo1.png" alt="Blessed Irembo" width={50} height={50} />
-              </Link>
+              </div>
               <nav className="flex gap-8">
-                <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Home
-                </Link>
-                <Link href="/find-pharmacies" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Find Pharmacies
-                </Link>
                 <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold">
-                  Dashboard
+                  My Pharmacy
                 </Link>
               </nav>
             </div>
@@ -307,90 +302,45 @@ export default function PharmacySettings() {
 
             <div className="flex gap-8">
               {/* Settings Sidebar */}
-              <div className="w-64">
-                <nav className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
-                  <button
-                    onClick={() => setActiveTab('account')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === 'account'
-                        ? 'bg-teal-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+              <div className="w-64">                <nav className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
+                <button
+                  onClick={() => setActiveTab('account')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'account'
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
                     }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
-                    <span className="font-medium">Account</span>
-                  </button>
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  <span className="font-medium">Account</span>
+                </button>
 
-                  <button
-                    onClick={() => setActiveTab('notifications')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === 'notifications'
-                        ? 'bg-teal-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
+                <button
+                  onClick={() => setActiveTab('general')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'general'
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
                     }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                    </svg>
-                    <span className="font-medium">Notifications</span>
-                  </button>
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className="font-medium">Working Hours</span>
+                </button>
 
-                  <button
-                    onClick={() => setActiveTab('privacy')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === 'privacy'
-                        ? 'bg-teal-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    <span className="font-medium">Privacy</span>
-                  </button>
+                <div className="border-t border-gray-200 my-4"></div>
 
-                  <button
-                    onClick={() => setActiveTab('general')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === 'general'
-                        ? 'bg-teal-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="font-medium">General</span>
-                  </button>
-
-                  <div className="border-t border-gray-200 my-4"></div>
-
-                  <button
-                    onClick={() => setActiveTab('help')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${
-                      activeTab === 'help'
-                        ? 'bg-teal-600 text-white'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span className="font-medium">Help & Support</span>
-                  </button>
-
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span className="font-medium">Logout</span>
-                  </button>
-                </nav>
+                <button
+                  onClick={handleLogout}
+                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span className="font-medium">Logout</span>
+                </button>
+              </nav>
               </div>
 
               {/* Settings Content */}
@@ -516,7 +466,7 @@ export default function PharmacySettings() {
                       <p className="text-gray-600 mb-6">
                         Permanently delete your account and all associated data. This action cannot be undone.
                       </p>
-                      
+
                       {!showDeletePrompt ? (
                         <button
                           onClick={() => setShowDeletePrompt(true)}
@@ -530,11 +480,11 @@ export default function PharmacySettings() {
                       ) : (
                         <div className="bg-red-50 p-4 rounded-lg border border-red-200 max-w-2xl">
                           <p className="text-red-800 font-semibold mb-4">Please confirm your current password to delete your account.</p>
-                          
+
                           {deleteError && (
                             <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{deleteError}</div>
                           )}
-                          
+
                           <input
                             type="password"
                             placeholder="Current Password"
@@ -573,7 +523,7 @@ export default function PharmacySettings() {
                     {hoursError && (
                       <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{hoursError}</div>
                     )}
-                    
+
                     <form onSubmit={handleUpdateHours} className="space-y-6 max-w-2xl">
                       {/* Checkbox for 24/7 */}
                       <div className="flex items-center gap-3">
@@ -597,11 +547,10 @@ export default function PharmacySettings() {
                                   type="button"
                                   key={day}
                                   onClick={() => toggleDay(day)}
-                                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${
-                                    hoursData.days.includes(day)
+                                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${hoursData.days.includes(day)
                                       ? 'bg-teal-600 text-white border-teal-600'
                                       : 'bg-white text-gray-600 border-gray-300 hover:border-teal-600 hover:text-teal-600'
-                                  }`}
+                                    }`}
                                 >
                                   {day}
                                 </button>
@@ -631,7 +580,7 @@ export default function PharmacySettings() {
                           </div>
                         </div>
                       )}
-                      
+
                       <button
                         type="submit"
                         disabled={isUpdatingHours}
@@ -642,7 +591,7 @@ export default function PharmacySettings() {
                     </form>
                   </div>
                 )}
-                
+
                 {activeTab !== 'account' && activeTab !== 'general' && (
                   <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
                     <p className="text-gray-500 text-lg">

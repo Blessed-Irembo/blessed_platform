@@ -37,6 +37,7 @@ export default function PharmacyDetailPage() {
 
   const [pharmacy, setPharmacy] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [hoursExpanded, setHoursExpanded] = useState(false);
 
   // ── Directions state ──────────────────────────────────────────────────────
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -88,6 +89,7 @@ export default function PharmacyDetailPage() {
             email: data.email ?? '',
             isOpen: checkIfPharmacyIsOpen(data.operatingHours),
             hours: formatOperatingHours(data.operatingHours, data.hours),
+            operatingHours: data.operatingHours ?? null,
             rating: data.rating ?? 0,
             distance: '',
             verified: data.isVerified ?? false,
@@ -268,16 +270,104 @@ export default function PharmacyDetailPage() {
               </div>
             </div>
 
-            {/* Hours */}
+            {/* Hours — Google-style dropdown */}
             <div className="flex items-start">
-              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center shrink-0 mt-0.5">
                 <svg className="w-6 h-6 text-green-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="ml-4">
-                <div className="text-sm font-medium text-gray-500">Hours</div>
-                <div className="text-gray-900 font-medium">{pharmacy.hours}</div>
+              <div className="ml-4 flex-1">
+                <div className="text-sm font-medium text-gray-500 mb-1">Hours</div>
+
+                {/* Trigger row */}
+                <button
+                  onClick={() => setHoursExpanded(prev => !prev)}
+                  className="flex items-center gap-2 group w-full text-left"
+                >
+                  {/* Open / Closed badge */}
+                  <span className={`inline-flex items-center gap-1 text-sm font-semibold ${
+                    pharmacy.isOpen ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    <span className={`w-2 h-2 rounded-full ${
+                      pharmacy.isOpen ? 'bg-green-500' : 'bg-red-500'
+                    }`} />
+                    {pharmacy.isOpen ? 'Open now' : 'Closed now'}
+                  </span>
+
+                  {/* Summary */}
+                  <span className="text-sm text-gray-600">·</span>
+                  <span className="text-sm text-gray-700">{pharmacy.hours}</span>
+
+                  {/* Chevron */}
+                  <svg
+                    className={`w-4 h-4 text-gray-400 transition-transform ml-auto ${
+                      hoursExpanded ? 'rotate-180' : ''
+                    }`}
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {/* Expanded day-by-day schedule */}
+                {hoursExpanded && (() => {
+                  const oh = pharmacy.operatingHours;
+                  const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                  const todayName = ALL_DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+
+                  if (!oh) return (
+                    <p className="mt-2 text-sm text-gray-500 italic">Hours not specified</p>
+                  );
+
+                  if (oh.is24Hours) return (
+                    <div className="mt-3 rounded-lg border border-gray-100 overflow-hidden">
+                      {ALL_DAYS.map((day) => (
+                        <div
+                          key={day}
+                          className={`flex justify-between items-center px-3 py-2 text-sm ${
+                            day === todayName ? 'bg-teal-50 font-semibold' : 'bg-white'
+                          } ${ day !== 'Sunday' ? 'border-b border-gray-100' : ''}`}
+                        >
+                          <span className={day === todayName ? 'text-teal-700' : 'text-gray-700'}>{day}</span>
+                          <span className={day === todayName ? 'text-teal-600' : 'text-gray-500'}>Open 24 hours</span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+
+                  const openDays: string[] = Array.isArray(oh.days) ? oh.days : [];
+                  return (
+                    <div className="mt-3 rounded-lg border border-gray-100 overflow-hidden">
+                      {ALL_DAYS.map((day) => {
+                        const isToday = day === todayName;
+                        const isOpen = openDays.includes(day);
+                        return (
+                          <div
+                            key={day}
+                            className={`flex justify-between items-center px-3 py-2 text-sm border-b border-gray-100 last:border-0 ${
+                              isToday ? 'bg-teal-50' : 'bg-white'
+                            }`}
+                          >
+                            <span className={`${
+                              isToday ? 'font-semibold text-teal-700' : 'text-gray-700'
+                            }`}>{day}</span>
+                            <span className={`${
+                              isToday
+                                ? isOpen ? 'text-teal-600 font-semibold' : 'text-red-500 font-semibold'
+                                : isOpen ? 'text-gray-600' : 'text-gray-400'
+                            }`}>
+                              {isOpen
+                                ? `${oh.openTime || '?'} – ${oh.closeTime || '?'}`
+                                : 'Closed'
+                              }
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>

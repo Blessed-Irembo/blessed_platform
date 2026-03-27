@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import type { Pharmacy } from '@/components/PharmacyMap';
 import { useRequireUserRole } from '@/lib/authHooks';
 import { useAuth } from '@/lib/AuthContext';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
@@ -45,6 +45,8 @@ export default function PharmaciesPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [userPhone, setUserPhone] = useState('');
+  const [expandedHoursId, setExpandedHoursId] = useState<string | null>(null);
 
   // ── Fetch pharmacies from Firestore on mount ──────────────────────────────
   useEffect(() => {
@@ -69,6 +71,7 @@ export default function PharmaciesPage() {
             email: data.email ?? '',
             isOpen: checkIfPharmacyIsOpen(data.operatingHours),
             hours: formatOperatingHours(data.operatingHours, data.hours),
+            operatingHours: data.operatingHours ?? null,
             rating: data.rating ?? 0,
             distance: '',
             verified: data.isVerified ?? false,
@@ -87,6 +90,18 @@ export default function PharmaciesPage() {
     loadPharmacies();
   }, []);
 
+  // Fetch user phone number from Firestore
+  useEffect(() => {
+    async function loadUserPhone() {
+      if (!currentUser) return;
+      try {
+        const snap = await getDoc(doc(db, 'users', currentUser.uid));
+        if (snap.exists()) setUserPhone(snap.data().phoneNumber ?? '');
+      } catch {}
+    }
+    loadUserPhone();
+  }, [currentUser]);
+
   // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -100,7 +115,7 @@ export default function PharmaciesPage() {
 
   const handleSignOut = async () => {
     await signOut();
-    router.replace('/login');
+    router.replace('/');
   };
 
   // Derive display name and initials from Firebase user
@@ -197,7 +212,7 @@ export default function PharmaciesPage() {
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="shrink-0">
-              <Link href="/" className="flex items-center gap-2">
+              <div className="flex items-center gap-2 cursor-default">
                 <Image
                   src="/logo1.png"
                   alt="Blessed Irembo"
@@ -206,7 +221,7 @@ export default function PharmaciesPage() {
                   className="object-contain"
                 />
                 <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-              </Link>
+              </div>
             </div>
 
 
@@ -270,6 +285,7 @@ export default function PharmaciesPage() {
                     <div className="min-w-0">
                       <p className="text-white font-bold text-sm truncate uppercase">{displayName}</p>
                       <p className="text-teal-100 text-xs truncate">{email}</p>
+                      {userPhone && <p className="text-teal-200 text-xs truncate mt-0.5">{userPhone}</p>}
                     </div>
                   </div>
 
@@ -298,18 +314,6 @@ export default function PharmaciesPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       Settings
-                    </Link>
-
-                    <Link
-                      href="/pharmacy/inquiries"
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                      </svg>
-                      Inquiries
                     </Link>
 
                     {/* Divider */}
@@ -568,12 +572,76 @@ export default function PharmaciesPage() {
                     </span>
                   </div>
 
-                  {/* Hours */}
-                  <div className="flex items-center text-sm text-gray-600 mb-2">
-                    <svg className="w-4 h-4 mr-2 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>{pharmacy.hours}</span>
+                  {/* Hours — Google-style dropdown */}
+                  <div className="text-sm text-gray-600 mb-2">
+                    {/* Trigger row */}
+                    <button
+                      className="flex items-center gap-1.5 w-full text-left"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpandedHoursId(
+                          expandedHoursId === pharmacy.id ? null : pharmacy.id
+                        );
+                      }}
+                    >
+                      <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className={`font-medium ${
+                        pharmacy.isOpen ? 'text-green-600' : 'text-red-500'
+                      }`}>
+                        {pharmacy.isOpen ? 'Open now' : 'Closed'}
+                      </span>
+                      <span className="text-gray-400">·</span>
+                      <span className="truncate text-gray-600">{pharmacy.hours}</span>
+                      <svg
+                        className={`w-3.5 h-3.5 text-gray-400 transition-transform ml-auto shrink-0 ${
+                          expandedHoursId === pharmacy.id ? 'rotate-180' : ''
+                        }`}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+
+                    {/* Expanded schedule */}
+                    {expandedHoursId === pharmacy.id && (() => {
+                      const oh = pharmacy.operatingHours;
+                      const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                      const todayName = ALL_DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+                      const openDays: string[] = oh && Array.isArray(oh.days) ? oh.days : [];
+
+                      return (
+                        <div className="mt-1.5 rounded-md border border-gray-100 overflow-hidden text-xs">
+                          {ALL_DAYS.map((day) => {
+                            const isToday = day === todayName;
+                            const isDayOpen = oh?.is24Hours || openDays.includes(day);
+                            return (
+                              <div
+                                key={day}
+                                className={`flex justify-between px-2.5 py-1.5 border-b border-gray-50 last:border-0 ${
+                                  isToday ? 'bg-teal-50' : 'bg-white'
+                                }`}
+                              >
+                                <span className={isToday ? 'font-semibold text-teal-700' : 'text-gray-600'}>{day}</span>
+                                <span className={`${
+                                  isToday
+                                    ? isDayOpen ? 'text-teal-600 font-semibold' : 'text-red-500 font-semibold'
+                                    : isDayOpen ? 'text-gray-500' : 'text-gray-400'
+                                }`}>
+                                  {oh?.is24Hours
+                                    ? 'Open 24 hours'
+                                    : isDayOpen
+                                      ? `${oh?.openTime ?? '?'} – ${oh?.closeTime ?? '?'}`
+                                      : 'Closed'
+                                  }
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* Phone */}

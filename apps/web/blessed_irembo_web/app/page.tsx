@@ -1,9 +1,12 @@
+'use client';
+
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import HeroSection from '@/components/sections/HeroSection';
 import FeaturesSection from '@/components/sections/FeaturesSection';
 import PharmacyOwnersSection from '@/components/sections/PharmacyOwnersSection';
 import CTASection from '@/components/sections/CTASection';
+import { useRedirectIfAuth } from '@/lib/authHooks';
 
 /**
  * Home Page
@@ -13,6 +16,8 @@ import CTASection from '@/components/sections/CTASection';
  * features, and calls-to-action for both users and pharmacy owners.
  */
 export default function Home() {
+  useRedirectIfAuth();
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />

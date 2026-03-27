@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -11,30 +11,77 @@ import {
     deleteUser,
     EmailAuthProvider,
     reauthenticateWithCredential,
+    updateProfile,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function SettingsPage() {
     const { loading } = useRequireAuth();
     const { currentUser, signOut } = useAuth();
     const router = useRouter();
 
-    // Change password state
+    // ─── Profile state ─────────────────────────────────────────────────────────
+    const [profileFullName, setProfileFullName] = useState('');
+    const [profilePhone, setProfilePhone] = useState('');
+    const [profileLoading, setProfileLoading] = useState(false);
+    const [profileMessage, setProfileMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+    // ─── Password state ─────────────────────────────────────────────────────────
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [passwordLoading, setPasswordLoading] = useState(false);
     const [passwordMessage, setPasswordMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-    // Delete account state
+    // ─── Delete account state ──────────────────────────────────────────────────
     const [deletePassword, setDeletePassword] = useState('');
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    // ─── Load user profile from Firestore ─────────────────────────────────────
+    useEffect(() => {
+        async function loadProfile() {
+            if (!currentUser) return;
+            try {
+                const snap = await getDoc(doc(db, 'users', currentUser.uid));
+                if (snap.exists()) {
+                    const data = snap.data();
+                    setProfileFullName(data.fullName ?? currentUser.displayName ?? '');
+                    setProfilePhone(data.phoneNumber ?? '');
+                }
+            } catch {}
+        }
+        loadProfile();
+    }, [currentUser]);
+
+    // ─── Handlers ─────────────────────────────────────────────────────────────
+
     const handleSignOut = async () => {
         await signOut();
-        router.replace('/login');
+        router.replace('/');
+    };
+
+    const handleUpdateProfile = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!currentUser) return;
+        setProfileMessage(null);
+        setProfileLoading(true);
+        try {
+            // Update Firestore
+            await updateDoc(doc(db, 'users', currentUser.uid), {
+                fullName: profileFullName.trim(),
+                phoneNumber: profilePhone.trim(),
+            });
+            // Update Firebase Auth display name
+            await updateProfile(currentUser, { displayName: profileFullName.trim() });
+            setProfileMessage({ type: 'success', text: 'Profile updated successfully.' });
+        } catch {
+            setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+        } finally {
+            setProfileLoading(false);
+        }
     };
 
     const handleChangePassword = async (e: React.FormEvent) => {
@@ -49,12 +96,10 @@ export default function SettingsPage() {
             setPasswordMessage({ type: 'error', text: 'Passwords do not match.' });
             return;
         }
-
         if (!currentUser?.email) return;
         setPasswordLoading(true);
 
         try {
-            // Re-authenticate before changing password (Firebase security requirement)
             const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
             await reauthenticateWithCredential(currentUser, credential);
             await updatePassword(currentUser, newPassword);
@@ -82,14 +127,14 @@ export default function SettingsPage() {
     const handleDeleteAccount = async (e: React.FormEvent) => {
         e.preventDefault();
         setDeleteError(null);
-
         if (!currentUser?.email) return;
         setDeleteLoading(true);
-
         try {
-            // Re-authenticate before deleting (Firebase security requirement)
             const credential = EmailAuthProvider.credential(currentUser.email, deletePassword);
             await reauthenticateWithCredential(currentUser, credential);
+            // Delete Firestore user doc first
+            await deleteDoc(doc(db, 'users', currentUser.uid));
+            // Then delete Firebase Auth account
             await deleteUser(currentUser);
             router.replace('/');
         } catch (error: any) {
@@ -123,16 +168,14 @@ export default function SettingsPage() {
             <header className="bg-white border-b border-gray-200">
                 <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center h-16">
-                        <Link href="/" className="flex items-center gap-2">
+                        {/* Non-clickable logo */}
+                        <div className="flex items-center gap-2 cursor-default">
                             <Image src="/logo1.png" alt="Blessed Irembo" width={40} height={40} className="object-contain" />
                             <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-                        </Link>
+                        </div>
                         <div className="flex items-center gap-6">
                             <Link href="/pharmacies" className="text-sm font-medium text-gray-700 hover:text-teal-600 transition-colors">
                                 Find Pharmacies
-                            </Link>
-                            <Link href="/pharmacy/inquiries" className="text-sm font-medium text-gray-700 hover:text-teal-600 transition-colors">
-                                Inquiries
                             </Link>
                             <button
                                 onClick={handleSignOut}
@@ -162,6 +205,77 @@ export default function SettingsPage() {
 
                 <div className="space-y-6">
 
+                    {/* ── Update Profile ────────────────────────────────────────── */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-teal-50 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="font-semibold text-gray-900">Profile Information</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">Update your name and phone number</p>
+                            </div>
+                        </div>
+
+                        <form onSubmit={handleUpdateProfile} className="px-6 py-6 space-y-4">
+                            {profileMessage && (
+                                <div className={`px-4 py-3 rounded-lg text-sm ${profileMessage.type === 'success'
+                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                    : 'bg-red-50 text-red-700 border border-red-200'}`}>
+                                    {profileMessage.text}
+                                </div>
+                            )}
+
+                            <div>
+                                <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Full Name
+                                </label>
+                                <input
+                                    id="profile-name"
+                                    type="text"
+                                    value={profileFullName}
+                                    onChange={(e) => setProfileFullName(e.target.value)}
+                                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+                                    placeholder="Your full name"
+                                />
+                            </div>
+
+                            <div>
+                                <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Phone Number
+                                </label>
+                                <input
+                                    id="profile-phone"
+                                    type="tel"
+                                    value={profilePhone}
+                                    onChange={(e) => setProfilePhone(e.target.value)}
+                                    className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
+                                    placeholder="+250 7XX XXX XXX"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-gray-500 mb-1.5">
+                                    Email Address
+                                </label>
+                                <p className="block w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm">
+                                    {currentUser?.email ?? '—'}
+                                </p>
+                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed here.</p>
+                            </div>
+
+                            <button
+                                type="submit"
+                                disabled={profileLoading}
+                                className="w-full py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            >
+                                {profileLoading ? 'Saving...' : 'Save Profile'}
+                            </button>
+                        </form>
+                    </div>
+
                     {/* ── Change Password ──────────────────────────────────────── */}
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                         <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
@@ -178,12 +292,9 @@ export default function SettingsPage() {
 
                         <form onSubmit={handleChangePassword} className="px-6 py-6 space-y-4">
                             {passwordMessage && (
-                                <div
-                                    className={`px-4 py-3 rounded-lg text-sm ${passwordMessage.type === 'success'
-                                            ? 'bg-green-50 text-green-700 border border-green-200'
-                                            : 'bg-red-50 text-red-700 border border-red-200'
-                                        }`}
-                                >
+                                <div className={`px-4 py-3 rounded-lg text-sm ${passwordMessage.type === 'success'
+                                    ? 'bg-green-50 text-green-700 border border-green-200'
+                                    : 'bg-red-50 text-red-700 border border-red-200'}`}>
                                     {passwordMessage.text}
                                 </div>
                             )}
@@ -241,28 +352,6 @@ export default function SettingsPage() {
                                 {passwordLoading ? 'Updating...' : 'Update Password'}
                             </button>
                         </form>
-                    </div>
-
-                    {/* ── Notifications (placeholder) ─────────────────────────── */}
-                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-teal-50 flex items-center justify-center shrink-0">
-                                <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                </svg>
-                            </div>
-                            <div>
-                                <h2 className="font-semibold text-gray-900">Notifications</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Email notifications for inquiry replies</p>
-                            </div>
-                        </div>
-                        <div className="px-6 py-5 flex items-center justify-between">
-                            <div>
-                                <p className="text-sm font-medium text-gray-900">Email me when a pharmacy replies</p>
-                                <p className="text-xs text-gray-500 mt-0.5">Get notified directly to your email</p>
-                            </div>
-                            <span className="text-xs text-gray-400 italic">Coming soon</span>
-                        </div>
                     </div>
 
                     {/* ── Danger Zone — Delete Account ─────────────────────────── */}
