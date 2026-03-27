@@ -3,11 +3,12 @@
 export const dynamic = 'force-dynamic';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
 import { useRequireAdmin } from '@/lib/adminAuthHooks';
-import { collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ActivityItem {
@@ -127,7 +128,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             {/* Total Pharmacies */}
             <div className="bg-white rounded-xl border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
@@ -141,23 +142,7 @@ export default function DashboardPage() {
               <div className="text-3xl font-bold text-gray-900 mb-2">
                 {dataLoading ? '-' : totalPharmacies}
               </div>
-              <div className="text-sm text-teal-600 font-medium">{dataLoading ? '-' : `${totalPharmacies} active`}</div>
-            </div>
-
-            {/* Pending Approvals */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-600 text-sm font-medium">Pending Approvals</span>
-                <div className="bg-red-50 p-2 rounded-lg">
-                  <svg className="w-5 h-5 text-red-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-900 mb-2">
-                {dataLoading ? '-' : pendingApprovals}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">Require action</div>
+              <div className="text-sm text-teal-600 font-medium">{dataLoading ? '-' : `${totalPharmacies} registered`}</div>
             </div>
 
             {/* Total Users */}
@@ -175,58 +160,35 @@ export default function DashboardPage() {
               </div>
               <div className="text-sm text-teal-600 font-medium">Registered accounts</div>
             </div>
-
-            {/* Revenue - Dashed out as requested */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6 opacity-60">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-gray-600 text-sm font-medium">Revenue (MTD)</span>
-                <div className="bg-gray-50 p-2 rounded-lg">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                </div>
-              </div>
-              <div className="text-3xl font-bold text-gray-400 mb-2">-</div>
-              <div className="text-sm text-gray-400 font-medium">Not tracked yet</div>
-            </div>
           </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Approve Pharmacies */}
-              <div className="bg-teal-50 rounded-xl p-6 text-center relative cursor-pointer hover:bg-teal-100 transition-colors">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Approve Pharmacies — links directly to pharmacies management page */}
+              <Link
+                href="/dashboard/pharmacies"
+                className="bg-teal-50 rounded-xl p-6 text-center relative hover:bg-teal-100 transition-colors block"
+              >
                 <div className="bg-teal-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-6 h-6 text-teal-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Approve Pharmacies</h3>
-                {pendingApprovals > 0 ? (
-                   <span className="inline-block bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                     {pendingApprovals} pending
-                   </span>
+                {dataLoading ? (
+                  <span className="inline-block bg-gray-400 text-white text-xs font-bold px-3 py-1 rounded-full">Loading...</span>
+                ) : pendingApprovals > 0 ? (
+                  <span className="inline-block bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+                    {pendingApprovals} pending
+                  </span>
                 ) : (
                   <span className="inline-block bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                     All approved
-                   </span>
+                    All approved
+                  </span>
                 )}
-              </div>
-
-              {/* View Inquiries */}
-              <div className="bg-blue-50 rounded-xl p-6 text-center cursor-not-allowed opacity-60">
-                <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2">View Inquiries</h3>
-                <span className="inline-block bg-gray-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  Coming soon
-                </span>
-              </div>
+              </Link>
 
               {/* Manage Subscriptions */}
               <div className="bg-gray-50 rounded-xl p-6 text-center cursor-not-allowed opacity-60">

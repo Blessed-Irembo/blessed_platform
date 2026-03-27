@@ -32,12 +32,6 @@ export default function Header() {
           </div>
 
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
-              Home
-            </Link>
-            <Link href="/pharmacies" className="text-gray-700 hover:text-gray-900 font-medium">
-              Find Pharmacies
-            </Link>
             <Link href="/dashboard" className="text-teal-600 font-medium">
               Dashboard
             </Link>
