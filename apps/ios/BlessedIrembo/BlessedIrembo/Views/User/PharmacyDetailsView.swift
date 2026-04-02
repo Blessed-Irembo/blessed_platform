@@ -34,6 +34,14 @@ struct PharmacyDetailsView: View {
                 shareButton
             }
         }
+        .onAppear {
+            // Track this view in Firestore — mirrors whatsappClicks tracking.
+            // Only fires if the pharmacy has a non-empty ID (always true for real data).
+            guard !pharmacy.id.isEmpty else { return }
+            FirebaseManager.shared.pharmaciesCollection
+                .document(pharmacy.id)
+                .updateData(["profileViews": FieldValue.increment(Int64(1))])
+        }
     }
 
     // MARK: - Map Header

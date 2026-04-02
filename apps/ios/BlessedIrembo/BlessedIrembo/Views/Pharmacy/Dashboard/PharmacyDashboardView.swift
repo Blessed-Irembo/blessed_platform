@@ -1,7 +1,9 @@
 /// Pharmacy Dashboard View
 ///
-/// Overview screen for the pharmacy dashboard showing key statistics
-/// and recent activity. Inquiries section removed — contact is via WhatsApp now.
+/// Overview screen showing live engagement metrics fetched directly
+/// from Firestore via the shared PharmacyDashboardViewModel listener.
+/// Metrics update in real time whenever a user interacts with the pharmacy
+/// on any platform (iOS or web).
 
 import SwiftUI
 
@@ -13,7 +15,12 @@ struct PharmacyDashboardView: View {
         ScrollView {
             VStack(spacing: 24) {
                 headerSection
-                statsGrid
+                if viewModel.isLoading {
+                    loadingSection
+                } else {
+                    statsGrid
+                    liveIndicator
+                }
                 Spacer(minLength: 20)
             }
             .padding(.bottom, 20)
@@ -29,19 +36,18 @@ struct PharmacyDashboardView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Blessed Irembo")
                     .font(.system(size: 34, weight: .bold))
-                    .foregroundColor(.textPrimary)
+                    .foregroundColor(Color.textPrimary)
 
                 Text(appState.currentPharmacy?.name ?? "Pharmacy Name")
                     .font(.title3)
-                    .foregroundColor(.textSecondary)
+                    .foregroundColor(Color.textSecondary)
             }
             Spacer()
 
-            // Notification Bell
             Button(action: {}) {
                 Image(systemName: "bell.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(.primaryTeal)
+                    .foregroundColor(Color.primaryTeal)
                     .padding(10)
                     .background(Color.white)
                     .clipShape(Circle())
@@ -52,43 +58,75 @@ struct PharmacyDashboardView: View {
         .padding(.top, 20)
     }
 
+    // MARK: - Loading
+
+    private var loadingSection: some View {
+        VStack(spacing: 12) {
+            ProgressView()
+                .tint(Color.primaryTeal)
+            Text("Loading live metrics…")
+                .font(.caption)
+                .foregroundColor(Color.textSecondary)
+        }
+        .padding(.top, 40)
+    }
+
     // MARK: - Stats Grid
 
     private var statsGrid: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+            // WhatsApp Clicks
             DashboardStatCard(
                 title: "WhatsApp Clicks",
-                value: "\(viewModel.totalWhatsappClicks)",
+                value: "\(viewModel.whatsappClicks)",
                 trend: "",
                 icon: "message.fill",
-                color: Color(red: 0.145, green: 0.827, blue: 0.4) // #25D366
+                color: Color(red: 0.145, green: 0.827, blue: 0.4)
             )
 
+            // Subscription Status
             DashboardStatCard(
-                title: "Avg. Rating",
-                value: String(format: "%.1f", appState.currentPharmacy?.rating ?? 0.0),
+                title: "Subscription",
+                value: viewModel.subscriptionPlan,
                 trend: "",
-                icon: "star.fill",
-                color: .orange
+                icon: viewModel.isPremium ? "star.fill" : "person.fill",
+                color: viewModel.isPremium ? Color(hex: "4F46E5") : Color.primaryTeal
             )
 
+            // Profile Views
             DashboardStatCard(
-                title: "Total Reviews",
-                value: "\(appState.currentPharmacy?.reviewCount ?? 0)",
+                title: "Profile Views",
+                value: "\(viewModel.profileViews)",
                 trend: "",
-                icon: "person.2.fill",
-                color: .purple
+                icon: "eye.fill",
+                color: Color.blue
             )
 
+            // Open / Closed status
             DashboardStatCard(
                 title: "Status",
                 value: appState.currentPharmacy?.isCurrentlyOpen == true ? "Open" : "Closed",
                 trend: "",
                 icon: "clock.fill",
-                color: appState.currentPharmacy?.isCurrentlyOpen == true ? .green : .red
+                color: appState.currentPharmacy?.isCurrentlyOpen == true ? Color.green : Color.red
             )
         }
         .padding(.horizontal, 20)
+    }
+
+    // MARK: - Live Indicator
+
+    private var liveIndicator: some View {
+        HStack(spacing: 6) {
+            Circle()
+                .fill(Color.green)
+                .frame(width: 7, height: 7)
+            Text("Live — updates automatically")
+                .font(.caption2)
+                .foregroundColor(Color.textSecondary)
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -117,7 +155,7 @@ struct DashboardStatCard: View {
                     Text(trend)
                         .font(.caption)
                         .fontWeight(.bold)
-                        .foregroundColor(.green)
+                        .foregroundColor(Color.green)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.green.opacity(0.1))
@@ -128,11 +166,11 @@ struct DashboardStatCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(value)
                     .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.textPrimary)
+                    .foregroundColor(Color.textPrimary)
 
                 Text(title)
                     .font(.caption)
-                    .foregroundColor(.textSecondary)
+                    .foregroundColor(Color.textSecondary)
             }
         }
         .padding(16)

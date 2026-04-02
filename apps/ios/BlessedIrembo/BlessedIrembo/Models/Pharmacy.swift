@@ -51,6 +51,7 @@ struct Pharmacy: Codable, Identifiable {
     var rating: Double
     var reviewCount: Int
     var whatsappClicks: Int
+    var profileViews: Int
 
     // Content
     var description: String
@@ -77,6 +78,7 @@ struct Pharmacy: Codable, Identifiable {
         rating: Double = 0.0,
         reviewCount: Int = 0,
         whatsappClicks: Int = 0,
+        profileViews: Int = 0,
         description: String = "",
         services: [String] = [],
         operatingHours: OperatingHours = OperatingHours(),
@@ -100,6 +102,7 @@ struct Pharmacy: Codable, Identifiable {
         self.rating = rating
         self.reviewCount = reviewCount
         self.whatsappClicks = whatsappClicks
+        self.profileViews = profileViews
         self.description = description
         self.services = services
         self.operatingHours = operatingHours

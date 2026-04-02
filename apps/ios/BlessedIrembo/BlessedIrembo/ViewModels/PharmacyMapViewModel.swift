@@ -82,6 +82,7 @@ class PharmacyMapViewModel: ObservableObject {
             rating: data["rating"] as? Double ?? 0.0,
             reviewCount: data["reviewCount"] as? Int ?? 0,
             whatsappClicks: data["whatsappClicks"] as? Int ?? 0,
+            profileViews: data["profileViews"] as? Int ?? 0,
             description: data["description"] as? String ?? "",
             services: data["services"] as? [String] ?? [],
             operatingHours: oh,

@@ -1,8 +1,10 @@
 /// Pharmacy Main View
 ///
 /// Main container for the pharmacy dashboard using TabView navigation.
-/// Shows Dashboard, Analytics, Profile, and Settings tabs.
-/// Inquiries tab has been removed — users contact pharmacies via WhatsApp instead.
+/// Shows Dashboard, Analytics, and Profile tabs.
+///
+/// Starts the real-time Firestore listener as soon as the pharmacy ID is
+/// known and stops it when the view is torn down.
 
 import SwiftUI
 #if canImport(UIKit)
@@ -39,15 +41,33 @@ struct PharmacyMainView: View {
         }
         .tint(.primaryTeal)
         .onAppear {
-#if canImport(UIKit)
-            let appearance = UITabBarAppearance()
-            appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = .white
-            UITabBar.appearance().standardAppearance = appearance
-            if #available(iOS 15.0, *) {
-                UITabBar.appearance().scrollEdgeAppearance = appearance
-            }
-#endif
+            styleTabBar()
+            startMetricsListener()
         }
+        // If currentPharmacy is set after the view appears (race condition on first launch)
+        // trigger the listener again.
+        .onChange(of: appState.currentPharmacy?.id) { _ in
+            startMetricsListener()
+        }
+    }
+
+    // MARK: - Helpers
+
+    private func startMetricsListener() {
+        if let id = appState.currentPharmacy?.id {
+            dashboardViewModel.startListening(for: id)
+        }
+    }
+
+    private func styleTabBar() {
+#if canImport(UIKit)
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = .white
+        UITabBar.appearance().standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = appearance
+        }
+#endif
     }
 }
