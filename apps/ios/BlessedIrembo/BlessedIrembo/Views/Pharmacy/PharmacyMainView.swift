@@ -3,8 +3,9 @@
 /// Main container for the pharmacy dashboard using TabView navigation.
 /// Shows Dashboard, Analytics, and Profile tabs.
 ///
-/// Starts the real-time Firestore listener as soon as the pharmacy ID is
-/// known and stops it when the view is torn down.
+/// Each tab that needs push navigation (Profile) is wrapped in its own
+/// NavigationStack so NavigationLink destinations receive the environment
+/// objects correctly and each tab has an independent navigation stack.
 
 import SwiftUI
 #if canImport(UIKit)
@@ -32,20 +33,23 @@ struct PharmacyMainView: View {
                 }
                 .tag(1)
 
-            // Profile
-            PharmacyProfileView()
-                .tabItem {
-                    Label("Profile", systemImage: "person.crop.circle.fill")
-                }
-                .tag(2)
+            // Profile — wrapped in its own NavigationStack so that
+            // NavigationLink destinations (Edit Profile, Operating Hours,
+            // Location & Address) can push and automatically receive
+            // the AppState environment object.
+            NavigationStack {
+                PharmacyProfileView()
+            }
+            .tabItem {
+                Label("Profile", systemImage: "person.crop.circle.fill")
+            }
+            .tag(2)
         }
-        .tint(.primaryTeal)
+        .tint(Color.primaryTeal)
         .onAppear {
             styleTabBar()
             startMetricsListener()
         }
-        // If currentPharmacy is set after the view appears (race condition on first launch)
-        // trigger the listener again.
         .onChange(of: appState.currentPharmacy?.id) { _ in
             startMetricsListener()
         }

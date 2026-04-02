@@ -19,7 +19,6 @@ struct PharmacyDashboardView: View {
                     loadingSection
                 } else {
                     statsGrid
-                    liveIndicator
                 }
                 Spacer(minLength: 20)
             }
@@ -114,20 +113,6 @@ struct PharmacyDashboardView: View {
         .padding(.horizontal, 20)
     }
 
-    // MARK: - Live Indicator
-
-    private var liveIndicator: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(Color.green)
-                .frame(width: 7, height: 7)
-            Text("Live — updates automatically")
-                .font(.caption2)
-                .foregroundColor(Color.textSecondary)
-        }
-        .padding(.horizontal, 20)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
 }
 
 // MARK: - Dashboard Stat Card

@@ -55,7 +55,8 @@ struct PharmacyProfileView: View {
         
             // Business Info
             Section("Business Information") {
-                NavigationLink(destination: PharmacyProfileSettingsView()) {
+                NavigationLink(destination: PharmacyProfileSettingsView()
+                    .environmentObject(appState)) {
                     Label {
                         Text("Edit Profile")
                     } icon: {
@@ -64,7 +65,8 @@ struct PharmacyProfileView: View {
                     }
                 }
             
-                NavigationLink(destination: Text("Operating Hours")) {
+                NavigationLink(destination: EditOperatingHoursView()
+                    .environmentObject(appState)) {
                     Label {
                         Text("Operating Hours")
                     } icon: {
@@ -73,7 +75,8 @@ struct PharmacyProfileView: View {
                     }
                 }
             
-                NavigationLink(destination: Text("Location & Address")) {
+                NavigationLink(destination: EditLocationView()
+                    .environmentObject(appState)) {
                     Label {
                         Text("Location & Address")
                     } icon: {

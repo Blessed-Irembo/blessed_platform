@@ -114,7 +114,7 @@ struct PharmacyAnalyticsView: View {
 
                 Divider()
 
-                Text("Every tap on \"Chat on WhatsApp\" from your pharmacy profile — on iOS or the web — is counted here in real time.")
+                Text("Every tap on \"Chat on WhatsApp\" from your pharmacy details by the user on this platform is counted here in real time.")
                     .font(.caption)
                     .foregroundColor(Color.textSecondary)
                     .multilineTextAlignment(.leading)

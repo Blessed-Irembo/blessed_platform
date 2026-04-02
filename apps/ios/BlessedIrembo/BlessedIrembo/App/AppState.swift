@@ -130,7 +130,9 @@ class AppState: ObservableObject {
                     id: uid,
                     name: data["name"] as? String ?? "",
                     ownerName: data["ownerName"] as? String ?? "",
-                    email: email,
+                    // Read email from Firestore data so updates from Edit Profile
+                    // are reflected immediately. Fall back to the Auth email if missing.
+                    email: data["email"] as? String ?? email,
                     phoneNumber: data["phoneNumber"] as? String ?? "",
                     whatsAppNumber: data["whatsAppNumber"] as? String ?? data["phoneNumber"] as? String ?? "",
                     licenseNumber: data["licenseNumber"] as? String ?? "",
