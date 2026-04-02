@@ -1,7 +1,8 @@
 /// Pharmacy Main View
 ///
 /// Main container for the pharmacy dashboard using TabView navigation.
-/// Shows Dashboard, Inquiries, Analytics, and Profile tabs.
+/// Shows Dashboard, Analytics, Profile, and Settings tabs.
+/// Inquiries tab has been removed — users contact pharmacies via WhatsApp instead.
 
 import SwiftUI
 #if canImport(UIKit)
@@ -12,7 +13,7 @@ struct PharmacyMainView: View {
     @EnvironmentObject var appState: AppState
     @StateObject private var dashboardViewModel = PharmacyDashboardViewModel()
     @State private var selectedTab = 0
-    
+
     var body: some View {
         TabView(selection: $selectedTab) {
             // Dashboard
@@ -21,41 +22,27 @@ struct PharmacyMainView: View {
                     Label("Home", systemImage: "house.fill")
                 }
                 .tag(0)
-            
-            // Inquiries
-            PharmacyInquiriesView(viewModel: dashboardViewModel)
-                .tabItem {
-                    Label("Inquiries", systemImage: "bubble.left.and.bubble.right.fill")
-                }
-                .tag(1)
-            
+
             // Analytics
             PharmacyAnalyticsView(viewModel: dashboardViewModel)
                 .tabItem {
-                    Image(systemName: "chart.bar.fill")
-                    Text("Analytics")
+                    Label("Analytics", systemImage: "chart.bar.fill")
                 }
-                .tag(2)
-            
+                .tag(1)
+
             // Profile
             PharmacyProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.crop.circle.fill")
                 }
-                .tag(3)
+                .tag(2)
         }
         .tint(.primaryTeal)
         .onAppear {
-            if let pharmacyId = appState.currentPharmacy?.id {
-                dashboardViewModel.fetchInquiries(for: pharmacyId)
-            }
-            
 #if canImport(UIKit)
-            // Ensure UITabBar appearance matches app style
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
             appearance.backgroundColor = .white
-            
             UITabBar.appearance().standardAppearance = appearance
             if #available(iOS 15.0, *) {
                 UITabBar.appearance().scrollEdgeAppearance = appearance
@@ -64,5 +51,3 @@ struct PharmacyMainView: View {
         }
     }
 }
-
-

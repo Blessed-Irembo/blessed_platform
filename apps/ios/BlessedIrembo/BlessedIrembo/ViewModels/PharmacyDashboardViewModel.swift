@@ -1,82 +1,40 @@
 /// Pharmacy Dashboard ViewModel
 ///
-/// Handles fetching inquiries and analytics data for a Pharmacy from Firestore.
+/// Handles fetching analytics data for a pharmacy from Firestore.
+/// Inquiries logic has been removed — users contact pharmacies via WhatsApp.
 
 import SwiftUI
 import Combine
 import FirebaseFirestore
 
 class PharmacyDashboardViewModel: ObservableObject {
-    @Published var inquiries: [Inquiry] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // Quick statistics
-    @Published var totalInquiries: Int = 0
-    @Published var unreadInquiries: Int = 0
-    
+
+    // WhatsApp engagement stats fetched from Firestore
+    @Published var totalWhatsappClicks: Int = 0
+
     private let db = FirebaseManager.shared.firestore
     private var listeners = Set<AnyCancellable>()
-    private var inquiriesListener: ListenerRegistration?
-    
-    deinit {
-        inquiriesListener?.remove()
-    }
-    
-    /// Observe inquiries for a specific pharmacy ID
-    func fetchInquiries(for pharmacyId: String) {
+
+    /// Fetch pharmacy-level stats from Firestore for the given pharmacy doc ID.
+    func fetchStats(for pharmacyId: String) {
         isLoading = true
         errorMessage = nil
-        
-        inquiriesListener?.remove()
-        
-        inquiriesListener = db.collection("inquiries")
-            .whereField("pharmacyId", isEqualTo: pharmacyId)
-            .order(by: "createdAt", descending: true)
-            .addSnapshotListener { [weak self] snapshot, error in
-                guard let self = self else { return }
-                self.isLoading = false
-                
-                if let error = error {
-                    self.errorMessage = "Failed to fetch inquiries: \(error.localizedDescription)"
-                    return
-                }
-                
-                guard let documents = snapshot?.documents else { return }
-                
-                let fetched: [Inquiry] = documents.compactMap { doc in
-                    let data = doc.data()
-                    
-                    let timestamp = data["createdAt"] as? Timestamp
-                    let date = timestamp?.dateValue() ?? Date()
-                    
-                    return Inquiry(
-                        id: doc.documentID,
-                        pharmacyId: data["pharmacyId"] as? String ?? "",
-                        userName: data["userName"] as? String ?? "Unknown",
-                        userEmail: data["userEmail"] as? String ?? "",
-                        userPhone: data["userPhone"] as? String ?? "",
-                        message: data["message"] as? String ?? "",
-                        createdAt: date,
-                        isRead: data["isRead"] as? Bool ?? false
-                    )
-                }
-                
-                DispatchQueue.main.async {
-                    self.inquiries = fetched
-                    self.totalInquiries = fetched.count
-                    self.unreadInquiries = fetched.filter { !$0.isRead }.count
-                }
-            }
-    }
-    
-    /// Mark an inquiry as read
-    func markAsRead(inquiryId: String) {
-        db.collection("inquiries").document(inquiryId).updateData([
-            "isRead": true
-        ]) { error in
+
+        db.collection("pharmacies").document(pharmacyId).getDocument { [weak self] snapshot, error in
+            guard let self = self else { return }
+            self.isLoading = false
+
             if let error = error {
-                print("Error updating inquiry: \(error)")
+                self.errorMessage = "Failed to load stats: \(error.localizedDescription)"
+                return
+            }
+
+            guard let data = snapshot?.data() else { return }
+
+            DispatchQueue.main.async {
+                self.totalWhatsappClicks = data["whatsappClicks"] as? Int ?? 0
             }
         }
     }

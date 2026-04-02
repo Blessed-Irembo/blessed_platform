@@ -154,7 +154,12 @@ class AuthViewModel: ObservableObject {
                 "reviewCount": 0,
                 "description": "",
                 "services": [],
-                "operatingHours": "Mon-Fri: 8:00 AM - 8:00 PM",
+                "operatingHours": [
+                    "is24Hours": false,
+                    "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+                    "openTime": "08:00",
+                    "closeTime": "20:00"
+                ] as [String: Any],
                 "createdAt": FieldValue.serverTimestamp()
             ]
             
@@ -235,22 +240,37 @@ class AuthViewModel: ObservableObject {
                         completion(.success((user: user, pharmacy: nil)))
                         
                     case .pharmacy(let data):
+                        // Decode the structured operatingHours map
+                        var oh = OperatingHours()
+                        if let ohMap = data["operatingHours"] as? [String: Any] {
+                            oh = OperatingHours(
+                                is24Hours: ohMap["is24Hours"] as? Bool ?? false,
+                                days: ohMap["days"] as? [String] ?? [],
+                                openTime: ohMap["openTime"] as? String ?? "",
+                                closeTime: ohMap["closeTime"] as? String ?? ""
+                            )
+                        }
                         let pharmacy = Pharmacy(
                             id: uid,
                             name: data["name"] as? String ?? "",
                             ownerName: data["ownerName"] as? String ?? "",
                             email: email,
                             phoneNumber: data["phoneNumber"] as? String ?? "",
+                            whatsAppNumber: data["whatsAppNumber"] as? String ?? data["phoneNumber"] as? String ?? "",
                             licenseNumber: data["licenseNumber"] as? String ?? "",
                             address: data["address"] as? String ?? "",
+                            district: data["district"] as? String ?? "",
                             latitude: data["latitude"] as? Double ?? -1.9536,
                             longitude: data["longitude"] as? Double ?? 30.0606,
                             isVerified: data["isVerified"] as? Bool ?? false,
+                            is24_7: data["is24_7"] as? Bool ?? oh.is24Hours,
+                            isPremium: data["isPremium"] as? Bool ?? false,
                             rating: data["rating"] as? Double ?? 0.0,
                             reviewCount: data["reviewCount"] as? Int ?? 0,
+                            whatsappClicks: data["whatsappClicks"] as? Int ?? 0,
                             description: data["description"] as? String ?? "",
                             services: data["services"] as? [String] ?? [],
-                            operatingHours: data["operatingHours"] as? String ?? ""
+                            operatingHours: oh
                         )
                         completion(.success((user: nil, pharmacy: pharmacy)))
                         

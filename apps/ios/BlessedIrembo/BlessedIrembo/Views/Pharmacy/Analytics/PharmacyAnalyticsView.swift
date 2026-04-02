@@ -1,22 +1,20 @@
 /// Pharmacy Analytics View
 ///
-/// Statistics and charts for the pharmacy.
+/// Statistics and charts for the pharmacy owner.
+/// Uses WhatsApp engagement data as the primary metric
+/// (inquiries removed — users contact via WhatsApp instead).
 
 import SwiftUI
 
 struct PharmacyAnalyticsView: View {
     @EnvironmentObject var appState: AppState
     @ObservedObject var viewModel: PharmacyDashboardViewModel
-    
+
     var body: some View {
         ScrollView {
             VStack(spacing: 24) {
-                // Summary Cards
                 analyticsSummary
-                
-                // Real Data Metric Visualization
-                inquiriesBreakdownSection
-                
+                whatsappEngagementSection
                 Spacer()
             }
             .padding()
@@ -24,61 +22,72 @@ struct PharmacyAnalyticsView: View {
         .background(Color.gray.opacity(0.05))
         .navigationTitle("Analytics")
     }
-    
+
+    // MARK: - Summary Cards
+
     private var analyticsSummary: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-            AnalyticsCard(title: "Total Inquiries", value: "\(viewModel.totalInquiries)", trend: "")
-            AnalyticsCard(title: "Unread Messages", value: "\(viewModel.unreadInquiries)", trend: viewModel.unreadInquiries > 0 ? "Action needed" : "")
-            AnalyticsCard(title: "Total Reviews", value: "\(appState.currentPharmacy?.reviewCount ?? 0)", trend: "")
-            AnalyticsCard(title: "Avg Rating", value: String(format: "%.1f", appState.currentPharmacy?.rating ?? 0.0), trend: "")
+            AnalyticsCard(
+                title: "WhatsApp Clicks",
+                value: "\(viewModel.totalWhatsappClicks)",
+                trend: ""
+            )
+            AnalyticsCard(
+                title: "Avg Rating",
+                value: String(format: "%.1f", appState.currentPharmacy?.rating ?? 0.0),
+                trend: ""
+            )
+            AnalyticsCard(
+                title: "Total Reviews",
+                value: "\(appState.currentPharmacy?.reviewCount ?? 0)",
+                trend: ""
+            )
+            AnalyticsCard(
+                title: "Status",
+                value: appState.currentPharmacy?.isCurrentlyOpen == true ? "Open" : "Closed",
+                trend: ""
+            )
         }
     }
-    
-    private var inquiriesBreakdownSection: some View {
+
+    // MARK: - WhatsApp Engagement Section
+
+    private var whatsappEngagementSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Inquiries Breakdown")
+            Text("WhatsApp Engagement")
                 .font(.headline)
                 .foregroundColor(.textPrimary)
-            
-            let total = max(1, viewModel.totalInquiries)
-            let unread = viewModel.unreadInquiries
-            let read = viewModel.totalInquiries - unread
-            
-            let readRatio = CGFloat(read) / CGFloat(total)
-            let unreadRatio = CGFloat(unread) / CGFloat(total)
-            
+
             VStack(spacing: 20) {
-                // Visual Bar
-                GeometryReader { geo in
-                    HStack(spacing: 0) {
-                        Rectangle()
-                            .fill(Color.primaryTeal)
-                            .frame(width: geo.size.width * readRatio)
-                        Rectangle()
-                            .fill(Color.orange)
-                            .frame(width: geo.size.width * unreadRatio)
+                HStack(spacing: 16) {
+                    // WhatsApp icon circle
+                    ZStack {
+                        Circle()
+                            .fill(Color(red: 0.145, green: 0.827, blue: 0.4).opacity(0.12))
+                            .frame(width: 56, height: 56)
+                        Image(systemName: "message.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(Color(red: 0.145, green: 0.827, blue: 0.4))
                     }
-                    .cornerRadius(8)
-                }
-                .frame(height: 24)
-                
-                // Legend
-                HStack(spacing: 24) {
-                    HStack(spacing: 8) {
-                        Circle().fill(Color.primaryTeal).frame(width: 8, height: 8)
-                        Text("Read (\(read))")
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("\(viewModel.totalWhatsappClicks)")
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(.textPrimary)
+                        Text("Users contacted your pharmacy via WhatsApp")
                             .font(.subheadline)
                             .foregroundColor(.textSecondary)
                     }
-                    
-                    HStack(spacing: 8) {
-                        Circle().fill(Color.orange).frame(width: 8, height: 8)
-                        Text("Unread (\(unread))")
-                            .font(.subheadline)
-                            .foregroundColor(.textSecondary)
-                    }
+
                     Spacer()
                 }
+
+                Divider()
+
+                Text("Every WhatsApp click is tracked when a user taps \"Chat on WhatsApp\" on your pharmacy profile.")
+                    .font(.caption)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.leading)
             }
             .padding()
             .background(Color.white)
@@ -87,34 +96,39 @@ struct PharmacyAnalyticsView: View {
         }
     }
 }
+
+// MARK: - Analytics Card
+
 struct AnalyticsCard: View {
     let title: String
     let value: String
     let trend: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(title)
                 .font(.caption)
                 .foregroundColor(.textSecondary)
-            
+
             HStack {
                 Text(value)
                     .font(.title2)
                     .bold()
                     .foregroundColor(.textPrimary)
-                
+
                 Spacer()
-                
-                Text(trend)
-                    .font(.caption)
-                    .foregroundColor(trend.contains("+") ? .green : .red)
-                    .padding(4)
-                    .background(
-                        (trend.contains("+") ? Color.green : Color.red)
-                            .opacity(0.1)
-                    )
-                    .cornerRadius(4)
+
+                if !trend.isEmpty {
+                    Text(trend)
+                        .font(.caption)
+                        .foregroundColor(trend.contains("+") ? .green : .red)
+                        .padding(4)
+                        .background(
+                            (trend.contains("+") ? Color.green : Color.red)
+                                .opacity(0.1)
+                        )
+                        .cornerRadius(4)
+                }
             }
         }
         .padding()
