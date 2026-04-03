@@ -154,6 +154,10 @@ class AuthViewModel: ObservableObject {
         address: String,
         latitude: Double,
         longitude: Double,
+        is24Hours: Bool,
+        operatingDays: [String],
+        openTime: String,
+        closeTime: String,
         password: String,
         confirmPassword: String,
         completion: @escaping (Result<Pharmacy, Error>) -> Void
@@ -216,11 +220,12 @@ class AuthViewModel: ObservableObject {
                 "description": "",
                 "services": [],
                 "operatingHours": [
-                    "is24Hours": false,
-                    "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-                    "openTime": "08:00",
-                    "closeTime": "20:00"
+                    "is24Hours": is24Hours,
+                    "days": operatingDays,
+                    "openTime": openTime,
+                    "closeTime": closeTime
                 ] as [String: Any],
+                "is24_7": is24Hours,
                 "createdAt": FieldValue.serverTimestamp()
             ]
             

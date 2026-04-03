@@ -29,6 +29,12 @@ struct SignUpPharmacyView: View {
     @State private var password         = ""
     @State private var confirmPassword  = ""
 
+    // MARK: – Operating Hours State
+    @State private var is24Hours        = false
+    @State private var selectedDays: Set<String> = Set(OperatingHours.allDays[0...4]) // Default to Monday-Friday
+    @State private var openTime         = Calendar.current.date(bySettingHour: 8, minute: 0, second: 0, of: Date()) ?? Date()
+    @State private var closeTime        = Calendar.current.date(bySettingHour: 20, minute: 0, second: 0, of: Date()) ?? Date()
+
     // MARK: – Location state
     enum LocationTab { case gps, coordinates }
     @State private var locationTab: LocationTab = .gps
@@ -130,7 +136,10 @@ struct SignUpPharmacyView: View {
             // ── 7. Location ──
             locationSection
 
-            // ── 8. Password ──
+            // ── 8. Operating Hours ──
+            operatingHoursSection
+
+            // ── 9. Password ──
             FormField(label: "Password", systemImage: "lock") {
                 Group {
                     if showPassword {
@@ -149,7 +158,7 @@ struct SignUpPharmacyView: View {
                 }
             }
 
-            // ── 9. Confirm Password ──
+            // ── 10. Confirm Password ──
             FormField(label: "Confirm Password", systemImage: "lock") {
                 Group {
                     if showConfirmPassword {
@@ -471,6 +480,62 @@ struct SignUpPharmacyView: View {
         .cornerRadius(10)
     }
 
+    // MARK: – Operating Hours Section
+    private var operatingHoursSection: some View {
+        FormField(label: "Operating Hours", systemImage: "clock") {
+            VStack(alignment: .leading, spacing: 12) {
+                Toggle("Open 24/7", isOn: $is24Hours)
+                    .font(.subheadline)
+                    .tint(.primaryTeal)
+
+                if !is24Hours {
+                    Divider()
+
+                    Text("Open Days")
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
+
+                    // Day bubbles
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            ForEach(OperatingHours.allDays, id: \.self) { day in
+                                let isSelected = selectedDays.contains(day)
+                                Text(String(day.prefix(3)))
+                                    .font(.caption).fontWeight(.semibold)
+                                    .padding(.horizontal, 12).padding(.vertical, 8)
+                                    .background(isSelected ? Color.primaryTeal : Color.gray.opacity(0.1))
+                                    .foregroundColor(isSelected ? .white : .textPrimary)
+                                    .clipShape(Capsule())
+                                    .onTapGesture {
+                                        if isSelected { selectedDays.remove(day) }
+                                        else { selectedDays.insert(day) }
+                                    }
+                            }
+                        }
+                    }
+
+                    Divider()
+
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("Opens at").font(.caption).foregroundColor(.textSecondary)
+                            DatePicker("", selection: $openTime, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                                .tint(.primaryTeal)
+                        }
+                        Spacer()
+                        VStack(alignment: .leading) {
+                            Text("Closes at").font(.caption).foregroundColor(.textSecondary)
+                            DatePicker("", selection: $closeTime, displayedComponents: .hourAndMinute)
+                                .labelsHidden()
+                                .tint(.primaryTeal)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // MARK: – FDA notice
     private var fdaNotice: some View {
         HStack(alignment: .top, spacing: 10) {
@@ -519,6 +584,10 @@ struct SignUpPharmacyView: View {
         let lat = effectiveLocation?.latitude ?? 0.0
         let lng = effectiveLocation?.longitude ?? 0.0
 
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        let orderedDays = OperatingHours.allDays.filter { selectedDays.contains($0) }
+
         viewModel.signUpPharmacy(
             pharmacyName: pharmacyName,
             ownerName: ownerName,
@@ -528,6 +597,10 @@ struct SignUpPharmacyView: View {
             address: address,
             latitude: lat,
             longitude: lng,
+            is24Hours: is24Hours,
+            operatingDays: is24Hours ? OperatingHours.allDays : orderedDays,
+            openTime: is24Hours ? "00:00" : formatter.string(from: openTime),
+            closeTime: is24Hours ? "23:59" : formatter.string(from: closeTime),
             password: password,
             confirmPassword: confirmPassword
         ) { result in

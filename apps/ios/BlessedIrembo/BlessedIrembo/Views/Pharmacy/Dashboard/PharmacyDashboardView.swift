@@ -33,12 +33,16 @@ struct PharmacyDashboardView: View {
     private var headerSection: some View {
         HStack {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Blessed Irembo")
-                    .font(.system(size: 34, weight: .bold))
-                    .foregroundColor(Color.textPrimary)
+                HStack(spacing: 8) {
+                    Logo(size: 32)
+                    Text("Blessed Irembo")
+                        .font(.system(size: 28, weight: .black, design: .rounded))
+                        .foregroundColor(Color.primaryTeal)
+                }
 
-                Text(appState.currentPharmacy?.name ?? "Pharmacy Name")
-                    .font(.title3)
+                Text(appState.currentPharmacy?.name.uppercased() ?? "PHARMACY NAME")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .tracking(2.0)
                     .foregroundColor(Color.textSecondary)
             }
             Spacer()
