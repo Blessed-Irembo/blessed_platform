@@ -1,85 +1,37 @@
-/// Pharmacy Inquiries View
+/// Pharmacy Inquiries View — Removed
 ///
-/// List of customer inquiries and messages.
+/// This view is no longer used. Users contact pharmacies via WhatsApp.
+/// The file is kept as a stub so existing Xcode project references compile.
 
 import SwiftUI
 
 struct PharmacyInquiriesView: View {
-    @ObservedObject var viewModel: PharmacyDashboardViewModel
-    @State private var searchText = ""
-    @State private var selectedFilter = 0
-    
-    private var filteredInquiries: [Inquiry] {
-        var result = viewModel.inquiries
-        if selectedFilter == 1 { // Unread
-            result = result.filter { !$0.isRead }
-        } else if selectedFilter == 2 { // Read
-            result = result.filter { $0.isRead }
-        }
-        
-        if !searchText.isEmpty {
-            result = result.filter { $0.userName.localizedCaseInsensitiveContains(searchText) || $0.message.localizedCaseInsensitiveContains(searchText) }
-        }
-        return result
-    }
-    
+    // ViewModel kept in signature for backward compatibility with any existing
+    // Xcode project file reference, but is no longer used in the UI.
+    var viewModel: PharmacyDashboardViewModel? = nil
+
     var body: some View {
-        VStack(spacing: 0) {
-            // Search Bar
-            searchBar
-            
-            // Filter Tabs
-            filterTabs
-            
-            // List
-            List {
-                ForEach(filteredInquiries) { inquiry in
-                    ZStack {
-                        NavigationLink(destination: Text("Chat with \(inquiry.userName)")) {
-                            EmptyView()
-                        }
-                        .opacity(0)
-                        
-                        InquiryRow(inquiry: inquiry)
-                    }
-                    .listRowSeparator(.hidden)
-                    .listRowBackground(Color.clear)
-                    .listRowInsets(EdgeInsets(top: 8, leading: 20, bottom: 8, trailing: 20))
-                }
-            }
-            .listStyle(.plain)
-            .background(Color.gray.opacity(0.05))
+        VStack(spacing: 20) {
+            Spacer()
+
+            Image(systemName: "message.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.primaryTeal.opacity(0.4))
+
+            Text("Inquiries Removed")
+                .font(.title3)
+                .fontWeight(.semibold)
+                .foregroundColor(.textPrimary)
+
+            Text("Users contact pharmacies directly via WhatsApp. This screen is no longer active.")
+                .font(.body)
+                .foregroundColor(.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 40)
+
+            Spacer()
         }
         .navigationTitle("Inquiries")
-    }
-    
-    private var searchBar: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundColor(.gray)
-            
-            TextField("Search inquiries...", text: $searchText)
-        }
-        .padding(12)
-        .background(Color.white)
-        .cornerRadius(10)
-        .padding(.horizontal)
-        .padding(.vertical, 10)
-        .background(Color.gray.opacity(0.05))
-    }
-    
-    private var filterTabs: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                FilterChip(title: "All", isSelected: selectedFilter == 0) { selectedFilter = 0 }
-                FilterChip(title: "Unread", isSelected: selectedFilter == 1) { selectedFilter = 1 }
-                FilterChip(title: "Replied", isSelected: selectedFilter == 2) { selectedFilter = 2 }
-                FilterChip(title: "Archived", isSelected: selectedFilter == 3) { selectedFilter = 3 }
-            }
-            .padding(.horizontal)
-            .padding(.bottom, 10)
-        }
-        .background(Color.gray.opacity(0.05))
     }
 }
 
@@ -87,7 +39,7 @@ struct FilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)

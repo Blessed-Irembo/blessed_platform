@@ -292,14 +292,14 @@ struct PharmacyListCard: View {
                     .foregroundColor(.textSecondary)
                     .lineLimit(1)
                 
-                // Status/Hours
+                // Status/Hours — real open/closed based on Firestore operatingHours
                 HStack(spacing: 6) {
                     Circle()
-                        .fill(Color.green)
+                        .fill(pharmacy.isCurrentlyOpen ? Color.green : Color.red)
                         .frame(width: 6, height: 6)
-                    Text("Open now")
+                    Text(pharmacy.isCurrentlyOpen ? "Open now" : "Closed")
                         .font(.caption)
-                        .foregroundColor(.green)
+                        .foregroundColor(pharmacy.isCurrentlyOpen ? .green : .red)
                         .fontWeight(.medium)
                 }
             }

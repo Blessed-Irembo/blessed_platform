@@ -1,83 +1,70 @@
 /// Pharmacy Dashboard ViewModel
 ///
-/// Handles fetching inquiries and analytics data for a Pharmacy from Firestore.
+/// Keeps pharmacy engagement metrics (whatsappClicks, rating, reviewCount)
+/// in sync via a real-time Firestore snapshot listener.
+///
+/// This mirrors the web platform's `usePharmacyData` pattern:
+///   - On `startListening(for:)` → attaches a real-time listener
+///   - Every Firestore write (WhatsApp click, new review) triggers an update
+///   - Call `stopListening()` when the view disappears to avoid leaks
 
 import SwiftUI
 import Combine
 import FirebaseFirestore
 
 class PharmacyDashboardViewModel: ObservableObject {
-    @Published var inquiries: [Inquiry] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
-    
-    // Quick statistics
-    @Published var totalInquiries: Int = 0
-    @Published var unreadInquiries: Int = 0
-    
+
+    // Engagement metrics — kept live via Firestore listener
+    @Published var whatsappClicks: Int = 0
+    @Published var profileViews: Int = 0
+    @Published var isPremium: Bool = false
+    @Published var subscriptionPlan: String = "Free"
+
     private let db = FirebaseManager.shared.firestore
-    private var listeners = Set<AnyCancellable>()
-    private var inquiriesListener: ListenerRegistration?
-    
-    deinit {
-        inquiriesListener?.remove()
-    }
-    
-    /// Observe inquiries for a specific pharmacy ID
-    func fetchInquiries(for pharmacyId: String) {
+    private var listener: ListenerRegistration?
+
+    deinit { stopListening() }
+
+    // MARK: - Real-time Listener
+
+    /// Attach a Firestore snapshot listener for the given pharmacy document.
+    /// Data automatically refreshes whenever whatsappClicks, rating, or
+    /// reviewCount change in Firestore — no manual refresh needed.
+    func startListening(for pharmacyId: String) {
+        guard !pharmacyId.isEmpty else { return }
+        stopListening()
+
         isLoading = true
         errorMessage = nil
-        
-        inquiriesListener?.remove()
-        
-        inquiriesListener = db.collection("inquiries")
-            .whereField("pharmacyId", isEqualTo: pharmacyId)
-            .order(by: "createdAt", descending: true)
+
+        listener = db.collection("pharmacies")
+            .document(pharmacyId)
             .addSnapshotListener { [weak self] snapshot, error in
                 guard let self = self else { return }
+
                 self.isLoading = false
-                
+
                 if let error = error {
-                    self.errorMessage = "Failed to fetch inquiries: \(error.localizedDescription)"
+                    self.errorMessage = "Failed to load metrics: \(error.localizedDescription)"
                     return
                 }
-                
-                guard let documents = snapshot?.documents else { return }
-                
-                let fetched: [Inquiry] = documents.compactMap { doc in
-                    let data = doc.data()
-                    
-                    let timestamp = data["createdAt"] as? Timestamp
-                    let date = timestamp?.dateValue() ?? Date()
-                    
-                    return Inquiry(
-                        id: doc.documentID,
-                        pharmacyId: data["pharmacyId"] as? String ?? "",
-                        userName: data["userName"] as? String ?? "Unknown",
-                        userEmail: data["userEmail"] as? String ?? "",
-                        userPhone: data["userPhone"] as? String ?? "",
-                        message: data["message"] as? String ?? "",
-                        createdAt: date,
-                        isRead: data["isRead"] as? Bool ?? false
-                    )
-                }
-                
+
+                guard let data = snapshot?.data() else { return }
+
                 DispatchQueue.main.async {
-                    self.inquiries = fetched
-                    self.totalInquiries = fetched.count
-                    self.unreadInquiries = fetched.filter { !$0.isRead }.count
+                    self.whatsappClicks  = data["whatsappClicks"]  as? Int    ?? 0
+                    self.profileViews    = data["profileViews"]    as? Int    ?? 0
+                    self.isPremium       = data["isPremium"]        as? Bool   ?? false
+                    self.subscriptionPlan = data["subscriptionPlan"] as? String ?? (self.isPremium ? "Premium" : "Free")
                 }
             }
     }
-    
-    /// Mark an inquiry as read
-    func markAsRead(inquiryId: String) {
-        db.collection("inquiries").document(inquiryId).updateData([
-            "isRead": true
-        ]) { error in
-            if let error = error {
-                print("Error updating inquiry: \(error)")
-            }
-        }
+
+    /// Detach the listener — call from `onDisappear` to free resources.
+    func stopListening() {
+        listener?.remove()
+        listener = nil
     }
 }

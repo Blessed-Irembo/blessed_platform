@@ -1,77 +1,149 @@
 /// Sign Up User View
 ///
 /// Registration screen for regular users looking for pharmacies.
-/// Includes form validation and terms & conditions acceptance.
+/// Phone number is the PRIMARY field — email is optional.
 
 import SwiftUI
-import FirebaseAuth
 
 struct SignUpUserView: View {
     @StateObject private var viewModel = AuthViewModel()
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
-    
-    @State private var fullName = ""
-    @State private var email = ""
-    @State private var phoneNumber = ""
-    @State private var password = ""
+
+    @State private var fullName        = ""
+    @State private var phoneNumber     = ""   // PRIMARY
+    @State private var email           = ""   // optional
+    @State private var password        = ""
     @State private var confirmPassword = ""
-   @State private var acceptedTerms = false
-    
+    @State private var acceptedTerms   = false
+    @State private var showPassword         = false
+    @State private var showConfirmPassword  = false
+
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                // Header
-                VStack(spacing: 12) {
-                    Logo(size: 70)
-                        .padding(.top, 20)
-                    
+            VStack(spacing: 0) {
+                // ── Header ──────────────────────────────────────────────
+                VStack(spacing: 10) {
+                    Logo(size: 64)
+                        .padding(.top, 28)
                     Text("Create Account")
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.system(size: 26, weight: .bold))
                         .foregroundColor(.textPrimary)
-                    
-                    Text("Sign up to find pharmacies")
-                        .font(.body)
+                    Text("Sign up to find pharmacies near you")
+                        .font(.subheadline)
                         .foregroundColor(.textSecondary)
                 }
-                
-                // Form
-                VStack(spacing: 16) {
-                    CustomTextField(
-                        placeholder: "Full Name",
+                .padding(.bottom, 28)
+
+                // ── Form card ────────────────────────────────────────────
+                VStack(spacing: 20) {
+
+                    // Error banner
+                    if let error = viewModel.errorMessage {
+                        HStack(spacing: 10) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .foregroundColor(.red)
+                            Text(error)
+                                .font(.subheadline)
+                                .foregroundColor(.red)
+                        }
+                        .padding(14)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Color.red.opacity(0.08))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.25)))
+                        .cornerRadius(12)
+                    }
+
+                    // 1. Full Name
+                    fieldRow(
+                        label: "Full Name",
                         systemImage: "person",
-                        text: $fullName
+                        content: {
+                            TextField("Enter your full name", text: $fullName)
+                                .autocapitalization(.words)
+                        }
                     )
-                    
-                    CustomTextField(
-                        placeholder: "Email",
-                        systemImage: "envelope",
-                        text: $email,
-                        keyboardType: .emailAddress
-                    )
-                    
-                    CustomTextField(
-                        placeholder: "Phone Number",
-                        systemImage: "phone",
-                        text: $phoneNumber,
-                        keyboardType: .phonePad
-                    )
-                    
-                    CustomTextField(
-                        placeholder: "Password",
-                        systemImage: "lock",
-                        text: $password,
-                        isSecure: true
-                    )
-                    
-                    CustomTextField(
-                        placeholder: "Confirm Password",
-                        systemImage: "lock",
-                        text: $confirmPassword,
-                        isSecure: true
-                    )
-                    
-                    // Terms & Conditions
+
+                    // 2. Phone Number — PRIMARY
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 4) {
+                            Label("Phone Number", systemImage: "phone")
+                                .font(.subheadline).fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+                            Text("*")
+                                .foregroundColor(.primaryTeal)
+                                .fontWeight(.bold)
+                        }
+                        Text("Used to sign in and connect with pharmacies via WhatsApp")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+
+                        TextField("+250 788 123 456", text: $phoneNumber)
+                            .keyboardType(.phonePad)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                    }
+
+                    // 3. Email — optional
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Label("Email Address", systemImage: "envelope")
+                                .font(.subheadline).fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+                            Text("(optional)")
+                                .font(.caption)
+                                .foregroundColor(.textSecondary)
+                        }
+                        Text("Recommended for password recovery")
+                            .font(.caption)
+                            .foregroundColor(.textSecondary)
+
+                        TextField("you@example.com", text: $email)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+                            .padding()
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                    }
+
+                    // 4. Password
+                    fieldRow(label: "Password", systemImage: "lock") {
+                        HStack {
+                            Group {
+                                if showPassword {
+                                    TextField("Min. 6 characters", text: $password)
+                                        .autocapitalization(.none)
+                                } else {
+                                    SecureField("Min. 6 characters", text: $password)
+                                }
+                            }
+                            Button { showPassword.toggle() } label: {
+                                Image(systemName: showPassword ? "eye.slash" : "eye")
+                                    .foregroundColor(.textSecondary)
+                            }
+                        }
+                    }
+
+                    // 5. Confirm Password
+                    fieldRow(label: "Confirm Password", systemImage: "lock") {
+                        HStack {
+                            Group {
+                                if showConfirmPassword {
+                                    TextField("Re-enter password", text: $confirmPassword)
+                                        .autocapitalization(.none)
+                                } else {
+                                    SecureField("Re-enter password", text: $confirmPassword)
+                                }
+                            }
+                            Button { showConfirmPassword.toggle() } label: {
+                                Image(systemName: showConfirmPassword ? "eye.slash" : "eye")
+                                    .foregroundColor(.textSecondary)
+                            }
+                        }
+                    }
+
+                    // 6. Terms & Conditions
                     Toggle(isOn: $acceptedTerms) {
                         HStack(spacing: 4) {
                             Text("I accept the")
@@ -80,53 +152,66 @@ struct SignUpUserView: View {
                             Text("Terms & Conditions")
                                 .font(.subheadline)
                                 .foregroundColor(.primaryTeal)
+                                .fontWeight(.semibold)
                         }
                     }
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 24)
-                
-                // Sign Up button
-                PrimaryButton(
-                    title: "Sign Up",
-                    isLoading: viewModel.isLoading
-                ) {
-                    signUp()
-                }
-                .padding(.horizontal, 24)
-                .padding(.top, 16)
-                
-                // Error message
-                if let errorMessage = viewModel.errorMessage {
-                    Text(errorMessage)
-                        .font(.subheadline)
-                        .foregroundColor(.red)
-                        .padding(.horizontal, 24)
-                }
-                
-                // Sign in link
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Text("Already have an account?")
-                            .foregroundColor(.textSecondary)
-                        Text("Sign In")
-                            .foregroundColor(.primaryTeal)
-                            .fontWeight(.semibold)
+                    .tint(.primaryTeal)
+
+                    // Submit
+                    PrimaryButton(title: "Create Account", isLoading: viewModel.isLoading) {
+                        signUp()
                     }
-                    .font(.body)
+
+                    // Sign in link
+                    Button { dismiss() } label: {
+                        HStack(spacing: 4) {
+                            Text("Already have an account?")
+                                .foregroundColor(.textSecondary)
+                            Text("Sign In")
+                                .foregroundColor(.primaryTeal)
+                                .fontWeight(.semibold)
+                        }
+                        .font(.subheadline)
+                    }
+                    .padding(.bottom, 40)
                 }
-                .padding(.bottom, 32)
+                .padding(20)
+                .background(Color(.systemBackground))
+                .cornerRadius(20)
+                .shadow(color: .black.opacity(0.05), radius: 10)
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle("Sign Up")
         .navigationBarTitleDisplayMode(.inline)
     }
-    
+
+    // MARK: – Helpers
+
+    @ViewBuilder
+    private func fieldRow<Content: View>(
+        label: String,
+        systemImage: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Label(label, systemImage: systemImage)
+                .font(.subheadline).fontWeight(.semibold)
+                .foregroundColor(.textPrimary)
+            content()
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+        }
+    }
+
     private func signUp() {
         viewModel.signUpUser(
             fullName: fullName,
-            email: email,
             phoneNumber: phoneNumber,
+            email: email,
             password: password,
             confirmPassword: confirmPassword,
             acceptedTerms: acceptedTerms
@@ -135,7 +220,7 @@ struct SignUpUserView: View {
             case .success(let user):
                 appState.signIn(user: user)
             case .failure(let error):
-                print("Sign up failed: \(error)")
+                print("User sign-up failed: \(error)")
             }
         }
     }
