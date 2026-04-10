@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { usePharmacyData } from '@/lib/usePharmacyData';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 // Demo data
 const DEMO_PHARMACY = {
@@ -48,14 +49,7 @@ export default function PharmacyDashboard() {
   }, []);
 
   if (authLoading || pharmacyLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Loading dashboard…</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen text="Loading dashboard…" />;
   }
 
   const displayName = pharmacy?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Pharmacy';

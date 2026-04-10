@@ -1,3 +1,7 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
 /**
  * Features Section Component
  * 
@@ -5,10 +9,34 @@
  * Blessed Irembo. Includes metrics and feature cards with icons.
  */
 export default function FeaturesSection() {
+  const [pharmaciesCount, setPharmaciesCount] = useState<number | string>('...');
+  const [usersCount, setUsersCount] = useState<number | string>('...');
+  const [citiesCount, setCitiesCount] = useState<number | string>('...');
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        const res = await fetch('/api/public/stats');
+        if (!res.ok) throw new Error('Failed to fetch stats');
+        const data = await res.json();
+        
+        setPharmaciesCount(data.pharmacies);
+        setCitiesCount(data.cities);
+        setUsersCount(data.users);
+      } catch (e) {
+        console.error("Failed to fetch stats", e);
+        setPharmaciesCount('-');
+        setUsersCount('-');
+        setCitiesCount('-');
+      }
+    }
+    fetchStats();
+  }, []);
+
   const stats = [
-    { label: 'Registered Pharmacies', value: '6+' },
-    { label: 'Active Users', value: '150+' },
-    { label: 'Cities Covered', value: '5' },
+    { label: 'Registered Pharmacies', value: `${pharmaciesCount}` },
+    { label: 'Active Users', value: `${usersCount}` },
+    { label: 'Cities/Districts Covered', value: `${citiesCount}` },
     { label: 'Support Available', value: '24/7' }
   ];
 

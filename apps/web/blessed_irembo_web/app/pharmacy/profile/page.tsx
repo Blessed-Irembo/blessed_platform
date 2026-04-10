@@ -20,7 +20,7 @@ export default function PharmacyProfilePage() {
 
   const pharmacyName = pharmacy?.name || currentUser?.displayName || '—';
   const email = pharmacy?.email || currentUser?.email || '—';
-  const phone = pharmacy?.phoneNumber || '';
+  const phone = pharmacy?.phone || pharmacy?.phoneNumber || '';
   const initials = pharmacyName
     .split(' ')
     .map((n: string) => n[0])

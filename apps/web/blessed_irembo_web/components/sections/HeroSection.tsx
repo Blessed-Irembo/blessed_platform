@@ -14,12 +14,20 @@ export default function HeroSection() {
         <div className="grid md:grid-cols-2 gap-8 items-center">
           {/* Left Column - Content */}
           <div className="space-y-4">
+            {/* Ownership Badge */}
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-teal-50 border border-teal-100 text-teal-700 text-sm font-medium mb-2">
+              <svg className="w-4 h-4" fill="none" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              A Blessed HealthConnect Ltd Initiative
+            </div>
+
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
               Find Trusted Pharmacies Anywhere in Rwanda
             </h1>
             
             <p className="text-base text-gray-600 leading-relaxed">
-              Blessed Irembo connects you with verified pharmacies nationwide. 
+              Operating under <strong className="text-gray-800">Blessed HealthConnect Ltd</strong>, Blessed Irembo connects you with verified pharmacies nationwide. 
               Search by location, check availability, and get the medication you need, 
               when you need it.
             </p>

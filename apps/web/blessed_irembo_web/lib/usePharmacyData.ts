@@ -15,7 +15,8 @@ export interface PharmacyData {
     name: string;
     ownerName: string;
     email: string;
-    phoneNumber: string;
+    phoneNumber?: string;
+    phone?: string;
     address: string;
     registrationNumber: string;
     latitude: number;

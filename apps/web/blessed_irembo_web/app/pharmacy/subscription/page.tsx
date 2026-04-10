@@ -90,7 +90,7 @@ export default function PharmacySubscription() {
     alert(`Selected plan: ${planId}`);
   };
 
-  const newInquiries = 1;
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,12 +103,7 @@ export default function PharmacySubscription() {
                 <Image src="/logo1.png" alt="Blessed Irembo" width={50} height={50} />
               </Link>
               <nav className="flex gap-8">
-                <Link href="/" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Home
-                </Link>
-                <Link href="/find-pharmacies" className="text-gray-700 hover:text-gray-900 font-medium">
-                  Find Pharmacies
-                </Link>
+
                 <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold">
                   Dashboard
                 </Link>
@@ -148,22 +143,7 @@ export default function PharmacySubscription() {
                 <span className="font-medium">Overview</span>
               </Link>
 
-              <Link
-                href="/pharmacy/inquiries"
-                className="flex items-center justify-between px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                  </svg>
-                  <span className="font-medium">Inquiries</span>
-                </div>
-                {newInquiries > 0 && (
-                  <span className="bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                    {newInquiries}
-                  </span>
-                )}
-              </Link>
+
 
               <Link
                 href="/pharmacy/subscription"

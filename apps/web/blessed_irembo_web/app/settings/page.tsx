@@ -51,7 +51,7 @@ export default function SettingsPage() {
                     setProfileFullName(data.fullName ?? currentUser.displayName ?? '');
                     setProfilePhone(data.phoneNumber ?? '');
                 }
-            } catch {}
+            } catch { }
         }
         loadProfile();
     }, [currentUser]);

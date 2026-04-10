@@ -10,7 +10,6 @@ import Image from 'next/image';
 export default function Footer() {
   const quickLinks = [
     { label: 'About Us', href: '/about' },
-    { label: 'How it Works', href: '/how-it-works' },
     { label: 'For Pharmacies', href: '/for-pharmacies' },
     { label: 'Privacy Policy', href: '/privacy' }
   ];
@@ -32,8 +31,10 @@ export default function Footer() {
               <span className="text-xl font-bold text-gray-900">Blessed Irembo</span>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Connecting Rwandans with trusted pharmacies nationwide. 
-              Find medication quickly and easily.
+              Connecting Rwandans with trusted pharmacies nationwide. Find medication quickly and easily.
+            </p>
+            <p className="text-gray-500 text-sm mt-3 font-medium">
+              A healthcare digital solution by <span className="text-teal-600 font-semibold">Blessed HealthConnect Ltd</span>.
             </p>
           </div>
 
@@ -43,7 +44,7 @@ export default function Footer() {
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
                 <li key={index}>
-                  <Link 
+                  <Link
                     href={link.href}
                     className="text-gray-600 hover:text-teal-600 transition-colors text-sm"
                   >
@@ -59,53 +60,53 @@ export default function Footer() {
             <h3 className="text-gray-900 font-semibold mb-4">Contact</h3>
             <ul className="space-y-3">
               <li className="flex items-start text-gray-600 text-sm">
-                <svg 
-                  className="w-5 h-5 mr-2 mt-0.5 shrink-0" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="w-5 h-5 mr-2 mt-0.5 shrink-0"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
                   <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
-                <a 
+                <a
                   href="mailto:support@blessedirembo.rw"
                   className="hover:text-teal-600 transition-colors"
                 >
-                  support@blessedirembo.rw
+                  blessedirembo@gmail.com
                 </a>
               </li>
-              
+
               <li className="flex items-start text-gray-600 text-sm">
-                <svg 
-                  className="w-5 h-5 mr-2 mt-0.5 shrink-0" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="w-5 h-5 mr-2 mt-0.5 shrink-0"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
                   <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                 </svg>
-                <a 
+                <a
                   href="tel:+250788000000"
                   className="hover:text-teal-600 transition-colors"
                 >
-                  +250 788 000 000
+                  +250 781424230
                 </a>
               </li>
-              
+
               <li className="flex items-start text-gray-600 text-sm">
-                <svg 
-                  className="w-5 h-5 mr-2 mt-0.5 shrink-0" 
-                  fill="none" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth="2" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  className="w-5 h-5 mr-2 mt-0.5 shrink-0"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                 >
                   <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -118,9 +119,12 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-gray-200 mt-12 pt-8 text-center">
+        <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <p className="text-gray-600 text-sm">
-            &copy; 2025 Blessed Irembo. All rights reserved.
+            &copy; {new Date().getFullYear()} Blessed Irembo. All rights reserved.
+          </p>
+          <p className="text-gray-500 text-xs font-medium">
+            Operated by Blessed HealthConnect Ltd.
           </p>
         </div>
       </div>

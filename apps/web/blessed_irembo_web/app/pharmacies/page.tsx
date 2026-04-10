@@ -10,6 +10,8 @@ import { useRequireUserRole } from '@/lib/authHooks';
 import { useAuth } from '@/lib/AuthContext';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import LoadingScreen from '@/components/ui/LoadingScreen';
+import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
 const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
@@ -24,7 +26,7 @@ const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
   ),
 });
 
-import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
+
 
 // ─── Page Component ────────────────────────────────────────────────────────────
 
@@ -97,7 +99,7 @@ export default function PharmaciesPage() {
       try {
         const snap = await getDoc(doc(db, 'users', currentUser.uid));
         if (snap.exists()) setUserPhone(snap.data().phoneNumber ?? '');
-      } catch {}
+      } catch { }
     }
     loadUserPhone();
   }, [currentUser]);
@@ -182,14 +184,7 @@ export default function PharmaciesPage() {
   //  - Pharmacy data is loading
   //  - User is a pharmacy role (redirect is in-flight, hide map completely)
   if (loading || pharmaciesLoading || userRole === 'pharmacy') {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Redirecting…</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen text="Loading pharmacies…" />;
   }
 
   // Filter pharmacies based on search, district, and open status
@@ -292,7 +287,7 @@ export default function PharmaciesPage() {
                   {/* Menu items */}
                   <div className="py-2">
                     <Link
-                      href="/pharmacy/profile"
+                      href="/profile"
                       className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                       onClick={() => setDropdownOpen(false)}
                       role="menuitem"
@@ -587,17 +582,15 @@ export default function PharmaciesPage() {
                       <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
-                      <span className={`font-medium ${
-                        pharmacy.isOpen ? 'text-green-600' : 'text-red-500'
-                      }`}>
+                      <span className={`font-medium ${pharmacy.isOpen ? 'text-green-600' : 'text-red-500'
+                        }`}>
                         {pharmacy.isOpen ? 'Open now' : 'Closed'}
                       </span>
                       <span className="text-gray-400">·</span>
                       <span className="truncate text-gray-600">{pharmacy.hours}</span>
                       <svg
-                        className={`w-3.5 h-3.5 text-gray-400 transition-transform ml-auto shrink-0 ${
-                          expandedHoursId === pharmacy.id ? 'rotate-180' : ''
-                        }`}
+                        className={`w-3.5 h-3.5 text-gray-400 transition-transform ml-auto shrink-0 ${expandedHoursId === pharmacy.id ? 'rotate-180' : ''
+                          }`}
                         fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
                       >
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
@@ -607,7 +600,7 @@ export default function PharmaciesPage() {
                     {/* Expanded schedule */}
                     {expandedHoursId === pharmacy.id && (() => {
                       const oh = pharmacy.operatingHours;
-                      const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+                      const ALL_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
                       const todayName = ALL_DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
                       const openDays: string[] = oh && Array.isArray(oh.days) ? oh.days : [];
 
@@ -619,16 +612,14 @@ export default function PharmaciesPage() {
                             return (
                               <div
                                 key={day}
-                                className={`flex justify-between px-2.5 py-1.5 border-b border-gray-50 last:border-0 ${
-                                  isToday ? 'bg-teal-50' : 'bg-white'
-                                }`}
+                                className={`flex justify-between px-2.5 py-1.5 border-b border-gray-50 last:border-0 ${isToday ? 'bg-teal-50' : 'bg-white'
+                                  }`}
                               >
                                 <span className={isToday ? 'font-semibold text-teal-700' : 'text-gray-600'}>{day}</span>
-                                <span className={`${
-                                  isToday
+                                <span className={`${isToday
                                     ? isDayOpen ? 'text-teal-600 font-semibold' : 'text-red-500 font-semibold'
                                     : isDayOpen ? 'text-gray-500' : 'text-gray-400'
-                                }`}>
+                                  }`}>
                                   {oh?.is24Hours
                                     ? 'Open 24 hours'
                                     : isDayOpen
