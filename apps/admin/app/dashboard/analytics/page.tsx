@@ -110,10 +110,10 @@ export default function AnalyticsPage() {
       <Header />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 px-8 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Analytics &amp; Reports</h1>
-            <p className="text-gray-600">Live data from the platform database</p>
+        <main className="flex-1 w-full overflow-hidden p-4 sm:p-8 pb-20 sm:pb-8">
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Analytics &amp; Reports</h1>
+            <p className="text-sm sm:text-base text-gray-600">Live data from the platform database</p>
           </div>
 
           {/* Summary Stats */}

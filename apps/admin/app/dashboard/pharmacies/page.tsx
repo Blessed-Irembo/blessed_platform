@@ -60,10 +60,10 @@ export default function PharmaciesPage() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 px-8 py-8">
+        <main className="flex-1 w-full overflow-hidden p-4 sm:p-8 pb-20 sm:pb-8">
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Pharmacy Management</h1>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Pharmacy Management</h1>
           </div>
 
           {/* Content Area */}
@@ -108,9 +108,13 @@ export default function PharmaciesPage() {
                             Verified
                           </span>
                         )}
-                        <span className="bg-teal-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                          {pharmacy.status}
-                        </span>
+                        {!(pharmacy.verified && pharmacy.status === 'pending') && (
+                          <span className={`text-white text-xs font-semibold px-3 py-1 rounded-full ${
+                            pharmacy.status === 'pending' ? 'bg-amber-500' : 'bg-teal-600'
+                          }`}>
+                            {pharmacy.status}
+                          </span>
+                        )}
                       </div>
                       
                       <div className="grid md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">

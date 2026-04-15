@@ -120,11 +120,11 @@ export default function DashboardPage() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 px-8 py-8">
+        <main className="flex-1 p-4 sm:p-8 pb-20 sm:pb-8 w-full overflow-hidden">
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
-            <p className="text-gray-600">Blessed Irembo Platform Management</p>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Admin Dashboard</h1>
+            <p className="text-sm sm:text-base text-gray-600">Blessed Irembo Platform Management</p>
           </div>
 
           {/* Stats Cards */}
@@ -163,8 +163,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Actions */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
-            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+          <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 mb-8">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-5 sm:mb-6">Quick Actions</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Approve Pharmacies — links directly to pharmacies management page */}
               <Link

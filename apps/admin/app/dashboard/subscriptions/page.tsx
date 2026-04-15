@@ -71,10 +71,10 @@ export default function SubscriptionsPage() {
       <div className="flex">
         <Sidebar />
         
-        <main className="flex-1 px-8 py-8">
+        <main className="flex-1 w-full overflow-hidden p-4 sm:p-8 pb-20 sm:pb-8">
           {/* Page Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Subscription Management</h1>
+          <div className="mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Subscription Management</h1>
           </div>
 
           {/* Stats Cards */}
