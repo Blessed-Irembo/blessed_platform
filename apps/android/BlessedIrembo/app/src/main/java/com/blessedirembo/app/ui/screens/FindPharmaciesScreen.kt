@@ -1,7 +1,6 @@
 package com.blessedirembo.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,8 +21,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,13 +34,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.SheetState
-import androidx.compose.material3.SheetValue
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -59,7 +62,6 @@ import com.blessedirembo.app.data.model.Pharmacy
 import com.blessedirembo.app.ui.components.PharmacyInfo
 import com.blessedirembo.app.ui.components.PharmacyListItem
 import com.blessedirembo.app.ui.theme.Gray100
-import com.blessedirembo.app.ui.theme.Gray300
 import com.blessedirembo.app.ui.theme.Gray400
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
@@ -79,6 +81,11 @@ fun FindPharmaciesScreen(
     var searchQuery by remember { mutableStateOf("") }
     val uiState by pharmacyViewModel.uiState.collectAsState()
 
+    // QuickDetailsSheet state — mirrors iOS selectedPharmacy + QuickDetailsSheet
+    var quickPharmacy by remember { mutableStateOf<PharmacyInfo?>(null) }
+    var selectedPharmacyId by remember { mutableStateOf<String?>(null) }
+    val quickSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
     val scaffoldState = rememberBottomSheetScaffoldState()
 
     // Log screen view
@@ -92,6 +99,121 @@ fun FindPharmaciesScreen(
             pharmacyViewModel.loadNearbyPharmacies()
         } else {
             pharmacyViewModel.searchPharmacies(searchQuery)
+        }
+    }
+
+    // ── QuickDetailsSheet — shown when a map marker is tapped
+    // mirrors iOS QuickDetailsSheet with name, verified badge, address, View Details CTA
+    if (quickPharmacy != null) {
+        ModalBottomSheet(
+            onDismissRequest = {
+                quickPharmacy = null
+                selectedPharmacyId = null
+            },
+            sheetState = quickSheetState,
+            containerColor = White,
+            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
+        ) {
+            val p = quickPharmacy!!
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                // Pharmacy name + verified badge — mirrors iOS HStack with checkmark.seal.fill
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = p.name,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Gray900
+                            )
+                            if (p.isVerified) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Icon(
+                                    imageVector = Icons.Filled.Verified,
+                                    contentDescription = "Verified",
+                                    tint = Teal500,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Distance row — mirrors iOS location.fill + formattedDistance
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Filled.LocationOn,
+                                contentDescription = null,
+                                tint = Teal500,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = p.distance.ifBlank { "—" },
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = Gray500
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // Address
+                        Text(
+                            text = p.address,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Gray500,
+                            maxLines = 2
+                        )
+                    }
+
+                    // Close button — mirrors iOS xmark.circle.fill
+                    IconButton(
+                        onClick = {
+                            quickPharmacy = null
+                            selectedPharmacyId = null
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Close,
+                            contentDescription = "Close",
+                            tint = Gray400
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // "View Details" CTA — mirrors iOS NavigationLink with primaryTeal background
+                androidx.compose.material3.Button(
+                    onClick = {
+                        quickPharmacy = null
+                        selectedPharmacyId = null
+                        onPharmacyClick(p.id)
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                        containerColor = Teal500
+                    )
+                ) {
+                    Text(
+                        text = "View Details",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = White
+                    )
+                }
+            }
         }
     }
 
@@ -183,9 +305,10 @@ fun FindPharmaciesScreen(
                             }
                         }
 
-                        // Pharmacy List (Expands within bottom sheet)
+                        // Pharmacy List — uses updated PharmacyListItem card layout
                         LazyColumn(
-                            contentPadding = PaddingValues(bottom = 24.dp)
+                            contentPadding = PaddingValues(bottom = 24.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(state.pharmacies) { pharmacy ->
                                 val pharmacyInfo = PharmacyInfo(
@@ -202,14 +325,9 @@ fun FindPharmaciesScreen(
                                 )
                                 PharmacyListItem(
                                     pharmacy = pharmacyInfo,
+                                    isSelected = selectedPharmacyId == pharmacy.id,
                                     onClick = { onPharmacyClick(pharmacy.id) }
                                 )
-                                if (pharmacy != state.pharmacies.last()) {
-                                    HorizontalDivider(
-                                        color = Gray100,
-                                        modifier = Modifier.padding(vertical = 8.dp)
-                                    )
-                                }
                             }
                         }
                     }
@@ -244,8 +362,15 @@ fun FindPharmaciesScreen(
 
             com.blessedirembo.app.ui.components.GoogleMapView(
                 pharmacies = mapPharmacies,
-                selectedPharmacyId = null,
-                onPharmacyClick = { id -> onPharmacyClick(id) },
+                selectedPharmacyId = selectedPharmacyId,
+                onPharmacyClick = { id ->
+                    // Tap on marker → show QuickDetailsSheet (mirrors iOS onPharmacyTap)
+                    val pharmacy = mapPharmacies.find { it.id == id }
+                    if (pharmacy != null) {
+                        selectedPharmacyId = id
+                        quickPharmacy = pharmacy
+                    }
+                },
                 modifier = Modifier.fillMaxSize()
             )
 
@@ -277,10 +402,10 @@ fun FindPharmaciesScreen(
                     ),
                     singleLine = true
                 )
-                
+
                 Spacer(modifier = Modifier.height(12.dp))
 
-                // Location Button aligned to end
+                // Location Button aligned to end — mirrors iOS locationButton
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End

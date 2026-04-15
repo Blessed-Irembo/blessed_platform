@@ -40,6 +40,7 @@ sealed class Screen(val route: String) {
     data object Home : Screen("home")
     data object SignIn : Screen("sign_in")
     data object Profile : Screen("profile")
+    data object EditProfile : Screen("edit_profile")
     data object FindPharmacies : Screen("find_pharmacies")
     data object PharmacyDetail : Screen("pharmacy_detail/{pharmacyId}") {
         fun createRoute(pharmacyId: String) = "pharmacy_detail/$pharmacyId"
@@ -196,7 +197,16 @@ fun NavGraph(
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
-                }
+                },
+                onEditClick = { navController.navigate(Screen.EditProfile.route) }
+            )
+        }
+
+        // ── Edit Profile Screen ────────────────────────────────────────────────
+        composable(route = Screen.EditProfile.route) {
+            com.blessedirembo.app.ui.screens.EditProfileScreen(
+                onBackClick = { navController.popBackStack() },
+                authViewModel = authViewModel
             )
         }
 

@@ -31,6 +31,7 @@ val Gray900 = Color(0xFF111827)
 val ErrorRed = Color(0xFFDC2626)
 val SuccessGreen = Color(0xFF16A34A)
 val WarningYellow = Color(0xFFEAB308)
+val OrangeRating = Color(0xFFF97316) // Star rating — matches iOS .orange
 
 // Text Colors
 val TextPrimary = Gray900

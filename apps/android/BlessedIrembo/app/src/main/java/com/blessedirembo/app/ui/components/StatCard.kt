@@ -25,8 +25,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
+import com.blessedirembo.app.ui.theme.OrangeRating
 import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.White
 
@@ -67,25 +70,43 @@ fun StatCard(
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(iconBackgroundColor),
+                        .clip(androidx.compose.foundation.shape.CircleShape)
+                        .background(iconBackgroundColor.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = White,
+                        tint = iconBackgroundColor,
                         modifier = Modifier.size(20.dp)
                     )
                 }
                 
-                // Percentage change
-                if (percentageChange != null) {
+                // Percentage change or Rating Star
+                if (label == "Avg. Rating") {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Star,
+                            contentDescription = null,
+                            tint = OrangeRating,
+                            modifier = Modifier.size(12.dp)
+                        )
+                    }
+                } else if (percentageChange != null && percentageChange.isNotBlank()) {
                     Text(
-                        text = percentageChange,
+                        text = java.net.URLDecoder.decode(java.net.URLEncoder.encode(percentageChange, "UTF-8"), "UTF-8"), // Clean string
                         style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Medium,
-                        color = if (isPositive) PositiveGreen else NegativeRed
+                        fontWeight = FontWeight.Bold,
+                        color = if (isPositive) PositiveGreen else NegativeRed,
+                        modifier = Modifier
+                            .background(
+                                color = if (isPositive) PositiveGreen.copy(alpha = 0.1f) else NegativeRed.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
             }

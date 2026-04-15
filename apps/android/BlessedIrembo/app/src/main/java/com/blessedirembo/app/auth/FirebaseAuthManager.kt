@@ -73,4 +73,48 @@ object FirebaseAuthManager {
             else -> e.message ?: "An unknown error occurred."
         }
     }
+
+    /**
+     * Update the Firebase Auth display name.
+     */
+    suspend fun updateProfile(name: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("Not authenticated")
+            val profileUpdates = com.google.firebase.auth.UserProfileChangeRequest.Builder()
+                .setDisplayName(name)
+                .build()
+            user.updateProfile(profileUpdates).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Send a password reset email to the given address.
+     */
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update the user's password securely in Firebase Auth.
+     */
+    suspend fun updatePassword(newPassword: String): Result<Unit> {
+        return try {
+            val user = auth.currentUser ?: throw Exception("Not authenticated")
+            user.updatePassword(newPassword).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            val error = if (e.message?.contains("CREDENTIAL_TOO_OLD_LOGIN_AGAIN") == true || e.message?.contains("CREDENTIAL_TOO_OLD") == true) {
+                "Your session has expired for security reasons. Please fully log out and sign back in to change your password."
+            } else { getErrorMessage(e) }
+            Result.failure(Exception(error))
+        }
+    }
 }

@@ -22,12 +22,12 @@ import androidx.compose.material.icons.filled.Campaign
 import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.Inventory
-import androidx.compose.material.icons.filled.Message
+import androidx.compose.material.icons.filled.ChatBubble
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Reply
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Card
@@ -57,9 +57,11 @@ import com.blessedirembo.app.ui.viewmodel.InquiryViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 // Color palette for dashboard elements
 val BlueAccent = Color(0xFF3B82F6)
@@ -132,30 +134,16 @@ fun PharmacyOwnerDashboardScreen(
             Column {
                 Text(
                     text = "Blessed Irembo",
-                    style = MaterialTheme.typography.headlineMedium,
+                    fontSize = 34.sp,
                     fontWeight = FontWeight.Bold,
                     color = Gray900
                 )
                 Text(
-                    text = pharmacy?.name ?: "Loading...",
+                    text = pharmacy?.name ?: "Pharmacy Name",
                     style = MaterialTheme.typography.titleMedium,
                     color = Gray500,
                     modifier = Modifier.padding(top = 4.dp)
                 )
-                if (pharmacy?.phone?.isNotBlank() == true) {
-                    Text(
-                        text = "Tel: ${pharmacy!!.phone}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Gray500
-                    )
-                }
-                if (pharmacy?.email?.isNotBlank() == true) {
-                    Text(
-                        text = "Email: ${pharmacy!!.email}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = Gray500
-                    )
-                }
             }
             
             // Notification bell with badge
@@ -170,7 +158,8 @@ fun PharmacyOwnerDashboardScreen(
                 IconButton(
                     onClick = onNotificationClick,
                     modifier = Modifier
-                        .size(48.dp)
+                        .size(44.dp)
+                        .shadow(elevation = 2.dp, shape = CircleShape)
                         .clip(CircleShape)
                         .background(White)
                 ) {
@@ -185,26 +174,28 @@ fun PharmacyOwnerDashboardScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Stats Grid (2x2)
+        // Stats Grid (2x2) — mirrors iOS PharmacyDashboardView
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // WhatsApp Clicks (green — matches iOS message.fill card)
             StatCard(
-                icon = Icons.Filled.Message,
-                iconBackgroundColor = BlueAccent,
-                value = "125",
-                label = "Total Inquiries",
-                percentageChange = "+12%",
+                icon = Icons.Filled.ChatBubble,
+                iconBackgroundColor = Color(0xFF25D366), // WhatsApp green
+                value = "${pharmacy?.whatsappClicks ?: 0}",
+                label = "WhatsApp Clicks",
+                percentageChange = "",
                 isPositive = true,
                 modifier = Modifier.weight(1f)
             )
+            // Subscription status
             StatCard(
-                icon = Icons.Filled.Visibility,
-                iconBackgroundColor = SuccessGreen,
-                value = "1,240",
-                label = "Profile Views",
-                percentageChange = "+5%",
+                icon = if (pharmacy?.isPremium == true) Icons.Filled.Star else Icons.Filled.People,
+                iconBackgroundColor = if (pharmacy?.isPremium == true) PurpleAccent else Teal500,
+                value = pharmacy?.subscriptionPlan ?: "Free",
+                label = "Subscription",
+                percentageChange = "",
                 isPositive = true,
                 modifier = Modifier.weight(1f)
             )
@@ -216,61 +207,26 @@ fun PharmacyOwnerDashboardScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Profile Views
             StatCard(
-                icon = Icons.Filled.Star,
-                iconBackgroundColor = OrangeAccent,
-                value = "4.8",
-                label = "Avg. Rating",
+                icon = Icons.Filled.People,
+                iconBackgroundColor = BlueAccent,
+                value = "${pharmacy?.profileViews ?: 0}",
+                label = "Profile Views",
+                percentageChange = "",
+                isPositive = true,
                 modifier = Modifier.weight(1f)
             )
+            // Open / Closed status
+            val isOpen = pharmacy?.isCurrentlyOpen == true
             StatCard(
-                icon = Icons.Filled.Reply,
-                iconBackgroundColor = PurpleAccent,
-                value = "98%",
-                label = "Response Rate",
+                icon = Icons.Filled.Star, // clock fill equivalent
+                iconBackgroundColor = if (isOpen) SuccessGreen else Color(0xFFEF4444),
+                value = if (isOpen) "Open" else "Closed",
+                label = "Status",
+                percentageChange = "",
+                isPositive = isOpen,
                 modifier = Modifier.weight(1f)
-            )
-        }
-        
-        Spacer(modifier = Modifier.height(24.dp))
-        
-        // Quick Actions
-        Text(
-            text = "Quick Actions",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = Gray900
-        )
-        
-        Spacer(modifier = Modifier.height(16.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            QuickActionButton(
-                icon = Icons.Filled.Add,
-                label = "Log Sale",
-                backgroundColor = Teal500,
-                onClick = onLogSaleClick
-            )
-            QuickActionButton(
-                icon = Icons.Filled.TrendingUp,
-                label = "Update Stock",
-                backgroundColor = SuccessGreen,
-                onClick = onUpdateStockClick
-            )
-            QuickActionButton(
-                icon = Icons.Filled.Campaign,
-                label = "Add Promotion",
-                backgroundColor = OrangeAccent,
-                onClick = onAddPromotionClick
-            )
-            QuickActionButton(
-                icon = Icons.Filled.Help,
-                label = "Support",
-                backgroundColor = BlueAccent,
-                onClick = onSupportClick
             )
         }
         

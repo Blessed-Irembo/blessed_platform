@@ -1,12 +1,13 @@
 package com.blessedirembo.app.data.repository
 
 import com.blessedirembo.app.data.model.Pharmacy
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 /**
  * PharmacyRepository
- * Reads pharmacy data from Firestore at /pharmacies
+ * Reads and writes pharmacy data from Firestore at /pharmacies
  */
 class PharmacyRepository {
 
@@ -15,7 +16,6 @@ class PharmacyRepository {
 
     /**
      * Fetch all verified pharmacies.
-     * In production this would filter by geolocation radius.
      */
     suspend fun getNearbyPharmacies(): Result<List<Pharmacy>> {
         return try {
@@ -54,7 +54,14 @@ class PharmacyRepository {
                 .limit(1)
                 .get()
                 .await()
-            val pharmacy = snapshot.documents.firstOrNull()?.toObject(Pharmacy::class.java)
+            var pharmacy = snapshot.documents.firstOrNull()?.toObject(Pharmacy::class.java)
+
+            // Fallback: check by document ID (matching iOS behavior)
+            if (pharmacy == null) {
+                val doc = pharmaciesCollection.document(ownerId).get().await()
+                pharmacy = doc.toObject(Pharmacy::class.java)
+            }
+
             Result.success(pharmacy)
         } catch (e: Exception) {
             Result.failure(e)
@@ -62,11 +69,123 @@ class PharmacyRepository {
     }
 
     /**
-     * Search pharmacies by name (client-side filter for now).
+     * Search pharmacies by name (client-side filter).
      */
     suspend fun searchPharmacies(query: String): Result<List<Pharmacy>> {
         return getNearbyPharmacies().map { list ->
             list.filter { it.name.contains(query, ignoreCase = true) }
+        }
+    }
+
+    /**
+     * Register a new pharmacy document in Firestore.
+     * Mirrors iOS AuthViewModel.signUpPharmacy().
+     */
+    suspend fun registerPharmacy(
+        uid: String,
+        pharmacyName: String,
+        ownerName: String,
+        phoneNumber: String,
+        email: String,
+        licenseNumber: String,
+        address: String,
+        latitude: Double,
+        longitude: Double,
+        is24Hours: Boolean,
+        operatingDays: List<String>,
+        openTime: String,
+        closeTime: String
+    ): Result<Unit> {
+        return try {
+            val ohMap = mapOf(
+                "is24Hours" to is24Hours,
+                "days" to (if (is24Hours) listOf("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") else operatingDays),
+                "openTime" to (if (is24Hours) "00:00" else openTime),
+                "closeTime" to (if (is24Hours) "23:59" else closeTime)
+            )
+            val data = hashMapOf(
+                "name" to pharmacyName,
+                "ownerName" to ownerName,
+                "phoneNumber" to phoneNumber,
+                "whatsAppNumber" to phoneNumber,  // sync WhatsApp with phone
+                "email" to email,
+                "licenseNumber" to licenseNumber,
+                "address" to address,
+                "latitude" to latitude,
+                "longitude" to longitude,
+                "is24_7" to is24Hours,
+                "operatingHours" to ohMap,
+                "ownerId" to uid,
+                "isVerified" to false,
+                "rating" to 0.0,
+                "reviewCount" to 0,
+                "whatsappClicks" to 0,
+                "profileViews" to 0,
+                "subscriptionPlan" to "Free",
+                "isPremium" to false,
+                "createdAt" to FieldValue.serverTimestamp()
+            )
+            pharmaciesCollection.document(uid).set(data).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update pharmacy profile fields (name, email, phone).
+     * Mirrors iOS PharmacyProfileSettingsView.saveChanges().
+     */
+    suspend fun updatePharmacyProfile(
+        pharmacyId: String,
+        name: String,
+        email: String,
+        phone: String
+    ): Result<Unit> {
+        return try {
+            pharmaciesCollection.document(pharmacyId).update(
+                mapOf(
+                    "name" to name,
+                    "email" to email,
+                    "phoneNumber" to phone,
+                    "whatsAppNumber" to phone,   // keep WhatsApp in sync
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Update operating hours for a pharmacy.
+     * Mirrors iOS EditOperatingHoursView.save().
+     */
+    suspend fun updateOperatingHours(
+        pharmacyId: String,
+        is24Hours: Boolean,
+        days: List<String>,
+        openTime: String,
+        closeTime: String
+    ): Result<Unit> {
+        return try {
+            val ohMap = mapOf(
+                "is24Hours" to is24Hours,
+                "days" to (if (is24Hours) listOf("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday") else days),
+                "openTime" to (if (is24Hours) "00:00" else openTime),
+                "closeTime" to (if (is24Hours) "23:59" else closeTime)
+            )
+            pharmaciesCollection.document(pharmacyId).update(
+                mapOf(
+                    "operatingHours" to ohMap,
+                    "is24_7" to is24Hours,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 }
