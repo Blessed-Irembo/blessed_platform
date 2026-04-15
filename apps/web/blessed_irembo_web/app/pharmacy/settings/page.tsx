@@ -10,6 +10,7 @@ import { usePharmacyData } from '@/lib/usePharmacyData';
 import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from 'firebase/auth';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 
 export default function PharmacySettings() {
   const router = useRouter();
@@ -176,44 +177,29 @@ export default function PharmacySettings() {
   };
 
   if (authLoading || pharmacyLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500 text-sm">Loading settings…</p>
-        </div>
-      </div>
-    );
+    return <LoadingScreen text="Loading settings…" />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="mx-auto px-6 py-4">
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
+        <div className="mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-12">
-              {/* Non-clickable logo */}
-              <div className="flex items-center cursor-default">
-                <Image src="/logo1.png" alt="Blessed Irembo" width={50} height={50} />
-              </div>
-              <nav className="flex gap-8">
-                <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold">
-                  My Pharmacy
-                </Link>
-              </nav>
+            <div className="flex items-center gap-3">
+              <Image src="/logo1.png" alt="Blessed Irembo" width={40} height={40} className="shrink-0" />
+              <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold text-sm sm:text-base">
+                My Pharmacy
+              </Link>
             </div>
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 rounded-lg">
-                <svg className="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-teal-50 rounded-lg">
+                <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
-                <span className="text-teal-600 font-medium">Pharmacy</span>
+                <span className="text-teal-600 font-medium text-sm">Pharmacy</span>
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-gray-700 hover:text-gray-900 font-medium"
-              >
+              <button onClick={handleLogout} className="text-sm px-3 py-2 text-gray-700 hover:text-gray-900 font-medium">
                 Logout
               </button>
             </div>
@@ -221,9 +207,9 @@ export default function PharmacySettings() {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar */}
-        <aside className="w-64 bg-white border-r border-gray-200 min-h-screen">
+      <div className="flex pb-16 md:pb-0">
+        {/* Sidebar — hidden on mobile */}
+        <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200 min-h-screen shrink-0">
           <div className="p-6">
             {/* Main Navigation */}
             <nav className="space-y-2">
@@ -281,7 +267,7 @@ export default function PharmacySettings() {
 
         {/* Main Content */}
         <main className="flex-1">
-          <div className="p-8">
+          <div className="p-4 sm:p-6 md:p-8">
             {/* Header */}
             <div className="flex items-center gap-4 mb-8">
               <Link
@@ -295,14 +281,31 @@ export default function PharmacySettings() {
               </Link>
             </div>
 
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
-              <p className="text-gray-600 mt-2">Manage your account preferences and settings</p>
+            <div className="mb-5">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your account preferences and settings</p>
             </div>
 
-            <div className="flex gap-8">
-              {/* Settings Sidebar */}
-              <div className="w-64">                <nav className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
+            {/* Mobile tab bar — horizontal scrollable */}
+            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 md:hidden">
+              <button
+                onClick={() => setActiveTab('account')}
+                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'account' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+              >
+                Account
+              </button>
+              <button
+                onClick={() => setActiveTab('general')}
+                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'general' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+              >
+                Working Hours
+              </button>
+            </div>
+
+            <div className="flex gap-6 md:gap-8">
+              {/* Settings Sidebar — hidden on mobile */}
+              <div className="hidden md:block w-56 shrink-0">
+                <nav className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
                 <button
                   onClick={() => setActiveTab('account')}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'account'
@@ -604,6 +607,28 @@ export default function PharmacySettings() {
           </div>
         </main>
       </div>
+
+      {/* Bottom Nav — mobile only */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30">
+        <div className="grid grid-cols-4 h-16">
+          <Link href="/pharmacy/dashboard" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" /></svg>
+            <span className="text-xs font-medium">Overview</span>
+          </Link>
+          <Link href="/pharmacy/subscription" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+            <span className="text-xs font-medium">Subscription</span>
+          </Link>
+          <Link href="/pharmacy/profile" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+            <span className="text-xs font-medium">Profile</span>
+          </Link>
+          <Link href="/pharmacy/settings" className="flex flex-col items-center justify-center gap-1 text-teal-600">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+            <span className="text-xs font-medium">Settings</span>
+          </Link>
+        </div>
+      </nav>
     </div>
   );
 }
