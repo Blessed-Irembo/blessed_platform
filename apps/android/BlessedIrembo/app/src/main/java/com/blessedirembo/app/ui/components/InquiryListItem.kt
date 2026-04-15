@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,8 +50,8 @@ fun InquiryListItem(
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(16.dp),
+        verticalAlignment = Alignment.Top
     ) {
         // Avatar with initials
         Box(
@@ -68,33 +69,38 @@ fun InquiryListItem(
             )
         }
         
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp))
         
-        // Name and message
+        // Name, time, and message
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = inquiry.senderName,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = if (!inquiry.isRead) FontWeight.SemiBold else FontWeight.Normal,
-                color = Gray900
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Top
+            ) {
+                Text(
+                    text = inquiry.senderName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = if (!inquiry.isRead) FontWeight.SemiBold else FontWeight.Medium,
+                    color = Gray900
+                )
+                Text(
+                    text = inquiry.timeAgo,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Gray500
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
             Text(
                 text = inquiry.message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = Gray500,
-                maxLines = 1,
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
         }
-        
-        Spacer(modifier = Modifier.width(8.dp))
-        
-        // Time ago
-        Text(
-            text = inquiry.timeAgo,
-            style = MaterialTheme.typography.bodySmall,
-            color = Gray400
-        )
     }
 }
 

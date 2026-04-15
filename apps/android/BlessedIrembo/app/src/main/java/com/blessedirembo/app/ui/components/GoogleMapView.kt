@@ -5,8 +5,11 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -25,8 +28,30 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
 /**
- * Reusable Google Map component for Android
- * Featuring custom teal markers and "clinic-clean" styling
+ * Data class representing a pharmacy for display in maps and lists.
+ */
+data class PharmacyInfo(
+    val id: String,
+    val name: String,
+    val distance: String,
+    val rating: Float,
+    val reviewCount: Int,
+    val address: String,
+    val isOpen: Boolean,
+    val isVerified: Boolean = false,
+    val latitude: Double = -1.9441, // Default to Kigali center if not provided
+    val longitude: Double = 30.0619
+)
+
+/**
+ * Reusable Google Map component for Android.
+ *
+ * Markers match the iOS design exactly:
+ *   • White rounded-rect bubble with downward pointer
+ *   • logo1.png clipped to a circle inside the bubble
+ *   • Teal (#0D9488) border for verified pharmacies
+ *   • Gray   (#9CA3AF) border for unverified
+ *   • 48 dp bubble when selected, 36 dp otherwise
  */
 @Composable
 fun GoogleMapView(
@@ -36,42 +61,37 @@ fun GoogleMapView(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    
-    // Initial camera position centered on Kigali
-    val kigali = LatLng(-1.9441, 30.0619)
+
+    // Initial camera position centred on Kigali – same default as iOS
+    val kigali = LatLng(-1.9536, 30.0606)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(kigali, 13f)
+        position = CameraPosition.fromLatLngZoom(kigali, 13.5f)
     }
 
-    androidx.compose.runtime.LaunchedEffect(pharmacies) {
+    LaunchedEffect(pharmacies) {
         if (pharmacies.isNotEmpty()) {
             if (pharmacies.size == 1) {
                 cameraPositionState.animate(
                     com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
                         LatLng(pharmacies.first().latitude, pharmacies.first().longitude),
-                        14f
+                        15f
                     )
                 )
             } else {
                 val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
-                pharmacies.forEach { pharmacy ->
-                    builder.include(LatLng(pharmacy.latitude, pharmacy.longitude))
-                }
+                pharmacies.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
                 try {
                     cameraPositionState.animate(
                         com.google.android.gms.maps.CameraUpdateFactory.newLatLngBounds(
-                            builder.build(),
-                            150 // pixel padding
+                            builder.build(), 150
                         )
                     )
                 } catch (e: Exception) {
-                    // Fallback if map layout is not yet sized properly for bounds
                     val avgLat = pharmacies.map { it.latitude }.average()
                     val avgLng = pharmacies.map { it.longitude }.average()
                     cameraPositionState.animate(
                         com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                            LatLng(avgLat, avgLng),
-                            12f
+                            LatLng(avgLat, avgLng), 12f
                         )
                     )
                 }
@@ -79,11 +99,10 @@ fun GoogleMapView(
         }
     }
 
-    // Load custom map style
     val mapProperties = remember {
         MapProperties(
             mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style),
-            isMyLocationEnabled = false // TODO: Enable when permission logic is integrated
+            isMyLocationEnabled = false
         )
     }
 
@@ -103,10 +122,10 @@ fun GoogleMapView(
     ) {
         pharmacies.forEach { pharmacy ->
             val isSelected = pharmacy.id == selectedPharmacyId
-            val markerIcon = remember(pharmacy.isOpen, isSelected) {
-                createCustomMarkerBitmap(
+            val markerIcon = remember(isSelected, pharmacy.isVerified) {
+                createPharmacyMarkerIcon(
                     context = context,
-                    isOpen = pharmacy.isOpen,
+                    isVerified = pharmacy.isVerified,
                     isSelected = isSelected
                 )
             }
@@ -118,118 +137,139 @@ fun GoogleMapView(
                 icon = markerIcon,
                 onClick = {
                     onPharmacyClick(pharmacy.id)
-                    false // Return false to show info window or handle click
+                    true // consume click — prevents default info window
                 }
             )
         }
     }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Marker icon factory — mirrors iOS GoogleMapsView.makeMarkerIcon(isVerified:isSelected:)
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
- * Creates a custom marker bitmap matching the exact Web design (SVG replication)
+ * Builds an iOS-equivalent pharmacy map marker:
+ *
+ *  ┌────────────────┐
+ *  │  ┌──────────┐  │  ← white rounded-rect bubble
+ *  │  │  logo1   │  │  ← logo1.png clipped to circle
+ *  │  └──────────┘  │
+ *  └───────┬────────┘  ← teal (verified) or gray (unverified) border
+ *          ▼           ← downward triangular pointer
+ *
+ * Sizes:  selected = 48 dp bubble,  normal = 36 dp bubble
  */
-private fun createCustomMarkerBitmap(
+private fun createPharmacyMarkerIcon(
     context: Context,
-    isOpen: Boolean,
+    isVerified: Boolean,
     isSelected: Boolean
 ): BitmapDescriptor {
-    // Determine colors
-    val bgHex = if (isSelected) "#0D9488" else if (isOpen) "#14B8A6" else "#6B7280"
-    val ringHex = if (isSelected) "#0F766E" else if (isOpen) "#0D9488" else "#4B5563"
-    
-    val bgColor = Color.parseColor(bgHex)
-    val ringColor = Color.parseColor(ringHex)
-    
-    // Base dimensions (will scale by density)
     val density = context.resources.displayMetrics.density
-    // Scale up slightly for sharper rendering on map
-    val scale = density * 1.5f 
-    
-    val baseW = if (isSelected) 52f else 42f
-    val baseH = if (isSelected) 66f else 54f
-    
-    val w = baseW * scale
-    val h = baseH * scale
-    
-    val bitmap = Bitmap.createBitmap(w.toInt(), h.toInt(), Bitmap.Config.ARGB_8888)
+
+    // Bubble dimensions (dp → px) — matching iOS 36 / 48
+    val bubbleSizePx = (if (isSelected) 48f else 36f) * density
+    val cornerRadiusPx = bubbleSizePx * 0.3f
+    val pointerHeightPx = bubbleSizePx * 0.25f
+    val shadowPadding = 4f * density
+
+    val totalWidth = bubbleSizePx + shadowPadding * 2
+    val totalHeight = bubbleSizePx + pointerHeightPx + shadowPadding * 2
+
+    val bitmap = Bitmap.createBitmap(
+        totalWidth.toInt(),
+        totalHeight.toInt(),
+        Bitmap.Config.ARGB_8888
+    )
     val canvas = Canvas(bitmap)
+
+    // Colours — mirroring iOS: verified = teal, unverified = systemGray
+    val strokeColor = if (isVerified) Color.parseColor("#0D9488") else Color.parseColor("#9CA3AF")
+    val fillColor = Color.WHITE
+    val strokeWidthPx = 1.5f * density
+
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    
-    val cx = w / 2f
-    val r = cx - (3f * scale)
-    val tipY = h - (2f * scale)
-    
-    // Shadow (simulated with a simple oval at the bottom for Android map context)
-    paint.color = Color.argb(if (isSelected) 100 else 40, 0, 0, 0)
+
+    // Translate to leave room for shadow padding
+    canvas.translate(shadowPadding, shadowPadding)
+
+    // ── Drop shadow (subtle, like iOS)
+    val shadowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.argb(51, 0, 0, 0) // 0.2 alpha
+        maskFilter = android.graphics.BlurMaskFilter(
+            4f * density, android.graphics.BlurMaskFilter.Blur.NORMAL
+        )
+    }
+    canvas.drawRoundRect(
+        RectF(2f, 2f, bubbleSizePx - 2f, bubbleSizePx - 2f),
+        cornerRadiusPx, cornerRadiusPx, shadowPaint
+    )
+
+    // ── Bubble path (rounded-rect + pointer triangle) — matches iOS UIBezierPath
+    val bubblePath = Path().apply {
+        addRoundRect(
+            RectF(0f, 0f, bubbleSizePx, bubbleSizePx),
+            cornerRadiusPx, cornerRadiusPx,
+            Path.Direction.CW
+        )
+    }
+    // Pointer — iOS: moveTo(size*0.4, size), lineTo(size*0.5, size+size*0.25), lineTo(size*0.6, size)
+    val pointerPath = Path().apply {
+        moveTo(bubbleSizePx * 0.4f, bubbleSizePx)
+        lineTo(bubbleSizePx * 0.5f, bubbleSizePx + pointerHeightPx)
+        lineTo(bubbleSizePx * 0.6f, bubbleSizePx)
+        close()
+    }
+    val fullPath = Path().apply {
+        addPath(bubblePath)
+        addPath(pointerPath)
+    }
+
+    // Fill white
     paint.style = Paint.Style.FILL
-    canvas.drawOval(
-        cx - (8f * scale), 
-        tipY - (4f * scale), 
-        cx + (8f * scale), 
-        tipY + (4f * scale), 
-        paint
-    )
-    
-    // Draw Pin tail
-    val tailPath = android.graphics.Path()
-    tailPath.moveTo(cx - (6f * scale), (r * 2f) + (3f * scale))
-    tailPath.quadTo(cx, tipY + (4f * scale), cx + (6f * scale), (r * 2f) + (3f * scale))
-    tailPath.close()
-    paint.color = bgColor
-    canvas.drawPath(tailPath, paint)
-    
-    // Outer ring
-    paint.color = ringColor
-    val ringRadius = r + if (isSelected) (1f * scale) else 0f
-    canvas.drawCircle(cx, r + (3f * scale), ringRadius, paint)
-    
-    // Main circle body
-    paint.color = bgColor
-    canvas.drawCircle(cx, r + (3f * scale), r - (1f * scale), paint)
-    
-    // Inner white disc
-    paint.color = Color.WHITE
-    // Web uses opacity 0.97, close to solid white
-    paint.alpha = 247 
-    canvas.drawCircle(cx, r + (3f * scale), r * 0.72f, paint)
-    
-    // Diamond
-    val dx = cx
-    val dy = r + (3f * scale)
-    val ds = r * 0.42f
-    val diamondPath = android.graphics.Path()
-    diamondPath.moveTo(dx, dy - (ds * 1.1f))
-    diamondPath.lineTo(dx + ds, dy)
-    diamondPath.lineTo(dx, dy + (ds * 1.1f))
-    diamondPath.lineTo(dx - ds, dy)
-    diamondPath.close()
-    paint.color = bgColor
-    paint.alpha = 255
-    canvas.drawPath(diamondPath, paint)
-    
-    // Cross below diamond
-    paint.color = ringColor
-    paint.alpha = 178 // ~0.7 opacity
-    
-    val crossY = dy + (ds * 1.1f)
-    // Vertical rect
-    canvas.drawRoundRect(
-        cx - (1.2f * scale),
-        crossY + (2f * scale),
-        cx + (1.2f * scale),
-        crossY + (8f * scale),
-        1f * scale, 1f * scale,
-        paint
-    )
-    // Horizontal rect
-    canvas.drawRoundRect(
-        cx - (3f * scale),
-        crossY + (3.8f * scale),
-        cx + (3f * scale),
-        crossY + (6.2f * scale),
-        1f * scale, 1f * scale,
-        paint
-    )
+    paint.color = fillColor
+    canvas.drawPath(fullPath, paint)
+
+    // Stroke (teal / gray)
+    paint.style = Paint.Style.STROKE
+    paint.color = strokeColor
+    paint.strokeWidth = strokeWidthPx
+    canvas.drawPath(fullPath, paint)
+
+    // ── Draw logo1.png clipped to circle inside bubble (matches iOS logo clip)
+    val logoDrawable = ContextCompat.getDrawable(context, R.drawable.logo1)
+    val imageInset = bubbleSizePx * 0.15f
+    val imageSize = bubbleSizePx - imageInset * 2
+    val cx = bubbleSizePx / 2f
+    val cy = bubbleSizePx / 2f
+
+    if (logoDrawable != null) {
+        // Clip to circle
+        val clipPath = Path().apply {
+            addCircle(cx, cy, imageSize / 2f, Path.Direction.CW)
+        }
+        canvas.save()
+        canvas.clipPath(clipPath)
+        logoDrawable.setBounds(
+            imageInset.toInt(),
+            imageInset.toInt(),
+            (imageInset + imageSize).toInt(),
+            (imageInset + imageSize).toInt()
+        )
+        logoDrawable.draw(canvas)
+        canvas.restore()
+    } else {
+        // Fallback: white cross (matching iOS fallback)
+        paint.style = Paint.Style.STROKE
+        paint.color = Color.WHITE
+        paint.strokeWidth = bubbleSizePx * 0.12f
+        paint.strokeCap = Paint.Cap.ROUND
+        val crossInset = bubbleSizePx * 0.25f
+        // Vertical
+        canvas.drawLine(cx, crossInset, cx, bubbleSizePx - crossInset, paint)
+        // Horizontal
+        canvas.drawLine(crossInset, cy, bubbleSizePx - crossInset, cy, paint)
+    }
 
     return BitmapDescriptorFactory.fromBitmap(bitmap)
 }

@@ -34,6 +34,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,8 +64,8 @@ val StaffGreen = Color(0xFF22C55E)
  */
 @Composable
 fun PharmacyOwnerProfileScreen(
-    pharmacyName: String = "Demo Pharmacy",
-    isVerified: Boolean = true,
+    pharmacyViewModel: com.blessedirembo.app.ui.viewmodel.PharmacyViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
+    authViewModel: com.blessedirembo.app.auth.AuthViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     onEditProfileClick: () -> Unit = {},
     onOperatingHoursClick: () -> Unit = {},
     onLocationClick: () -> Unit = {},
@@ -75,6 +78,17 @@ fun PharmacyOwnerProfileScreen(
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
+    val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
+    
+    LaunchedEffect(Unit) {
+        val uid = authViewModel.currentUser?.uid
+        if (uid != null) {
+            pharmacyViewModel.loadPharmacyByOwnerId(uid)
+        }
+    }
+    
+    val pharmacyName = pharmacy?.name?.takeIf { it.isNotBlank() } ?: "Loading..."
+    val isVerified = pharmacy?.isVerified ?: false
     
     Column(
         modifier = modifier
@@ -93,16 +107,16 @@ fun PharmacyOwnerProfileScreen(
             // Pharmacy icon
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Teal500),
+                    .size(80.dp)
+                    .clip(androidx.compose.foundation.shape.CircleShape)
+                    .background(Teal500.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
-                    imageVector = Icons.Filled.LocalPharmacy,
+                    imageVector = Icons.Filled.LocalPharmacy, // iOS uses cross.case.fill
                     contentDescription = null,
-                    tint = White,
-                    modifier = Modifier.size(36.dp)
+                    tint = Teal500,
+                    modifier = Modifier.size(40.dp)
                 )
             }
             
@@ -110,26 +124,29 @@ fun PharmacyOwnerProfileScreen(
             
             Text(
                 text = pharmacyName,
-                style = MaterialTheme.typography.headlineSmall,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = Gray900
             )
             
             if (isVerified) {
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(top = 4.dp)
+                    modifier = Modifier
+                        .background(SuccessGreen.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = "Verified",
                         tint = SuccessGreen,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(14.dp)
                     )
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "Verified Partner",
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.labelSmall,
                         color = SuccessGreen
                     )
                 }
@@ -238,27 +255,18 @@ fun PharmacyOwnerProfileScreen(
         Spacer(modifier = Modifier.height(24.dp))
         
         // Sign Out Button
-        Card(
+        TextButton(
+            onClick = onSignOutClick,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                .padding(horizontal = 16.dp)
         ) {
-            TextButton(
-                onClick = onSignOutClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp)
-            ) {
-                Text(
-                    text = "Sign Out",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = Color(0xFFEF4444),
-                    fontWeight = FontWeight.Medium
-                )
-            }
+            Text(
+                text = "Sign Out",
+                style = MaterialTheme.typography.bodyLarge,
+                color = Color(0xFFEF4444),
+                fontWeight = FontWeight.SemiBold
+            )
         }
         
         Spacer(modifier = Modifier.height(100.dp)) // Bottom nav spacing

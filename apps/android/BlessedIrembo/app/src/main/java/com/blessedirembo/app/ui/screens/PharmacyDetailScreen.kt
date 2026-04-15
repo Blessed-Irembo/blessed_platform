@@ -27,8 +27,10 @@ import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,6 +73,7 @@ import com.blessedirembo.app.analytics.AnalyticsManager
 import com.blessedirembo.app.ui.components.StarRating
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray300
+import com.blessedirembo.app.ui.theme.Gray400
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
@@ -137,8 +140,9 @@ fun PharmacyDetailScreen(
         "A verified pharmacy offering prescription medications, OTC drugs, and health consultations."
     } ?: "Loading..."
     val address = pharmacy?.address ?: "—"
-    val phone = pharmacy?.phone?.ifBlank { "—" } ?: "—"
+    val phone = pharmacy?.phoneNumber?.ifBlank { pharmacy?.phone }?.ifBlank { "—" } ?: "—"
     val emailText = pharmacy?.email?.ifBlank { "—" } ?: "—"
+    val operatingHours = pharmacy?.displayOperatingHours ?: "—"
 
     // Inquiry Bottom Sheet
     if (showInquirySheet) {
@@ -346,9 +350,9 @@ fun PharmacyDetailScreen(
             }
 
             when (selectedTab) {
-                0 -> AboutTabContent(aboutText = aboutText, address = address, phone = phone, email = emailText)
-                1 -> ServicesTabContent()
-                2 -> ReviewsTabContent()
+                0 -> AboutTabContent(aboutText = aboutText, address = address, phone = phone, email = emailText, operatingHours = operatingHours)
+                1 -> ServicesTabContent(services = pharmacy?.services ?: emptyList())
+                2 -> ReviewsTabContent(reviewCount = pharmacy?.reviewCount ?: 0)
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -401,7 +405,8 @@ private fun AboutTabContent(
     aboutText: String,
     address: String,
     phone: String,
-    email: String
+    email: String,
+    operatingHours: String
 ) {
     Column(
         modifier = Modifier
@@ -455,6 +460,14 @@ private fun AboutTabContent(
             icon = Icons.Filled.Email,
             text = email
         )
+
+        Spacer(modifier = Modifier.height(12.dp))
+        
+        // Operating Hours — matches iOS clock.fill
+        ContactInfoRow(
+            icon = Icons.Filled.Schedule,
+            text = operatingHours
+        )
     }
 }
 
@@ -485,41 +498,125 @@ private fun ContactInfoRow(
 }
 
 /**
- * Services tab content placeholder
+ * Services tab — renders the real services list.
+ * Mirrors iOS servicesSection with checkmark.circle.fill per service,
+ * or "No services listed" empty state.
  */
 @Composable
-private fun ServicesTabContent() {
+private fun ServicesTabContent(services: List<String>) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
         Text(
-            text = "Services information coming soon",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Gray500
+            text = "Available Services",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            color = Gray900
         )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (services.isEmpty()) {
+            Text(
+                text = "No services listed",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Gray500,
+                modifier = Modifier
+                    .padding(vertical = 40.dp)
+                    .fillMaxWidth()
+            )
+        } else {
+            services.forEach { service ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.CheckCircle,
+                        contentDescription = null,
+                        tint = Teal500,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = service,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Gray900
+                    )
+                }
+            }
+        }
     }
 }
 
 /**
- * Reviews tab content placeholder
+ * Reviews tab — mirrors iOS reviewsSection empty state exactly:
+ * star icon + "No reviews yet" + "Be the first to review this pharmacy"
  */
 @Composable
-private fun ReviewsTabContent() {
+private fun ReviewsTabContent(reviewCount: Int) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+            .padding(16.dp)
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(
-            text = "Reviews coming soon",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Gray500
-        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Customer Reviews",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = Gray900
+            )
+            if (reviewCount > 0) {
+                Text(
+                    text = "$reviewCount reviews",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Gray500
+                )
+            }
+        }
+
+        if (reviewCount == 0) {
+            // Empty state — mirrors iOS exactly
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Star,
+                    contentDescription = null,
+                    tint = Gray400.copy(alpha = 0.4f),
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "No reviews yet",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Gray500
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Be the first to review this pharmacy",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Gray500
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Reviews will be loaded from backend",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Gray500
+            )
+        }
     }
 }

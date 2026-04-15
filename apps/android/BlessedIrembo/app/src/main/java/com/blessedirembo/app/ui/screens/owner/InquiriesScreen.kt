@@ -42,6 +42,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -215,7 +216,6 @@ private fun FilterChip(
 ) {
     val backgroundColor = if (isSelected) Teal500 else White
     val textColor = if (isSelected) White else Gray900
-    val borderColor = if (isSelected) Teal500 else Gray300
     
     Text(
         text = text,
@@ -223,9 +223,13 @@ private fun FilterChip(
         fontWeight = FontWeight.Medium,
         color = textColor,
         modifier = Modifier
+            .shadow(
+                elevation = if (isSelected) 0.dp else 2.dp, 
+                shape = RoundedCornerShape(20.dp),
+                spotColor = Color.Black.copy(alpha = 0.05f)
+            )
             .clip(RoundedCornerShape(20.dp))
             .background(backgroundColor)
-            .border(1.dp, borderColor, RoundedCornerShape(20.dp))
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     )

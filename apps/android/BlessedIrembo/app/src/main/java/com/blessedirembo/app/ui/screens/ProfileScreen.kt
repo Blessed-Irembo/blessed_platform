@@ -21,6 +21,7 @@ import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Lock
@@ -44,8 +45,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,6 +59,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.auth.AuthViewModel
+import com.blessedirembo.app.data.model.UserProfile
+import com.blessedirembo.app.data.repository.UserRepository
 import com.blessedirembo.app.ui.components.SettingsListItem
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
@@ -75,16 +81,35 @@ val LogoutRed = Color(0xFFFF6B6B)
 fun ProfileScreen(
     onBackClick: () -> Unit,
     onLogoutClick: () -> Unit,
+    onEditClick: () -> Unit,
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val currentUser = remember { authViewModel.currentUser }
+    var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+    
+    LaunchedEffect(currentUser?.uid) {
+        currentUser?.uid?.let { uid ->
+            val repository = UserRepository()
+            val result = repository.getUserProfile(uid)
+            userProfile = result.getOrNull()
+        }
+    }
 
-    // Derive display values from FirebaseUser
-    val userName = currentUser?.displayName?.takeIf { it.isNotBlank() } ?: "No name set"
-    val userEmail = currentUser?.email ?: "No email"
-    val userPhone = currentUser?.phoneNumber ?: "Not set"
+    // Derive display values from FirebaseUser and Firestore UserProfile dynamically
+    val userName = userProfile?.fullName?.takeIf { it.isNotBlank() } 
+        ?: currentUser?.displayName?.takeIf { it.isNotBlank() } 
+        ?: "No name set"
+        
+    val userEmail = userProfile?.email?.takeIf { it.isNotBlank() }
+        ?: currentUser?.email 
+        ?: "No email"
+        
+    val userPhone = userProfile?.phone?.takeIf { it.isNotBlank() }
+        ?: currentUser?.phoneNumber 
+        ?: "Not set"
+        
     val userId = currentUser?.uid?.take(8)?.let { "UID: $it…" } ?: ""
 
 
@@ -104,6 +129,15 @@ fun ProfileScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back"
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onEditClick) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit Profile",
+                            tint = Teal500
                         )
                     }
                 },
