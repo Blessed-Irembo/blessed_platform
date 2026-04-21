@@ -37,7 +37,7 @@ class AuthViewModel: ObservableObject {
     /// Debounced real-time license verification (600 ms delay, mirrors the web).
     func checkLicense(_ number: String) {
         licenseDebounceTask?.cancel()
-        let trimmed = number.trimmingCharacters(in: .whitespaces)
+        let trimmed = number.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             licenseStatus = .idle
             licensedPharmacyName = ""
@@ -125,6 +125,9 @@ class AuthViewModel: ObservableObject {
             ]
             
             self.db.collection("users").document(uid).setData(userData) { error in
+                if error == nil {
+                    self.db.collection("phone_to_email").document(normalizedPhone).setData(["email": loginEmail])
+                }
                 DispatchQueue.main.async {
                     self.isLoading = false
                     if let error = error {
@@ -181,7 +184,7 @@ class AuthViewModel: ObservableObject {
         errorMessage = nil
         
         let normalizedPhone = User.normalizePhoneNumber(phoneNumber)
-        let normalizedLicense = licenseNumber.uppercased().trimmingCharacters(in: .whitespaces)
+        let normalizedLicense = licenseNumber.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
         auth.createUser(withEmail: email, password: password) { [weak self] result, error in
             guard let self = self else { return }
@@ -243,6 +246,9 @@ class AuthViewModel: ObservableObject {
                 FirebaseManager.shared.licensedPharmaciesCollection
                     .document(docId)
                     .updateData(["isRegistered": true, "registeredUid": uid]) { _ in }
+                
+                // Add phone-to-email mapping
+                self.db.collection("phone_to_email").document(normalizedPhone).setData(["email": email])
                 
                 DispatchQueue.main.async {
                     self.isLoading = false

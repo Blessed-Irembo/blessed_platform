@@ -40,14 +40,22 @@ extension User {
     
     /// Validate phone number (Rwandan format)
     static func isValidPhoneNumber(_ phone: String) -> Bool {
-        let phoneRegex = "^(\\+250|250)?[0-9]{9}$"
+        // Normalize first (removes spaces, adds +250) then validate length
+        let normalized = normalizePhoneNumber(phone)
+        let phoneRegex = "^\\+250[0-9]{9}$"
         let phonePredicate = NSPredicate(format:"SELF MATCHES %@", phoneRegex)
-        return phonePredicate.evaluate(with: phone)
+        return phonePredicate.evaluate(with: normalized)
     }
     
     /// Normalize phone number to +250 format
     static func normalizePhoneNumber(_ phone: String) -> String {
-        let cleaned = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        var cleaned = phone.replacingOccurrences(of: "[^0-9]", with: "", options: .regularExpression)
+        
+        // Remove leading 0 if the user typed 078...
+        if cleaned.hasPrefix("0") {
+            cleaned.removeFirst()
+        }
+        
         if cleaned.hasPrefix("250") {
             return "+\(cleaned)"
         }

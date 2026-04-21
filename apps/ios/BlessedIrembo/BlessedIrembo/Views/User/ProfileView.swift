@@ -128,13 +128,31 @@ struct ProfileView: View {
                 .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
-                SettingsRow(icon: "bell.fill", title: "Notifications", hasChevron: true)
+                NavigationLink(destination: UserNotificationSettingsView()) {
+                    SettingsRow(icon: "bell.fill", title: "Notifications", hasChevron: true)
+                }
+                .buttonStyle(.plain)
+                
                 Divider().padding(.leading, 56)
-                SettingsRow(icon: "lock.fill", title: "Privacy & Security", hasChevron: true)
+                
+                NavigationLink(destination: UserPrivacySettingsView()) {
+                    SettingsRow(icon: "lock.fill", title: "Privacy & Security", hasChevron: true)
+                }
+                .buttonStyle(.plain)
+                
                 Divider().padding(.leading, 56)
-                SettingsRow(icon: "map.fill", title: "Location Services", hasChevron: true)
+                
+                NavigationLink(destination: UserLocationSettingsView()) {
+                    SettingsRow(icon: "map.fill", title: "Location Services", hasChevron: true)
+                }
+                .buttonStyle(.plain)
+                
                 Divider().padding(.leading, 56)
-                SettingsRow(icon: "paintbrush.fill", title: "Appearance", hasChevron: true)
+                
+                NavigationLink(destination: UserAppearanceSettingsView()) {
+                    SettingsRow(icon: "paintbrush.fill", title: "Appearance", hasChevron: true)
+                }
+                .buttonStyle(.plain)
             }
             .background(Color.white)
             .cornerRadius(12)
@@ -152,13 +170,24 @@ struct ProfileView: View {
                 .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
-                SettingsRow(icon: "info.circle.fill", title: "Help & Support", hasChevron: true)
+                Link(destination: URL(string: "https://blessedirembo.com/help")!) {
+                    SettingsRow(icon: "info.circle.fill", title: "Help & Support", hasChevron: true)
+                }
+                .buttonStyle(.plain)
+                
                 Divider().padding(.leading, 56)
-                SettingsRow(icon: "doc.text.fill", title: "Terms & Conditions", hasChevron: true)
+                
+                Link(destination: URL(string: "https://blessedirembo.com/terms")!) {
+                    SettingsRow(icon: "doc.text.fill", title: "Terms & Conditions", hasChevron: true)
+                }
+                .buttonStyle(.plain)
+                
                 Divider().padding(.leading, 56)
-                SettingsRow(icon: "shield.fill", title: "Privacy Policy", hasChevron: true)
-                Divider().padding(.leading, 56)
-                SettingsRow(icon: "star.fill", title: "Rate App", hasChevron: true)
+                
+                Link(destination: URL(string: "https://blessedirembo.com/privacy-policy")!) {
+                    SettingsRow(icon: "shield.fill", title: "Privacy Policy", hasChevron: true)
+                }
+                .buttonStyle(.plain)
             }
             .background(Color.white)
             .cornerRadius(12)
@@ -240,28 +269,27 @@ struct SettingsRow: View {
     let hasChevron: Bool
     
     var body: some View {
-        Button(action: {}) {
-            HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(.primaryTeal)
-                    .frame(width: 24)
-                
-                Text(title)
-                    .font(.body)
-                    .foregroundColor(.textPrimary)
-                
-                Spacer()
-                
-                if hasChevron {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.gray.opacity(0.4))
-                }
+        HStack(spacing: 16) {
+            Image(systemName: icon)
+                .font(.system(size: 18))
+                .foregroundColor(.primaryTeal)
+                .frame(width: 24)
+            
+            Text(title)
+                .font(.body)
+                .foregroundColor(.textPrimary)
+            
+            Spacer()
+            
+            if hasChevron {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.gray.opacity(0.4))
             }
-            .padding(.vertical, 16)
-            .padding(.horizontal, 16)
         }
+        .padding(.vertical, 16)
+        .padding(.horizontal, 16)
+        .contentShape(Rectangle())
     }
 }
 

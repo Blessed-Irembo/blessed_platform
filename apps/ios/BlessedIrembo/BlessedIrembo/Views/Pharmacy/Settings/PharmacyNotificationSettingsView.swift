@@ -7,8 +7,6 @@ import SwiftUI
 struct PharmacyNotificationSettingsView: View {
     @State private var emailNotifications = true
     @State private var pushNotifications = true
-    @State private var inquiryAlerts = true
-    @State private var stockAlerts = false
     @State private var marketingEmails = false
     
     var body: some View {
@@ -20,12 +18,7 @@ struct PharmacyNotificationSettingsView: View {
                     .tint(.primaryTeal)
             }
             
-            Section("Alerts") {
-                Toggle("New Inquiries", isOn: $inquiryAlerts)
-                    .tint(.primaryTeal)
-                Toggle("Low Stock Warnings", isOn: $stockAlerts)
-                    .tint(.primaryTeal)
-            }
+
             
             Section("Updates") {
                 Toggle("Marketing & Tips", isOn: $marketingEmails)

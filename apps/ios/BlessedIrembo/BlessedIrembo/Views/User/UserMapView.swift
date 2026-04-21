@@ -260,30 +260,14 @@ struct PharmacyListCard: View {
                     }
                 }
                 
-                // Distance and rating
-                HStack(spacing: 12) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "location.fill")
-                            .font(.system(size: 11))
-                            .foregroundColor(.primaryTeal)
-                        Text(pharmacy.formattedDistance(from: userLocation))
-                            .font(.caption)
-                            .foregroundColor(.textSecondary)
-                    }
-                    
-                    if pharmacy.reviewCount > 0 {
-                        HStack(spacing: 3) {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 11))
-                                .foregroundColor(.orange)
-                            Text(String(format: "%.1f", pharmacy.rating))
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
-                            Text("(\(pharmacy.reviewCount))")
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
-                        }
-                    }
+                // Distance
+                HStack(spacing: 4) {
+                    Image(systemName: "location.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(.primaryTeal)
+                    Text(pharmacy.formattedDistance(from: userLocation))
+                        .font(.caption)
+                        .foregroundColor(.textSecondary)
                 }
                 
                 // Address

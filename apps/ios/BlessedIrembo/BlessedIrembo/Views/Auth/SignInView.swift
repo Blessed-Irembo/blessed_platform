@@ -161,12 +161,6 @@ struct SignInView: View {
                         signIn()
                     }
 
-                    // ── Divider ──
-                    HStack {
-                        Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.2))
-                        Text("or").font(.caption).foregroundColor(.textSecondary).padding(.horizontal, 8)
-                        Rectangle().frame(height: 1).foregroundColor(Color.gray.opacity(0.2))
-                    }
 
                     // ── Phone note ── (only shown in phone mode)
                     if signInMethod == .phone {

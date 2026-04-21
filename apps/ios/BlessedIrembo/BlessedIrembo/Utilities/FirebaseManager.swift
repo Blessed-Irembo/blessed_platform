@@ -58,7 +58,7 @@ class FirebaseManager {
     // MARK: - Phone → Email Lookup
     
     /// Looks up a Firebase Auth email from a normalised phone number stored in
-    /// either the `users` or `pharmacies` Firestore collection.
+    /// the secure `phone_to_email` Firestore collection.
     /// Used to support "sign in with phone number" without Firebase Phone Auth.
     func fetchEmailByPhone(
         phone: String,
@@ -66,41 +66,22 @@ class FirebaseManager {
     ) {
         let normalised = User.normalizePhoneNumber(phone)
         
-        // Search users collection first
-        usersCollection
-            .whereField("phoneNumber", isEqualTo: normalised)
-            .limit(to: 1)
-            .getDocuments { snapshot, error in
+        firestore.collection("phone_to_email")
+            .document(normalised)
+            .getDocument { snapshot, error in
                 if let error = error {
                     completion(.failure(error))
                     return
                 }
-                if let doc = snapshot?.documents.first,
-                   let email = doc.data()["email"] as? String, !email.isEmpty {
+                
+                if let doc = snapshot, doc.exists, let email = doc.data()?["email"] as? String, !email.isEmpty {
                     completion(.success(email))
-                    return
+                } else {
+                    // Not found in mapping. As a fallback for any users created via other flows 
+                    // that use synthetic emails, we can generate it.
+                    let syntheticEmail = "\(normalised.replacingOccurrences(of: "+", with: ""))@blessed-irembo.app"
+                    completion(.success(syntheticEmail))
                 }
-                // Fall back to pharmacies collection
-                self.pharmaciesCollection
-                    .whereField("phoneNumber", isEqualTo: normalised)
-                    .limit(to: 1)
-                    .getDocuments { snapshot, error in
-                        if let error = error {
-                            completion(.failure(error))
-                            return
-                        }
-                        if let doc = snapshot?.documents.first,
-                           let email = doc.data()["email"] as? String, !email.isEmpty {
-                            completion(.success(email))
-                        } else {
-                            let err = NSError(
-                                domain: "FirebaseManager",
-                                code: 404,
-                                userInfo: [NSLocalizedDescriptionKey: "No account found with this phone number."]
-                            )
-                            completion(.failure(err))
-                        }
-                    }
             }
     }
     
@@ -113,12 +94,10 @@ class FirebaseManager {
         _ rawNumber: String,
         completion: @escaping (LicenseVerificationResult) -> Void
     ) {
-        let regNum = rawNumber.uppercased().trimmingCharacters(in: .whitespaces)
+        let regNum = rawNumber.uppercased().trimmingCharacters(in: .whitespacesAndNewlines)
         
         // Quick format check: NPC/A followed by 4 digits
-        let pattern = "^NPC/A\\d{4}$"
-        let predicate = NSPredicate(format: "SELF MATCHES %@", pattern)
-        guard predicate.evaluate(with: regNum) else {
+        guard regNum.range(of: "^NPC/A\\d{4}$", options: .regularExpression) != nil else {
             completion(.invalid)
             return
         }
@@ -126,7 +105,8 @@ class FirebaseManager {
         // Firestore uses '_' because '/' is a path separator
         let docId = regNum.replacingOccurrences(of: "/", with: "_")
         licensedPharmaciesCollection.document(docId).getDocument { snapshot, error in
-            if let _ = error {
+            if let error = error {
+                print("License verification error: \(error.localizedDescription)")
                 completion(.invalid)
                 return
             }

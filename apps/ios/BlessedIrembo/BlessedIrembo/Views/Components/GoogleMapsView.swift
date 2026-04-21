@@ -64,6 +64,9 @@ struct GoogleMapsView: UIViewRepresentable {
     }
     
     func updateUIView(_ mapView: GMSMapView, context: Context) {
+        // Update the coordinator's parent to ensure it references the latest data
+        context.coordinator.parent = self
+        
         // Only move camera if cameraTarget changed meaningfully
         let current = mapView.camera.target
         let threshold: Double = 0.0001

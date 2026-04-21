@@ -56,7 +56,7 @@ struct WelcomeMapScreen: View {
                             .multilineTextAlignment(.center)
                             .opacity(animateContent ? 1.0 : 0.0)
                         
-                        Text("Discover verified pharmacies in your area with real-time availability and easy navigation")
+                        Text("Operating under **Blessed HealthConnect Ltd**, Blessed Irembo connects you with verified pharmacies nationwide. Search by location, check availability, and get the medication you need, when you need it.")
                             .font(.body)
                             .foregroundColor(.textSecondary)
                             .multilineTextAlignment(.center)

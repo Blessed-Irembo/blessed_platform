@@ -96,15 +96,6 @@ struct PharmacyProfileView: View {
                             .foregroundColor(.purple)
                     }
                 }
-            
-                NavigationLink(destination: Text("Staff Members")) {
-                    Label {
-                        Text("Staff Members")
-                    } icon: {
-                        Image(systemName: "person.2.fill")
-                            .foregroundColor(.green)
-                    }
-                }
             }
         
             // App Settings
@@ -112,11 +103,17 @@ struct PharmacyProfileView: View {
                 NavigationLink(destination: PharmacyNotificationSettingsView()) {
                     Label("Notifications", systemImage: "bell.fill")
                 }
-                NavigationLink(destination: Text("Privacy & Security")) {
-                    Label("Privacy & Security", systemImage: "lock.fill")
+                Link(destination: URL(string: "https://blessedirembo.com/privacy-policy")!) {
+                    Label("Privacy Policy", systemImage: "shield.fill")
+                        .foregroundColor(.primary)
                 }
-                NavigationLink(destination: Text("Help & Support")) {
+                Link(destination: URL(string: "https://blessedirembo.com/terms")!) {
+                    Label("Terms & Conditions", systemImage: "doc.text.fill")
+                        .foregroundColor(.primary)
+                }
+                Link(destination: URL(string: "https://blessedirembo.com/help")!) {
                     Label("Help & Support", systemImage: "questionmark.circle.fill")
+                        .foregroundColor(.primary)
                 }
             }
         
