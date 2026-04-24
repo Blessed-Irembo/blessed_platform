@@ -1,97 +1,191 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useAuth } from '@/lib/AuthContext';
+import { usePharmacyData } from '@/lib/usePharmacyData';
+import { db, storage } from '@/lib/firebase';
+import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import LoadingScreen from '@/components/ui/LoadingScreen';
+
+const PLANS = [
+  {
+    id: '1_month',
+    name: '1 Month',
+    price: 1000,
+    label: '1,000 RWF / month',
+  },
+  {
+    id: '3_months',
+    name: '3 Months',
+    price: 3000,
+    label: '3,000 RWF / 3 months',
+    popular: true,
+  },
+  {
+    id: '12_months',
+    name: '12 Months',
+    price: 10000,
+    label: '10,000 RWF / year',
+  },
+];
 
 export default function PharmacySubscription() {
   const router = useRouter();
+  const { currentUser, signOut } = useAuth();
+  const { pharmacy, loading: pharmacyLoading } = usePharmacyData();
 
-  const currentPlan = {
-    name: 'Premium Plan',
-    status: 'Active',
-    startDate: '2024-01-15',
-    renewalDate: '2025-12-31',
+  const [selectedPlan, setSelectedPlan] = useState<typeof PLANS[0] | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmittingIntent, setIsSubmittingIntent] = useState(false);
+  const [pendingRequest, setPendingRequest] = useState<any>(null);
+  const [checkingPending, setCheckingPending] = useState(true);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Check if they already have a pending request
+  useEffect(() => {
+    async function checkPending() {
+      if (!currentUser?.uid) return;
+      try {
+        const q = query(
+          collection(db, 'subscription_requests'),
+          where('pharmacyId', '==', currentUser.uid),
+          where('status', '==', 'pending')
+        );
+        const snap = await getDocs(q);
+        if (!snap.empty) {
+          const reqDoc = snap.docs[0];
+          setPendingRequest({ id: reqDoc.id, ...reqDoc.data() });
+        }
+      } catch (error) {
+        console.error('Error checking pending requests:', error);
+      } finally {
+        setCheckingPending(false);
+      }
+    }
+    checkPending();
+  }, [currentUser]);
+
+  const handleLogout = async () => {
+    await signOut();
+    router.replace('/');
   };
 
-  const plans = [
-    {
-      id: 'monthly',
-      name: 'Monthly',
-      price: '15,000 RWF',
-      period: 'per month',
-      savings: null,
-      popular: false,
-    },
-    {
-      id: 'quarterly',
-      name: 'Quarterly',
-      price: '40,000 RWF',
-      period: 'per 3 months',
-      savings: 'Save 11%',
-      popular: true,
-    },
-    {
-      id: 'annual',
-      name: 'Annual',
-      price: '144,000 RWF',
-      period: 'per year',
-      savings: 'Save 20%',
-      popular: false,
-    },
-  ];
-
-  const features = [
-    {
-      icon: (
-        <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-        </svg>
-      ),
-      title: 'Verification Badge',
-      description: 'Build trust with customers',
-    },
-    {
-      icon: (
-        <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-      ),
-      title: 'Unlimited Inquiries',
-      description: 'No limit on customer messages',
-    },
-    {
-      icon: (
-        <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-        </svg>
-      ),
-      title: 'Priority Listing',
-      description: 'Appear first in search results',
-    },
-    {
-      icon: (
-        <svg className="w-6 h-6 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-        </svg>
-      ),
-      title: 'Analytics Dashboard',
-      description: 'Track your performance',
-    },
-  ];
-
-  const handleLogout = () => {
-    router.push('/');
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setReceiptFile(e.target.files[0]);
+    }
   };
 
-  const handleSelectPlan = (planId: string) => {
-    alert(`Selected plan: ${planId}`);
+  const handleSubmitIntent = async () => {
+    if (!selectedPlan) return;
+    if (!currentUser?.uid || !pharmacy) return;
+
+    setIsSubmittingIntent(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      // Write to Firestore (no image yet)
+      const docRef = await addDoc(collection(db, 'subscription_requests'), {
+        pharmacyId: currentUser.uid,
+        pharmacyName: pharmacy.name,
+        planId: selectedPlan.id,
+        amount: selectedPlan.price,
+        receiptUrl: '',
+        status: 'pending',
+        createdAt: serverTimestamp(),
+      });
+
+      setPendingRequest({
+        id: docRef.id,
+        pharmacyId: currentUser.uid,
+        pharmacyName: pharmacy.name,
+        planId: selectedPlan.id,
+        amount: selectedPlan.price,
+        receiptUrl: '',
+        status: 'pending'
+      });
+      
+      setSuccessMsg('Your payment request has been submitted and is under review.');
+      setSelectedPlan(null);
+    } catch (error: any) {
+      console.error('Submit intent error:', error);
+      setErrorMsg(error.message || 'Failed to submit request. Please try again.');
+    } finally {
+      setIsSubmittingIntent(false);
+    }
   };
+
+  const handleUploadReceipt = async () => {
+    if (!receiptFile || !pendingRequest) {
+      setErrorMsg('Please select a screenshot first.');
+      return;
+    }
+    if (!currentUser?.uid) return;
+
+    setIsUploading(true);
+    setErrorMsg('');
+    try {
+      // 1. Upload receipt image to Firebase Storage
+      const storageRef = ref(storage, `receipts/${currentUser.uid}_${Date.now()}_${receiptFile.name}`);
+      const uploadResult = await uploadBytes(storageRef, receiptFile);
+      const downloadUrl = await getDownloadURL(uploadResult.ref);
+
+      // 2. Update existing Firestore request
+      await updateDoc(doc(db, 'subscription_requests', pendingRequest.id), {
+        receiptUrl: downloadUrl
+      });
+
+      setPendingRequest({ ...pendingRequest, receiptUrl: downloadUrl });
+      setSuccessMsg('Your receipt has been securely uploaded.');
+      setReceiptFile(null);
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      setErrorMsg('Failed to upload receipt. Storage rules might be missing or network error occurred.');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleCancelRequest = async () => {
+    if (!pendingRequest || !confirm("Are you sure you want to cancel this request?")) return;
+    try {
+      await deleteDoc(doc(db, 'subscription_requests', pendingRequest.id));
+      setPendingRequest(null);
+      setReceiptFile(null);
+      setErrorMsg('');
+      setSuccessMsg('');
+    } catch (err) {
+      console.error("Failed to delete request", err);
+      alert("Failed to cancel request.");
+    }
+  };
+
+  if (pharmacyLoading || checkingPending) {
+    return <LoadingScreen text="Loading subscription details..." />;
+  }
+
+  // Calculate current status
+  const now = new Date();
+  let subEndDate = pharmacy?.subscriptionEndDate?.toDate();
+  if (!subEndDate && pharmacy?.createdAt) {
+      const fallback = new Date(pharmacy.createdAt.toDate());
+      fallback.setDate(fallback.getDate() + 90);
+      subEndDate = fallback;
+  }
+
+  const isActive = subEndDate && subEndDate > now;
+  const statusLabel = isActive ? 'Active' : 'Expired';
+  const endsOn = subEndDate ? subEndDate.toLocaleDateString() : 'N/A';
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
         <div className="mx-auto px-4 sm:px-6 py-3 sm:py-4">
@@ -103,12 +197,6 @@ export default function PharmacySubscription() {
               </Link>
             </div>
             <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-teal-50 rounded-lg">
-                <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-teal-600 font-medium text-sm">Pharmacy</span>
-              </div>
               <button onClick={handleLogout} className="text-sm px-3 py-2 text-gray-700 hover:text-gray-900 font-medium">
                 Logout
               </button>
@@ -117,9 +205,9 @@ export default function PharmacySubscription() {
         </div>
       </header>
 
-      <div className="flex">
-        {/* Sidebar — hidden on mobile */}
-        <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200 min-h-screen shrink-0">
+      <div className="flex flex-1">
+        {/* Sidebar (Desktop) */}
+        <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200 shrink-0">
           <div className="p-6">
             <nav className="space-y-2">
               <Link href="/pharmacy/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors">
@@ -156,94 +244,164 @@ export default function PharmacySubscription() {
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
-          <div className="max-w-4xl">
+          <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">Subscription Management</h1>
 
-            {/* Current Plan */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 mb-6">
-              <div className="flex items-start sm:items-center justify-between mb-5 gap-3">
+            {/* Current Status Card */}
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 mb-8 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-1">Current Plan</h2>
-                  <p className="text-gray-600 text-sm sm:text-base">{currentPlan.name}</p>
+                  <h2 className="text-lg sm:text-xl font-bold text-gray-900">Current Status</h2>
+                  {!isActive && (
+                    <p className="text-red-600 text-sm font-medium mt-1">Your access has expired or is pending renewal.</p>
+                  )}
                 </div>
-                <span className="bg-teal-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-semibold text-sm shrink-0">
-                  {currentPlan.status}
+                <span className={`px-4 py-1.5 rounded-lg font-semibold text-sm shrink-0 ${
+                  isActive ? 'bg-teal-100 text-teal-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {statusLabel}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Start Date</p>
-                  <p className="text-gray-900 font-semibold text-sm sm:text-base">{currentPlan.startDate}</p>
-                </div>
-                <div>
-                  <p className="text-xs sm:text-sm text-gray-500 mb-1">Renewal Date</p>
-                  <p className="text-gray-900 font-semibold text-sm sm:text-base">{currentPlan.renewalDate}</p>
-                </div>
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Access Valid Until</p>
+                <p className="text-gray-900 font-semibold">{endsOn}</p>
               </div>
             </div>
 
-            {/* Pricing Plans */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6">
-              {plans.map((plan) => (
-                <div
-                  key={plan.id}
-                  className={`bg-white rounded-xl border-2 p-5 sm:p-6 relative ${
-                    plan.popular ? 'border-blue-500 shadow-lg' : 'border-gray-200'
-                  }`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                      <span className="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                        Most Popular
-                      </span>
-                    </div>
-                  )}
-                  <div className="text-center mb-5">
-                    <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                    <div className="mb-1">
-                      <span className="text-2xl sm:text-3xl font-bold text-gray-900">{plan.price}</span>
-                    </div>
-                    <p className="text-sm text-gray-500 mb-1">{plan.period}</p>
-                    {plan.savings && (
-                      <p className="text-sm font-semibold text-teal-600">{plan.savings}</p>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleSelectPlan(plan.id)}
-                    className={`w-full py-2.5 sm:py-3 px-4 rounded-lg font-semibold transition-colors text-sm sm:text-base ${
-                      plan.popular
-                        ? 'bg-blue-500 text-white hover:bg-blue-600'
-                        : 'border-2 border-teal-600 text-teal-600 hover:bg-teal-50'
-                    }`}
-                  >
-                    Select Plan
-                  </button>
+            {/* Pending Request Banner */}
+            {pendingRequest ? (
+              <div className="bg-blue-50 border border-blue-200 p-6 rounded-xl mb-8">
+                <div className="flex items-center gap-3 mb-2">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <h3 className="text-lg font-bold text-blue-900">Request Sent to Admin</h3>
                 </div>
-              ))}
-            </div>
+                <p className="text-blue-800 mb-4">
+                  We have notified the admin that you intend to pay <strong>{pendingRequest.amount.toLocaleString()} RWF</strong>. 
+                  The admin is reviewing your request.
+                </p>
 
-            {/* Premium Features */}
-            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6">
-              <h2 className="text-lg sm:text-xl font-bold text-gray-900 mb-5">Premium Features Included</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {features.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <div className="w-11 h-11 bg-teal-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      {feature.icon}
+                {/* Step 2: Upload Receipt (If not yet uploaded) */}
+                {!pendingRequest.receiptUrl ? (
+                  <div className="bg-white rounded-lg p-5 border border-blue-100 shadow-sm mt-4">
+                    <h4 className="font-bold text-gray-900 mb-3">Step 2: Upload Receipt</h4>
+                    <p className="text-sm text-gray-700 mb-2 font-medium">To speed up approval, upload a screenshot of your MoMo receipt:</p>
+                    
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        className="block w-full text-sm text-gray-500
+                          file:mr-4 file:py-2 file:px-4
+                          file:rounded-md file:border-0
+                          file:text-sm file:font-semibold
+                          file:bg-teal-50 file:text-teal-700
+                          hover:file:bg-teal-100 cursor-pointer max-w-sm"
+                      />
+                      <button
+                        onClick={handleUploadReceipt}
+                        disabled={isUploading || !receiptFile}
+                        className="bg-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50 transition-colors whitespace-nowrap mt-3 sm:mt-0"
+                      >
+                        {isUploading ? 'Uploading...' : 'Upload Receipt'}
+                      </button>
+                    </div>
+                    {errorMsg && <p className="text-red-600 text-sm mt-3">{errorMsg}</p>}
+                    {successMsg && <p className="text-teal-600 text-sm mt-3">{successMsg}</p>}
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-lg p-4 border border-teal-200 mt-4 flex items-center gap-3 shadow-sm">
+                    <div className="w-10 h-10 bg-teal-100 rounded-full flex items-center justify-center text-teal-600 shrink-0">
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1 text-sm sm:text-base">{feature.title}</h3>
-                      <p className="text-sm text-gray-600">{feature.description}</p>
+                      <p className="font-medium text-gray-900">Receipt uploaded successfully.</p>
+                      <p className="text-sm text-gray-500">The admin will review it shortly to activate your subscription.</p>
                     </div>
                   </div>
-                ))}
+                )}
+                
+                <div className="mt-6 pt-4 border-t border-blue-200">
+                  <button
+                    onClick={handleCancelRequest}
+                    className="text-red-600 hover:text-red-700 text-sm font-medium flex items-center gap-1 transition-colors bg-white px-4 py-2 rounded-lg border border-red-200 shadow-sm"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    Cancel Pending Request
+                  </button>
+                </div>
               </div>
-            </div>
+            ) : (
+              <>
+                {/* Pricing Plans */}
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Select a Plan to Renew</h2>
+                {errorMsg && <p className="text-red-600 text-sm font-medium mb-4">{errorMsg}</p>}
+                
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+                  {PLANS.map((plan) => (
+                    <div
+                      key={plan.id}
+                      onClick={() => setSelectedPlan(plan)}
+                      className={`cursor-pointer bg-white rounded-xl border-2 p-5 sm:p-6 relative transition-all ${
+                        selectedPlan?.id === plan.id
+                          ? 'border-teal-600 shadow-md bg-teal-50/30'
+                          : plan.popular
+                          ? 'border-blue-200 hover:border-blue-300'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      {plan.popular && (
+                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                          <span className="bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-sm">
+                            Best Value
+                          </span>
+                        </div>
+                      )}
+                      <div className="text-center">
+                        <h3 className="text-lg font-bold text-gray-900 mb-2">{plan.name}</h3>
+                        <div className="text-2xl font-bold text-teal-600 mb-1">{plan.price.toLocaleString()} RWF</div>
+                        <p className="text-xs text-gray-500">Total amount</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Detailed Information and Button (Shows when a plan is selected) */}
+                {selectedPlan && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 shadow-sm">
+                    <h2 className="text-xl font-bold text-gray-900 mb-4">Complete Your Payment</h2>
+                    
+                    <div className="bg-gray-50 p-4 rounded-lg mb-6 border border-gray-200">
+                      <p className="text-sm text-gray-700 mb-2 font-bold">Step 1: Make the payment</p>
+                      <p className="text-sm text-gray-700 mb-2">Open your phone dialer and enter the following code:</p>
+                      <div className="bg-white px-4 py-3 border border-gray-300 rounded-md inline-block font-mono text-lg sm:text-xl text-gray-900 font-bold mb-2">
+                        *182*8*1*38220*{selectedPlan.price}#
+                      </div>
+                      <p className="text-sm text-gray-600 mt-2">
+                        You will be prompted to confirm a payment to <span className="font-bold text-gray-900">Blessed HealthConnect LTD</span> for {selectedPlan.price.toLocaleString()} RWF.
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={handleSubmitIntent}
+                      disabled={isSubmittingIntent}
+                      className="w-full bg-teal-600 text-white font-bold py-4 px-4 rounded-lg hover:bg-teal-700 transition-colors disabled:opacity-50 text-lg shadow-sm"
+                    >
+                      {isSubmittingIntent ? 'Sending Request...' : 'I have Paid (Intend to Pay)'}
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </main>
       </div>
 
-      {/* Bottom Nav — mobile only */}
+      {/* Mobile Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30">
         <div className="grid grid-cols-4 h-16">
           <Link href="/pharmacy/dashboard" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">

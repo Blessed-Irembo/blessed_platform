@@ -30,6 +30,7 @@ import {
   limit,
 } from 'firebase/firestore';
 import { auth, db } from './firebase';
+import { normalizePhoneNumber } from './phoneUtils';
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -116,14 +117,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // ── Regular user sign-up ─────────────────────────────────────────────────
   async function signUp(email: string, password: string, fullName: string, phone: string) {
+    const normalizedPhone = normalizePhoneNumber(phone);
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    
     await setDoc(doc(db, 'users', user.uid), {
       fullName,
       email,
-      phoneNumber: phone,
+      phoneNumber: normalizedPhone,
       role: 'user',
       createdAt: serverTimestamp(),
     });
+
+    // Write to phone_to_email collection
+    await setDoc(doc(db, 'phone_to_email', normalizedPhone), { email });
+
     setUserRole('user');
   }
 
@@ -149,18 +156,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 2. Create Firebase Auth account
     const { user } = await createUserWithEmailAndPassword(auth, email, password);
 
+    const normalizedPhone = normalizePhoneNumber(data.phone);
+
     // 3. Write pharmacy profile to Firestore
     await setDoc(doc(db, 'pharmacies', user.uid), {
       name: data.pharmacyName,
       ownerName: data.ownerName,
       email,
-      phoneNumber: data.phone,
+      phoneNumber: normalizedPhone,
+      whatsAppNumber: normalizedPhone,
       address: data.address,
       latitude: data.latitude,
       longitude: data.longitude,
       registrationNumber: regNum,
       role: 'pharmacy',
       isVerified: true, // verified via licensed_pharmacies list
+      subscriptionEndDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months free trial
       // Location info from licensed list
       province: licenseData.province ?? '',
       district: licenseData.district ?? '',
@@ -170,6 +181,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       licenseExpiryDate: licenseData.licenseExpiryDate ?? '',
       rating: 0,
       reviewCount: 0,
+      whatsappClicks: 0,
       createdAt: serverTimestamp(),
       operatingHours: data.operatingHours || {
         is24Hours: false,
@@ -182,6 +194,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // 4. Mark license as registered (prevents duplicate signups)
     await updateDoc(licenseRef, { isRegistered: true, registeredUid: user.uid });
 
+    // 5. Add phone-to-email mapping
+    await setDoc(doc(db, 'phone_to_email', normalizedPhone), { email });
+
     setUserRole('pharmacy');
   }
 
@@ -191,11 +206,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // If it doesn't contain an '@', treat it as a phone number and lookup the user's email
     if (!loginEmail.includes('@')) {
+      const normalizedPhone = normalizePhoneNumber(loginEmail);
       try {
         const res = await fetch('/api/auth/lookup', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ phoneNumber: loginEmail }),
+          body: JSON.stringify({ phoneNumber: normalizedPhone }),
         });
 
         const data = await res.json();

@@ -126,12 +126,16 @@ class AppState: ObservableObject {
             }
 
             DispatchQueue.main.async {
+                // Decode subscriptionEndDate (Firestore Timestamp → Date)
+                let subEndDate: Date? = (data["subscriptionEndDate"] as? Timestamp)?.dateValue()
+
+                // Decode createdAt
+                let createdDate: Date = (data["createdAt"] as? Timestamp)?.dateValue() ?? Date()
+
                 self.currentPharmacy = Pharmacy(
                     id: uid,
                     name: data["name"] as? String ?? "",
                     ownerName: data["ownerName"] as? String ?? "",
-                    // Read email from Firestore data so updates from Edit Profile
-                    // are reflected immediately. Fall back to the Auth email if missing.
                     email: data["email"] as? String ?? email,
                     phoneNumber: data["phoneNumber"] as? String ?? "",
                     whatsAppNumber: data["whatsAppNumber"] as? String ?? data["phoneNumber"] as? String ?? "",
@@ -143,6 +147,9 @@ class AppState: ObservableObject {
                     isVerified: data["isVerified"] as? Bool ?? false,
                     is24_7: data["is24_7"] as? Bool ?? oh.is24Hours,
                     isPremium: data["isPremium"] as? Bool ?? false,
+                    createdAt: createdDate,
+                    subscriptionEndDate: subEndDate,
+                    registrationNumber: data["registrationNumber"] as? String ?? "",
                     rating: data["rating"] as? Double ?? 0.0,
                     reviewCount: data["reviewCount"] as? Int ?? 0,
                     whatsappClicks: data["whatsappClicks"] as? Int ?? 0,

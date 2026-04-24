@@ -23,6 +23,7 @@ export interface PharmacyData {
     longitude: number;
     isVerified: boolean;
     subscriptionPlan?: string;
+    subscriptionEndDate?: { toDate: () => Date } | null;
     createdAt?: { toDate: () => Date } | null;
     whatsappClicks?: number;
     operatingHours?: {

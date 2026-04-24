@@ -9,6 +9,7 @@ import { useRequireUserRole } from '@/lib/authHooks';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
+import PageTransition from '@/components/PageTransition';
 
 const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap'), {
   ssr: false,
@@ -99,6 +100,9 @@ export default function PharmacyDetailPage() {
             latitude: data.latitude ?? 0,
             longitude: data.longitude ?? 0,
           });
+          
+          // Track view
+          fetch(`/api/pharmacies/${docSnap.id}/track-view`, { method: 'POST' }).catch(console.error);
         } else {
           setPharmacy(null);
         }
@@ -135,8 +139,9 @@ export default function PharmacyDetailPage() {
 
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+    <PageTransition>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -490,5 +495,6 @@ export default function PharmacyDetailPage() {
         </div>
       </main>
     </div>
+    </PageTransition>
   );
 }

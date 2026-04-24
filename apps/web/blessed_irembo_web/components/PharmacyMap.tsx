@@ -45,67 +45,34 @@ interface PharmacyMapProps {
 // A pharmacy building pin: house shape (roof + body + door + pharmacy cross)
 // with a drop shadow and a sharp point at the bottom.
 
+const LOGO_BASE64 = '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';
+
 export function buildPharmacyPinUrl(isOpen: boolean, isSelected: boolean): string {
-  const bg = isSelected ? '#0F766E' : isOpen ? '#0D9488' : '#6B7280';
-  const roof = isSelected ? '#0D9488' : isOpen ? '#14B8A6' : '#9CA3AF';
-  const cross = '#ffffff';
-  const shadow = isSelected ? 'rgba(13,148,136,0.5)' : 'rgba(0,0,0,0.22)';
-  const w = isSelected ? 52 : 44;
-  const h = isSelected ? 64 : 56;
-
-  // Layout constants
+  const strokeColor = isSelected ? '#0F766E' : isOpen ? '#0D9488' : '#6B7280';
+  const w = isSelected ? 60 : 50;
+  const h = isSelected ? 70 : 60;
   const cx = w / 2;
-  // Roof peak — top 28% of height
-  const peakY = h * 0.18;
-  // Eave (where roof meets walls) — 42% from top
-  const eaveY = h * 0.42;
-  // Wall bottom (above the pin point) — 75% from top
-  const wallBY = h * 0.75;
-  // Left / right wall x
-  const wallL = w * 0.12;
-  const wallR = w * 0.88;
-  // Door dimensions
-  const doorW = w * 0.24;
-  const doorH = h * 0.18;
-  const doorX = cx - doorW / 2;
-  const doorY = wallBY - doorH;
-  // Cross dimensions (centered on building face)
-  const crossCY = (eaveY + doorY) / 2;
-  const crossArmL = w * 0.14;   // half-length of horizontal arm
-  const crossArmT = h * 0.07;   // half-height of horizontal arm
-  const crossVL = w * 0.04;   // half-width of vertical arm
-  const crossVT = h * 0.12;   // half-height of vertical arm
-
+  const cy = w / 2;
+  const r = (w / 2) - 4;
+  
   const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <filter id="sh" x="-30%" y="-20%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="2" stdDeviation="${isSelected ? 3 : 2}" flood-color="${shadow}"/>
+    <filter id="sh" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="${isSelected ? 3 : 2}" flood-color="rgba(0,0,0,0.25)"/>
     </filter>
   </defs>
 
-  <!-- Pin tail (sharp bottom point) -->
-  <polygon points="${cx - 5},${wallBY} ${cx + 5},${wallBY} ${cx},${h - 1}"
-           fill="${bg}" filter="url(#sh)"/>
-
-  <!-- Building body -->
-  <rect x="${wallL}" y="${eaveY}" width="${wallR - wallL}" height="${wallBY - eaveY}"
-        rx="2" fill="${bg}" filter="url(#sh)"/>
-
-  <!-- Roof (triangle) -->
-  <polygon points="${cx},${peakY} ${wallL - 2},${eaveY} ${wallR + 2},${eaveY}"
-           fill="${roof}" filter="url(#sh)"/>
-
-  <!-- Pharmacy cross (white) -->
-  <!-- Horizontal arm -->
-  <rect x="${cx - crossArmL}" y="${crossCY - crossArmT}" width="${crossArmL * 2}" height="${crossArmT * 2}"
-        rx="1.5" fill="${cross}" opacity="0.95"/>
-  <!-- Vertical arm -->
-  <rect x="${cx - crossVL}" y="${crossCY - crossVT}" width="${crossVL * 2}" height="${crossVT * 2}"
-        rx="1.5" fill="${cross}" opacity="0.95"/>
-
-  <!-- Door -->
-  <rect x="${doorX}" y="${doorY}" width="${doorW}" height="${doorH}"
-        rx="1.5" fill="rgba(0,0,0,0.18)"/>
+  <!-- Pin tail (pointer) -->
+  <path d="M ${cx} ${h - 2} L ${cx - 8} ${cy + 10} L ${cx + 8} ${cy + 10} Z" fill="#ffffff" filter="url(#sh)" />
+  
+  <!-- Circle background -->
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="#ffffff" filter="url(#sh)" />
+  
+  <!-- Inner Circle Border based on selection/open state -->
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${strokeColor}" stroke-width="2.5" />
+  
+  <!-- Logo -->
+  <image x="${cx - 16}" y="${cy - 9}" width="32" height="19" href="data:image/png;base64,${LOGO_BASE64}" />
 </svg>`.trim();
 
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;

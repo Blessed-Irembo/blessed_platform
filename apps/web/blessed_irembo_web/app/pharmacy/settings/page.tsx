@@ -11,6 +11,7 @@ import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from 'firebase/auth';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 
 export default function PharmacySettings() {
   const router = useRouter();
@@ -50,19 +51,34 @@ export default function PharmacySettings() {
   const [hoursSuccess, setHoursSuccess] = useState('');
   const [hoursError, setHoursError] = useState('');
 
+  // Location State
+  const [address, setAddress] = useState('');
+  const [mapLocation, setMapLocation] = useState({ lat: -1.9536, lng: 30.0605 });
+  const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [locationSuccess, setLocationSuccess] = useState('');
+  const [locationError, setLocationError] = useState('');
+
+  const MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+
   const DAYS_OF_WEEK = [
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
 
   // Populate hoursData when pharmacy loads
   useEffect(() => {
-    if (pharmacy && pharmacy.operatingHours) {
-      setHoursData({
-        is24Hours: pharmacy.operatingHours.is24Hours || false,
-        days: pharmacy.operatingHours.days || [],
-        openTime: pharmacy.operatingHours.openTime || '',
-        closeTime: pharmacy.operatingHours.closeTime || ''
-      });
+    if (pharmacy) {
+      if (pharmacy.operatingHours) {
+        setHoursData({
+          is24Hours: pharmacy.operatingHours.is24Hours || false,
+          days: pharmacy.operatingHours.days || [],
+          openTime: pharmacy.operatingHours.openTime || '',
+          closeTime: pharmacy.operatingHours.closeTime || ''
+        });
+      }
+      setAddress(pharmacy.address || '');
+      if (pharmacy.latitude && pharmacy.longitude) {
+        setMapLocation({ lat: pharmacy.latitude, lng: pharmacy.longitude });
+      }
     }
   }, [pharmacy]);
 
@@ -140,6 +156,65 @@ export default function PharmacySettings() {
     }
   };
 
+  const handleUpdateLocation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentUser) return;
+    setLocationError('');
+    setLocationSuccess('');
+
+    if (!address.trim()) {
+      return setLocationError('Address cannot be empty.');
+    }
+
+    setIsUpdatingLocation(true);
+    try {
+      let finalLat = mapLocation.lat;
+      let finalLng = mapLocation.lng;
+      let district = pharmacy?.district || '';
+
+      // If the map pin hasn't been moved from 0,0, try geocoding
+      if (finalLat === 0 && finalLng === 0) {
+        try {
+          if (MAPS_API_KEY) {
+            const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address.trim())}&key=${MAPS_API_KEY}`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) {
+              const loc = data.results[0].geometry.location;
+              finalLat = loc.lat;
+              finalLng = loc.lng;
+              
+              const components = data.results[0].address_components;
+              const districtComponent = components.find((c: any) => 
+                c.types.includes('administrative_area_level_2') || 
+                c.types.includes('locality')
+              );
+              if (districtComponent) {
+                district = districtComponent.long_name;
+              }
+            }
+          }
+        } catch (geocodeErr) {
+          console.error('Error geocoding address:', geocodeErr);
+        }
+      }
+
+      await updateDoc(doc(db, 'pharmacies', currentUser.uid), {
+        address: address.trim(),
+        latitude: finalLat,
+        longitude: finalLng,
+        district
+      });
+      
+      setLocationSuccess('Location and map coordinates updated successfully!');
+      setTimeout(() => setLocationSuccess(''), 3000);
+    } catch (err) {
+      console.error(err);
+      setLocationError('Failed to update location.');
+    } finally {
+      setIsUpdatingLocation(false);
+    }
+  };
+
   const toggleDay = (day: string) => {
     setHoursData(prev => ({
       ...prev,
@@ -178,6 +253,28 @@ export default function PharmacySettings() {
 
   if (authLoading || pharmacyLoading) {
     return <LoadingScreen text="Loading settings…" />;
+  }
+
+  // Redirect if subscription is expired
+  if (pharmacy) {
+    const now = new Date();
+    let isExpired = false;
+    
+    if (pharmacy.subscriptionEndDate) {
+      isExpired = pharmacy.subscriptionEndDate.toDate() < now;
+    } else if (pharmacy.createdAt) {
+      // Fallback for older pharmacies: 90 days from createdAt
+      const trialEnd = new Date(pharmacy.createdAt.toDate());
+      trialEnd.setDate(trialEnd.getDate() + 90);
+      isExpired = trialEnd < now;
+    } else {
+      isExpired = true;
+    }
+
+    if (isExpired) {
+      router.replace('/pharmacy/subscription');
+      return null;
+    }
   }
 
   return (
@@ -300,6 +397,12 @@ export default function PharmacySettings() {
               >
                 Working Hours
               </button>
+              <button
+                onClick={() => setActiveTab('location')}
+                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'location' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
+              >
+                Location & Address
+              </button>
             </div>
 
             <div className="flex gap-6 md:gap-8">
@@ -330,6 +433,20 @@ export default function PharmacySettings() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className="font-medium">Working Hours</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('location')}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'location'
+                      ? 'bg-teal-600 text-white'
+                      : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="font-medium">Location</span>
                 </button>
 
                 <div className="border-t border-gray-200 my-4"></div>
@@ -595,7 +712,67 @@ export default function PharmacySettings() {
                   </div>
                 )}
 
-                {activeTab !== 'account' && activeTab !== 'general' && (
+                {activeTab === 'location' && (
+                  <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h2 className="text-xl font-bold text-gray-900 mb-6">Location & Address</h2>
+                    {locationSuccess && (
+                      <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200">{locationSuccess}</div>
+                    )}
+                    {locationError && (
+                      <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{locationError}</div>
+                    )}
+
+                    <form onSubmit={handleUpdateLocation} className="space-y-6 max-w-2xl">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Pin Location
+                        </label>
+                        <p className="text-xs text-gray-500 mb-3">Click on the map to set your exact location.</p>
+                        <div className="w-full h-64 rounded-xl overflow-hidden border border-gray-300 relative">
+                          <APIProvider apiKey={MAPS_API_KEY}>
+                            <Map
+                              defaultCenter={mapLocation}
+                              defaultZoom={14}
+                              mapTypeControl={false}
+                              streetViewControl={false}
+                              onClick={(e) => {
+                                if (e.detail.latLng) {
+                                  setMapLocation({ lat: e.detail.latLng.lat, lng: e.detail.latLng.lng });
+                                }
+                              }}
+                            >
+                              <Marker position={mapLocation} />
+                            </Map>
+                          </APIProvider>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
+                          Pharmacy Address
+                        </label>
+                        <input
+                          type="text"
+                          id="address"
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="e.g. KN 5 Rd, Kigali"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                        />
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isUpdatingLocation}
+                        className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50"
+                      >
+                        {isUpdatingLocation ? 'Saving...' : 'Save Location'}
+                      </button>
+                    </form>
+                  </div>
+                )}
+
+                {activeTab !== 'account' && activeTab !== 'general' && activeTab !== 'location' && (
                   <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
                     <p className="text-gray-500 text-lg">
                       {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} settings coming soon

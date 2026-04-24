@@ -18,6 +18,7 @@ export default function AnalyticsPage() {
   const [totalUsers, setTotalUsers] = useState(0);
   const [verifiedCount, setVerifiedCount] = useState(0);
   const [totalWhatsappClicks, setTotalWhatsappClicks] = useState(0);
+  const [totalProfileViews, setTotalProfileViews] = useState(0);
   const [districtData, setDistrictData] = useState<DistrictCount[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyCount[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
@@ -32,6 +33,7 @@ export default function AnalyticsPage() {
         let pharmsCount = 0;
         let verCount = 0;
         let waClicks = 0;
+        let pViews = 0;
         const districtMap: Record<string, number> = {};
         const pharmByMonth: Record<string, number> = {};
 
@@ -40,6 +42,7 @@ export default function AnalyticsPage() {
           const d = doc.data();
           if (d.isVerified) verCount++;
           waClicks += d.whatsappClicks ?? 0;
+          pViews += d.profileViews ?? 0;
 
           // District grouping
           const raw: string = d.district ?? d.address ?? '';
@@ -88,6 +91,7 @@ export default function AnalyticsPage() {
         setTotalUsers(usersCount);
         setVerifiedCount(verCount);
         setTotalWhatsappClicks(waClicks);
+        setTotalProfileViews(pViews);
         setDistrictData(districts);
         setMonthlyData(months);
       } catch (err) {
@@ -123,6 +127,7 @@ export default function AnalyticsPage() {
               { label: 'Verified Pharmacies', value: verifiedCount, color: 'green' },
               { label: 'Total Users', value: totalUsers, color: 'purple' },
               { label: 'WhatsApp Clicks', value: totalWhatsappClicks, color: 'emerald' },
+              { label: 'Profile Views', value: totalProfileViews, color: 'blue' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-white rounded-xl border border-gray-200 p-5">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{label}</p>

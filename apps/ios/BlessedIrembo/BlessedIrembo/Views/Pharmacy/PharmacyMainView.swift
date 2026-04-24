@@ -44,6 +44,15 @@ struct PharmacyMainView: View {
                 Label("Profile", systemImage: "person.crop.circle.fill")
             }
             .tag(2)
+
+            // Subscription — wrapped in its own NavigationStack
+            NavigationStack {
+                PharmacySubscriptionView()
+            }
+            .tabItem {
+                Label("Subscription", systemImage: "creditcard.fill")
+            }
+            .tag(3)
         }
         .tint(Color.primaryTeal)
         .onAppear {

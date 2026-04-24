@@ -40,6 +40,13 @@ export default function SettingsPage() {
     const [deleteError, setDeleteError] = useState<string | null>(null);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+    // ─── Preferences state (UI only for now) ──────────────────────────────────
+    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+    const [emailAlerts, setEmailAlerts] = useState(true);
+    const [locationEnabled, setLocationEnabled] = useState(false);
+    const [dataSharing, setDataSharing] = useState(false);
+    const [darkMode, setDarkMode] = useState(false);
+
     // ─── Load user profile from Firestore ─────────────────────────────────────
     useEffect(() => {
         async function loadProfile() {
@@ -352,6 +359,117 @@ export default function SettingsPage() {
                                 {passwordLoading ? 'Updating...' : 'Update Password'}
                             </button>
                         </form>
+                    </div>
+
+                    {/* ── Notification Settings ──────────────────────────────────────── */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="font-semibold text-gray-900">Notifications</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">Manage how we contact you</p>
+                            </div>
+                        </div>
+                        <div className="px-6 py-6 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Push Notifications</p>
+                                    <p className="text-xs text-gray-500">Receive alerts on your device</p>
+                                </div>
+                                <button 
+                                    onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${notificationsEnabled ? 'bg-teal-600' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${notificationsEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Email Alerts</p>
+                                    <p className="text-xs text-gray-500">Updates and promotional emails</p>
+                                </div>
+                                <button 
+                                    onClick={() => setEmailAlerts(!emailAlerts)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${emailAlerts ? 'bg-teal-600' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${emailAlerts ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Location & Privacy ──────────────────────────────────────── */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-purple-50 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.39-2.823 1.07-4" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="font-semibold text-gray-900">Location & Privacy</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">Control your data and location access</p>
+                            </div>
+                        </div>
+                        <div className="px-6 py-6 space-y-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Location Services</p>
+                                    <p className="text-xs text-gray-500">Allow app to use your precise location</p>
+                                </div>
+                                <button 
+                                    onClick={() => setLocationEnabled(!locationEnabled)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${locationEnabled ? 'bg-teal-600' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${locationEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Analytics & Sharing</p>
+                                    <p className="text-xs text-gray-500">Help improve the platform with usage data</p>
+                                </div>
+                                <button 
+                                    onClick={() => setDataSharing(!dataSharing)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${dataSharing ? 'bg-teal-600' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${dataSharing ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ── Appearance Settings ──────────────────────────────────────── */}
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div className="px-6 py-5 border-b border-gray-100 flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
+                                <svg className="w-5 h-5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 className="font-semibold text-gray-900">Appearance</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">Customize your app interface</p>
+                            </div>
+                        </div>
+                        <div className="px-6 py-6">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-900">Dark Mode</p>
+                                    <p className="text-xs text-gray-500">Switch between light and dark themes</p>
+                                </div>
+                                <button 
+                                    onClick={() => setDarkMode(!darkMode)}
+                                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${darkMode ? 'bg-teal-600' : 'bg-gray-200'}`}
+                                >
+                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${darkMode ? 'translate-x-6' : 'translate-x-1'}`} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     {/* ── Danger Zone — Delete Account ─────────────────────────── */}

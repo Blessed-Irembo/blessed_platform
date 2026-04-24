@@ -191,17 +191,20 @@ export default function DashboardPage() {
               </Link>
 
               {/* Manage Subscriptions */}
-              <div className="bg-gray-50 rounded-xl p-6 text-center cursor-not-allowed opacity-60">
-                <div className="bg-gray-200 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-6 h-6 text-gray-700" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+              <Link
+                href="/dashboard/subscriptions"
+                className="bg-purple-50 rounded-xl p-6 text-center relative hover:bg-purple-100 transition-colors block"
+              >
+                <div className="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-purple-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
                 </div>
                 <h3 className="font-semibold text-gray-900 mb-2">Manage Subscriptions</h3>
-                <span className="inline-block bg-gray-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                  Coming soon
+                <span className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full">
+                  View plans
                 </span>
-              </div>
+              </Link>
             </div>
           </div>
 

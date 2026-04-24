@@ -46,6 +46,8 @@ struct Pharmacy: Codable, Identifiable {
     var is24_7: Bool
     var isPremium: Bool
     var createdAt: Date
+    var subscriptionEndDate: Date?   // nil = no paid subscription yet (uses 90-day trial)
+    var registrationNumber: String   // Rwanda FDA council registration number (NPC/Axxxx)
 
     // Engagement
     var rating: Double
@@ -75,6 +77,8 @@ struct Pharmacy: Codable, Identifiable {
         is24_7: Bool = false,
         isPremium: Bool = false,
         createdAt: Date = Date(),
+        subscriptionEndDate: Date? = nil,
+        registrationNumber: String = "",
         rating: Double = 0.0,
         reviewCount: Int = 0,
         whatsappClicks: Int = 0,
@@ -99,6 +103,8 @@ struct Pharmacy: Codable, Identifiable {
         self.is24_7 = is24_7
         self.isPremium = isPremium
         self.createdAt = createdAt
+        self.subscriptionEndDate = subscriptionEndDate
+        self.registrationNumber = registrationNumber
         self.rating = rating
         self.reviewCount = reviewCount
         self.whatsappClicks = whatsappClicks
