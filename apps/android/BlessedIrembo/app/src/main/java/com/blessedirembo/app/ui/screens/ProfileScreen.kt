@@ -57,6 +57,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.data.model.UserProfile
@@ -82,12 +85,17 @@ fun ProfileScreen(
     onBackClick: () -> Unit,
     onLogoutClick: () -> Unit,
     onEditClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
+    onLocationClick: () -> Unit,
+    onAppearanceClick: () -> Unit,
     modifier: Modifier = Modifier,
     authViewModel: AuthViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val currentUser = remember { authViewModel.currentUser }
     var userProfile by remember { mutableStateOf<UserProfile?>(null) }
+    val context = LocalContext.current
     
     LaunchedEffect(currentUser?.uid) {
         currentUser?.uid?.let { uid ->
@@ -263,25 +271,25 @@ fun ProfileScreen(
                     SettingsListItem(
                         icon = Icons.Filled.Notifications,
                         title = "Notifications",
-                        onClick = { /* TODO */ }
+                        onClick = onNotificationsClick
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Lock,
                         title = "Privacy & Security",
-                        onClick = { /* TODO */ }
+                        onClick = onPrivacyClick
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.LocationOn,
                         title = "Location Services",
-                        onClick = { /* TODO */ }
+                        onClick = onLocationClick
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Brush,
                         title = "Appearance",
-                        onClick = { /* TODO */ }
+                        onClick = onAppearanceClick
                     )
                 }
             }
@@ -309,25 +317,28 @@ fun ProfileScreen(
                     SettingsListItem(
                         icon = Icons.AutoMirrored.Filled.Help,
                         title = "Help & Support",
-                        onClick = { /* TODO */ }
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/help"))
+                            context.startActivity(intent)
+                        }
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Description,
                         title = "Terms & Conditions",
-                        onClick = { /* TODO */ }
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms"))
+                            context.startActivity(intent)
+                        }
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Shield,
                         title = "Privacy Policy",
-                        onClick = { /* TODO */ }
-                    )
-                    HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
-                    SettingsListItem(
-                        icon = Icons.Filled.Star,
-                        title = "Rate App",
-                        onClick = { /* TODO */ }
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
+                            context.startActivity(intent)
+                        }
                     )
                 }
             }

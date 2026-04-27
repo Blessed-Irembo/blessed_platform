@@ -45,10 +45,11 @@ class UserRepository {
      */
     suspend fun fetchUserRole(uid: String): Result<String?> {
         return try {
-            // First check users collection
+            // First check users collection and use the stored role if available
             val userDoc = usersCollection.document(uid).get().await()
             if (userDoc.exists() && userDoc.data?.isNotEmpty() == true) {
-                return Result.success(com.blessedirembo.app.data.model.UserRole.USER)
+                val role = userDoc.getString("role") ?: com.blessedirembo.app.data.model.UserRole.USER
+                return Result.success(role)
             }
 
             // Then check pharmacies collection

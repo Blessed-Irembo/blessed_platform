@@ -43,6 +43,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Shield
 import com.blessedirembo.app.ui.components.SettingsListItem
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
@@ -70,15 +75,13 @@ fun PharmacyOwnerProfileScreen(
     onOperatingHoursClick: () -> Unit = {},
     onLocationClick: () -> Unit = {},
     onSubscriptionClick: () -> Unit = {},
-    onStaffMembersClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
-    onPrivacyClick: () -> Unit = {},
-    onHelpClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val scrollState = rememberScrollState()
     val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
+    val context = LocalContext.current
     
     LaunchedEffect(Unit) {
         val uid = authViewModel.currentUser?.uid
@@ -208,12 +211,6 @@ fun PharmacyOwnerProfileScreen(
                     onClick = onSubscriptionClick,
                     iconTint = PlanPurple
                 )
-                SettingsListItem(
-                    icon = Icons.Filled.Groups,
-                    title = "Staff Members",
-                    onClick = onStaffMembersClick,
-                    iconTint = StaffGreen
-                )
             }
         }
         
@@ -238,15 +235,30 @@ fun PharmacyOwnerProfileScreen(
                     iconTint = Teal500
                 )
                 SettingsListItem(
-                    icon = Icons.Filled.Lock,
-                    title = "Privacy & Security",
-                    onClick = onPrivacyClick,
+                    icon = Icons.Filled.Shield,
+                    title = "Privacy Policy",
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
+                        context.startActivity(intent)
+                    },
+                    iconTint = Teal500
+                )
+                SettingsListItem(
+                    icon = Icons.Filled.Description,
+                    title = "Terms & Conditions",
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms"))
+                        context.startActivity(intent)
+                    },
                     iconTint = Teal500
                 )
                 SettingsListItem(
                     icon = Icons.AutoMirrored.Filled.Help,
                     title = "Help & Support",
-                    onClick = onHelpClick,
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/help"))
+                        context.startActivity(intent)
+                    },
                     iconTint = Teal500
                 )
             }

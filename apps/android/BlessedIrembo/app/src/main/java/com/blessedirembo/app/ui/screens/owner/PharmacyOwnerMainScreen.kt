@@ -1,16 +1,18 @@
 package com.blessedirembo.app.ui.screens.owner
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Message
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Message
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -46,7 +48,7 @@ private enum class ProfileSubScreen {
     NONE,
     EDIT_PROFILE,
     OPERATING_HOURS,
-    SUBSCRIPTION
+    NOTIFICATIONS
 }
 
 /**
@@ -67,10 +69,10 @@ fun PharmacyOwnerMainScreen(
     }
 
     val navItems = listOf(
-        OwnerNavItem("Home",     Icons.Filled.Home,    Icons.Outlined.Home),
-        OwnerNavItem("Inquiries",Icons.Filled.Message, Icons.Outlined.Message),
-        OwnerNavItem("Analytics",Icons.Filled.BarChart,Icons.Outlined.BarChart),
-        OwnerNavItem("Profile",  Icons.Filled.Person,  Icons.Outlined.Person)
+        OwnerNavItem("Home",         Icons.Filled.Home,    Icons.Outlined.Home),
+        OwnerNavItem("Analytics",    Icons.Filled.BarChart,Icons.Outlined.BarChart),
+        OwnerNavItem("Profile",      Icons.Filled.Person,  Icons.Outlined.Person),
+        OwnerNavItem("Subscription", Icons.Filled.Star,    Icons.Outlined.Star)
     )
 
     // Hide bottom nav when in sub-screens
@@ -121,26 +123,27 @@ fun PharmacyOwnerMainScreen(
                     onBackClick = { profileSubScreen = ProfileSubScreen.NONE }
                 )
 
-            profileSubScreen == ProfileSubScreen.SUBSCRIPTION ->
-                SubscriptionScreen(
-                    onBackClick = { profileSubScreen = ProfileSubScreen.NONE },
-                    modifier = Modifier.padding(paddingValues)
+            profileSubScreen == ProfileSubScreen.NOTIFICATIONS ->
+                PharmacyNotificationSettingsScreen(
+                    onBackClick = { profileSubScreen = ProfileSubScreen.NONE }
                 )
 
             // ── Main tab destinations ────────────────────────────────────────
             else -> when (selectedTab) {
                 0 -> PharmacyOwnerDashboardScreen(
-                    onViewAllInquiriesClick = { selectedTab = 1 },
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
                 )
-                1 -> InquiriesScreen(modifier = Modifier.padding(paddingValues))
-                2 -> AnalyticsScreen(modifier = Modifier.padding(paddingValues))
-                3 -> PharmacyOwnerProfileScreen(
+                1 -> AnalyticsScreen(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
+                2 -> PharmacyOwnerProfileScreen(
                     onEditProfileClick   = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
                     onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
-                    onSubscriptionClick  = { profileSubScreen = ProfileSubScreen.SUBSCRIPTION },
+                    onNotificationsClick = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
                     onSignOutClick       = onSignOut,
-                    modifier = Modifier.padding(paddingValues)
+                    modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                )
+                3 -> SubscriptionScreen(
+                    onBackClick = { selectedTab = 0 }, // Go back to home if they press back (though it's a tab now)
+                    modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
                 )
                 else -> Unit
             }

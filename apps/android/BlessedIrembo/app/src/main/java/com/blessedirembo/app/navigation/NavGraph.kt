@@ -42,6 +42,10 @@ sealed class Screen(val route: String) {
     data object Profile : Screen("profile")
     data object EditProfile : Screen("edit_profile")
     data object FindPharmacies : Screen("find_pharmacies")
+    data object UserNotificationSettings : Screen("user_notification_settings")
+    data object UserPrivacySettings : Screen("user_privacy_settings")
+    data object UserLocationSettings : Screen("user_location_settings")
+    data object UserAppearanceSettings : Screen("user_appearance_settings")
     data object PharmacyDetail : Screen("pharmacy_detail/{pharmacyId}") {
         fun createRoute(pharmacyId: String) = "pharmacy_detail/$pharmacyId"
     }
@@ -198,7 +202,33 @@ fun NavGraph(
                         popUpTo(Screen.Home.route) { inclusive = true }
                     }
                 },
-                onEditClick = { navController.navigate(Screen.EditProfile.route) }
+                onEditClick = { navController.navigate(Screen.EditProfile.route) },
+                onNotificationsClick = { navController.navigate(Screen.UserNotificationSettings.route) },
+                onPrivacyClick = { navController.navigate(Screen.UserPrivacySettings.route) },
+                onLocationClick = { navController.navigate(Screen.UserLocationSettings.route) },
+                onAppearanceClick = { navController.navigate(Screen.UserAppearanceSettings.route) }
+            )
+        }
+
+        // ── User Settings Screens ──────────────────────────────────────────────
+        composable(route = Screen.UserNotificationSettings.route) {
+            com.blessedirembo.app.ui.screens.UserNotificationSettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(route = Screen.UserPrivacySettings.route) {
+            com.blessedirembo.app.ui.screens.UserPrivacySettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(route = Screen.UserLocationSettings.route) {
+            com.blessedirembo.app.ui.screens.UserLocationSettingsScreen(
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+        composable(route = Screen.UserAppearanceSettings.route) {
+            com.blessedirembo.app.ui.screens.UserAppearanceSettingsScreen(
+                onBackClick = { navController.popBackStack() }
             )
         }
 
