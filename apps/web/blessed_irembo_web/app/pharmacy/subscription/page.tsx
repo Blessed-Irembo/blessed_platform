@@ -10,6 +10,7 @@ import { db, storage } from '@/lib/firebase';
 import { collection, addDoc, query, where, getDocs, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import { sendNotification } from '@/lib/notificationUtils';
 
 const PLANS = [
   {
@@ -145,6 +146,15 @@ export default function PharmacySubscription() {
       setPendingRequest({ ...pendingRequest, receiptUrl: downloadUrl });
       setSuccessMsg('Your receipt has been securely uploaded.');
       setReceiptFile(null);
+
+      // Notify admins
+      await sendNotification(
+        'ADMIN',
+        'New Receipt Uploaded',
+        `Pharmacy ${pharmacy?.name || 'Unknown'} uploaded a payment receipt.`,
+        'subscription',
+        '/dashboard/subscriptions' // Admin panel URL
+      );
     } catch (error: any) {
       console.error('Upload error:', error);
       setErrorMsg('Failed to upload receipt. Storage rules might be missing or network error occurred.');

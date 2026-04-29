@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { usePharmacyData } from '@/lib/usePharmacyData';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import ExpiredSubscriptionWall from '@/components/ui/ExpiredSubscriptionWall';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 
 export default function PharmacyProfilePage() {
   const { loading } = useRequireAuth();
@@ -28,26 +30,9 @@ export default function PharmacyProfilePage() {
     return <LoadingScreen text="Loading profile…" />;
   }
 
-  // Redirect if subscription is expired
-  if (pharmacy) {
-    const now = new Date();
-    let isExpired = false;
-    
-    if (pharmacy.subscriptionEndDate) {
-      isExpired = pharmacy.subscriptionEndDate.toDate() < now;
-    } else if (pharmacy.createdAt) {
-      // Fallback for older pharmacies: 90 days from createdAt
-      const trialEnd = new Date(pharmacy.createdAt.toDate());
-      trialEnd.setDate(trialEnd.getDate() + 90);
-      isExpired = trialEnd < now;
-    } else {
-      isExpired = true;
-    }
-
-    if (isExpired) {
-      router.replace('/pharmacy/subscription');
-      return null;
-    }
+  const subscriptionStatus = getSubscriptionStatus(pharmacy);
+  if (subscriptionStatus.isExpired) {
+    return <ExpiredSubscriptionWall statusResult={subscriptionStatus} pharmacyName={pharmacy?.name} />;
   }
 
   return (

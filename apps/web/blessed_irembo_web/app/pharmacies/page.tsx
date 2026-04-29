@@ -8,7 +8,7 @@ import { useRouter } from 'next/navigation';
 import type { Pharmacy } from '@/components/PharmacyMap';
 import { useRequireUserRole } from '@/lib/authHooks';
 import { useAuth } from '@/lib/AuthContext';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
@@ -54,7 +54,13 @@ export default function PharmaciesPage() {
   useEffect(() => {
     async function loadPharmacies() {
       try {
-        const snapshot = await getDocs(collection(db, 'pharmacies'));
+        // Only show pharmacies where isActive is not explicitly false
+        // (undefined/missing = active, for backwards-compat with existing pharmacies)
+        const q = query(
+          collection(db, 'pharmacies'),
+          where('isActive', '!=', false)
+        );
+        const snapshot = await getDocs(q);
         const list: Pharmacy[] = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
           // Normalize district to Title Case so it matches dropdown values

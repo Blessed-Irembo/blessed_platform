@@ -105,6 +105,7 @@ struct UserMapView: View {
             .background(Color.white)
     }
     
+    
     private var locationButton: some View {
         Button(action: centerOnUserLocation) {
             Circle()

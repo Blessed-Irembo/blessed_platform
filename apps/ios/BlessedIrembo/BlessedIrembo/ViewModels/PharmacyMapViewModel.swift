@@ -57,6 +57,10 @@ class PharmacyMapViewModel: ObservableObject {
         // Decode the nested operatingHours map
         let oh = decodeOperatingHours(from: data["operatingHours"])
 
+        // Filter out administratively deactivated pharmacies
+        let isActive = data["isActive"] as? Bool ?? true
+        if !isActive { return nil }
+
         // Normalize district to title case
         let rawDistrict = data["district"] as? String ?? ""
         let district = rawDistrict.split(separator: " ")
@@ -79,6 +83,9 @@ class PharmacyMapViewModel: ObservableObject {
             is24_7: data["is24_7"] as? Bool ?? oh.is24Hours,
             isPremium: data["isPremium"] as? Bool ?? false,
             createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
+            subscriptionEndDate: (data["subscriptionEndDate"] as? Timestamp)?.dateValue(),
+            registrationNumber: data["registrationNumber"] as? String ?? "",
+            isActive: isActive,
             rating: data["rating"] as? Double ?? 0.0,
             reviewCount: data["reviewCount"] as? Int ?? 0,
             whatsappClicks: data["whatsappClicks"] as? Int ?? 0,

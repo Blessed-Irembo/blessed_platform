@@ -8,6 +8,9 @@ import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { usePharmacyData } from '@/lib/usePharmacyData';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import ExpiredSubscriptionWall from '@/components/ui/ExpiredSubscriptionWall';
+import NotificationBell from '@/components/ui/NotificationBell';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 
 export default function PharmacyDashboard() {
   const router = useRouter();
@@ -36,26 +39,10 @@ export default function PharmacyDashboard() {
     return <LoadingScreen text="Loading dashboard…" />;
   }
 
-  // Redirect if subscription is expired
-  if (pharmacy) {
-    const now = new Date();
-    let isExpired = false;
-    
-    if (pharmacy.subscriptionEndDate) {
-      isExpired = pharmacy.subscriptionEndDate.toDate() < now;
-    } else if (pharmacy.createdAt) {
-      // Fallback for older pharmacies: 90 days from createdAt
-      const trialEnd = new Date(pharmacy.createdAt.toDate());
-      trialEnd.setDate(trialEnd.getDate() + 90);
-      isExpired = trialEnd < now;
-    } else {
-      isExpired = true;
-    }
-
-    if (isExpired) {
-      router.replace('/pharmacy/subscription');
-      return null;
-    }
+  // Gate: expired subscription shows the paywall wall instead of dashboard
+  const subscriptionStatus = getSubscriptionStatus(pharmacy);
+  if (subscriptionStatus.isExpired) {
+    return <ExpiredSubscriptionWall statusResult={subscriptionStatus} pharmacyName={pharmacy?.name} />;
   }
 
   const displayName = pharmacy?.name || currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Pharmacy';
@@ -75,10 +62,13 @@ export default function PharmacyDashboard() {
               <span className="text-teal-600 font-semibold text-sm sm:text-base">My Pharmacy</span>
             </div>
 
-            {/* Avatar + dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                id="pharmacy-menu-btn"
+            {/* Notifications & Avatar */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              {currentUser && <NotificationBell recipientId={currentUser.uid} />}
+              
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  id="pharmacy-menu-btn"
                 onClick={() => setDropdownOpen((prev) => !prev)}
                 className="flex items-center gap-2 focus:outline-none group"
                 aria-haspopup="true"
@@ -138,6 +128,7 @@ export default function PharmacyDashboard() {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>

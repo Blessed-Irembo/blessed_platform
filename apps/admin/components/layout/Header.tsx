@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/lib/AdminAuthContext';
+import NotificationBell from '@/components/ui/NotificationBell';
 
 export default function Header() {
   const router = useRouter();
@@ -38,6 +39,8 @@ export default function Header() {
           </div>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
+            <NotificationBell recipientId="ADMIN" />
+            
             <div className="hidden sm:flex bg-teal-50 text-teal-600 px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg font-medium items-center gap-2 text-sm sm:text-base">
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                 <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />

@@ -11,6 +11,8 @@ import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from 'firebase/auth';
 import LoadingScreen from '@/components/ui/LoadingScreen';
+import ExpiredSubscriptionWall from '@/components/ui/ExpiredSubscriptionWall';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
 
 export default function PharmacySettings() {
@@ -255,26 +257,9 @@ export default function PharmacySettings() {
     return <LoadingScreen text="Loading settings…" />;
   }
 
-  // Redirect if subscription is expired
-  if (pharmacy) {
-    const now = new Date();
-    let isExpired = false;
-    
-    if (pharmacy.subscriptionEndDate) {
-      isExpired = pharmacy.subscriptionEndDate.toDate() < now;
-    } else if (pharmacy.createdAt) {
-      // Fallback for older pharmacies: 90 days from createdAt
-      const trialEnd = new Date(pharmacy.createdAt.toDate());
-      trialEnd.setDate(trialEnd.getDate() + 90);
-      isExpired = trialEnd < now;
-    } else {
-      isExpired = true;
-    }
-
-    if (isExpired) {
-      router.replace('/pharmacy/subscription');
-      return null;
-    }
+  const subscriptionStatus = getSubscriptionStatus(pharmacy);
+  if (subscriptionStatus.isExpired) {
+    return <ExpiredSubscriptionWall statusResult={subscriptionStatus} pharmacyName={pharmacy?.name} />;
   }
 
   return (

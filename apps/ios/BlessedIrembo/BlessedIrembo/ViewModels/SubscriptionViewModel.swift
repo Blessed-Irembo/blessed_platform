@@ -38,6 +38,12 @@ class SubscriptionViewModel: ObservableObject {
 
     func calculateStatus(pharmacy: Pharmacy) {
         let now = Date()
+        
+        // Check administrative activation first
+        if !pharmacy.isActive {
+            status = .expired
+            return
+        }
 
         if let endDate = pharmacy.subscriptionEndDate {
             // Has a paid subscription
@@ -173,6 +179,15 @@ class SubscriptionViewModel: ObservableObject {
                 "receiptUrl": downloadURL.absoluteString
             ])
             successMessage = "Receipt uploaded successfully! The admin can now see your payment proof."
+            
+            // Notify admins
+            await NotificationViewModel.sendNotification(
+                recipientId: "ADMIN",
+                title: "New Receipt Uploaded",
+                message: "Pharmacy \(pharmacy.name) uploaded a payment receipt.",
+                type: "subscription",
+                actionUrl: "/dashboard/subscriptions"
+            )
         } catch {
             errorMessage = "Upload failed: \(error.localizedDescription)"
         }

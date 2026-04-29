@@ -18,40 +18,56 @@ struct PharmacyMainView: View {
     @State private var selectedTab = 0
 
     var body: some View {
+        let isExpired: Bool = {
+            if case .expired = appState.subscriptionStatus { return true }
+            return false
+        }()
+
         TabView(selection: $selectedTab) {
-            // Dashboard
-            PharmacyDashboardView(viewModel: dashboardViewModel)
-                .tabItem {
-                    Label("Home", systemImage: "house.fill")
-                }
-                .tag(0)
-
-            // Analytics
-            PharmacyAnalyticsView(viewModel: dashboardViewModel)
-                .tabItem {
-                    Label("Analytics", systemImage: "chart.bar.fill")
-                }
-                .tag(1)
-
-            // Profile — wrapped in its own NavigationStack so that
-            // NavigationLink destinations (Edit Profile, Operating Hours,
-            // Location & Address) can push and automatically receive
-            // the AppState environment object.
+            // Dashboard — gated when expired
             NavigationStack {
-                PharmacyProfileView()
+                if isExpired {
+                    ExpiredSubscriptionView(selectedTab: $selectedTab, subscriptionTabIndex: 3)
+                        .navigationTitle("Dashboard")
+                        .navigationBarTitleDisplayMode(.large)
+                } else {
+                    PharmacyDashboardView(viewModel: dashboardViewModel)
+                }
             }
-            .tabItem {
-                Label("Profile", systemImage: "person.crop.circle.fill")
+            .tabItem { Label("Home", systemImage: "house.fill") }
+            .tag(0)
+
+            // Analytics — gated when expired
+            NavigationStack {
+                if isExpired {
+                    ExpiredSubscriptionView(selectedTab: $selectedTab, subscriptionTabIndex: 3)
+                        .navigationTitle("Analytics")
+                        .navigationBarTitleDisplayMode(.large)
+                } else {
+                    PharmacyAnalyticsView(viewModel: dashboardViewModel)
+                }
             }
+            .tabItem { Label("Analytics", systemImage: "chart.bar.fill") }
+            .tag(1)
+
+            // Profile — gated when expired
+            NavigationStack {
+                if isExpired {
+                    ExpiredSubscriptionView(selectedTab: $selectedTab, subscriptionTabIndex: 3)
+                        .navigationTitle("Profile")
+                        .navigationBarTitleDisplayMode(.large)
+                } else {
+                    PharmacyProfileView()
+                }
+            }
+            .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
             .tag(2)
 
-            // Subscription — wrapped in its own NavigationStack
+            // Subscription — ALWAYS accessible, never gated
             NavigationStack {
                 PharmacySubscriptionView()
             }
-            .tabItem {
-                Label("Subscription", systemImage: "creditcard.fill")
-            }
+            .tabItem { Label("Subscription", systemImage: "creditcard.fill") }
             .tag(3)
         }
         .tint(Color.primaryTeal)

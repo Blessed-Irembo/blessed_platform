@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import { useRequireAdmin } from '@/lib/adminAuthHooks';
 import { collection, doc, updateDoc, getDoc, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { sendNotification } from '@/lib/notificationUtils';
 
 interface Pharmacy {
   id: string;
@@ -46,6 +47,9 @@ export default function SubscriptionsPage() {
   
   const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [migrating, setMigrating] = useState(false);
+  const [migrateResult, setMigrateResult] = useState<string | null>(null);
+  const [showMigrateTool, setShowMigrateTool] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -170,13 +174,22 @@ export default function SubscriptionsPage() {
       newEndDate.setMonth(newEndDate.getMonth() + monthsToAdd);
 
       await updateDoc(pharmacyRef, {
-        subscriptionEndDate: newEndDate
+        subscriptionEndDate: newEndDate,
+        isActive: true,   // ← restore public listing visibility on approval
       });
 
       await updateDoc(doc(db, 'subscription_requests', req.id), {
         status: 'approved',
         reviewedAt: new Date()
       });
+
+      await sendNotification(
+        req.pharmacyId,
+        'Subscription Approved',
+        'Your subscription payment has been verified. Your listing is now active!',
+        'subscription',
+        '/pharmacy/subscription'
+      );
 
     } catch (err) {
       console.error(err);
@@ -194,11 +207,89 @@ export default function SubscriptionsPage() {
         status: 'rejected',
         reviewedAt: new Date()
       });
+
+      // We need to fetch the request to know who to notify
+      const reqDoc = await getDoc(doc(db, 'subscription_requests', reqId));
+      if (reqDoc.exists()) {
+        const reqData = reqDoc.data();
+        await sendNotification(
+          reqData.pharmacyId,
+          'Subscription Rejected',
+          'Your recent payment request was rejected. Please contact support.',
+          'alert',
+          '/pharmacy/subscription'
+        );
+      }
+
     } catch (err) {
       console.error(err);
       alert('Failed to reject request.');
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleDeactivate = async (pharmacyId: string, pharmacyName: string) => {
+    if (!confirm(`Deactivate "${pharmacyName}"?\n\nThis will immediately hide them from all public listings on the web and iOS app.`)) return;
+    setActionLoading(pharmacyId);
+    try {
+      await updateDoc(doc(db, 'pharmacies', pharmacyId), { isActive: false });
+      await sendNotification(
+        pharmacyId,
+        'Account Deactivated',
+        'Your pharmacy listing has been deactivated by an admin. Please contact support.',
+        'alert'
+      );
+    } catch (err) {
+      console.error(err);
+      alert('Failed to deactivate pharmacy.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReactivate = async (pharmacyId: string) => {
+    if (!confirm('Reactivate this pharmacy listing? They will appear on the public map again.')) return;
+    setActionLoading(pharmacyId);
+    try {
+      await updateDoc(doc(db, 'pharmacies', pharmacyId), { isActive: true });
+      await sendNotification(
+        pharmacyId,
+        'Account Reactivated',
+        'Your pharmacy listing has been reactivated and is now visible.',
+        'system'
+      );
+    } catch (err) {
+      console.error(err);
+      alert('Failed to reactivate pharmacy.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleMigrateAllActive = async () => {
+    if (!confirm('This will set isActive: true on ALL pharmacies that do not have it set yet.\nThis is a one-time migration step. Proceed?')) return;
+    setMigrating(true);
+    setMigrateResult(null);
+    try {
+      const { getDocs, collection: col, writeBatch } = await import('firebase/firestore');
+      const snap = await getDocs(col(db, 'pharmacies'));
+      const batch = writeBatch(db);
+      let count = 0;
+      snap.forEach(docSnap => {
+        const data = docSnap.data();
+        if (data.isActive === undefined || data.isActive === null) {
+          batch.update(docSnap.ref, { isActive: true });
+          count++;
+        }
+      });
+      await batch.commit();
+      setMigrateResult(`✅ Migration complete. Set isActive: true on ${count} pharmacies.`);
+    } catch (err) {
+      console.error(err);
+      setMigrateResult('❌ Migration failed. Check console for details.');
+    } finally {
+      setMigrating(false);
     }
   };
 
@@ -397,7 +488,39 @@ export default function SubscriptionsPage() {
             {/* --- EXPIRED TAB --- */}
             {activeTab === 'expired' && (
               <>
-                <h2 className="text-xl font-bold text-gray-900 mb-6">Expired Pharmacies</h2>
+                <h2 className="text-xl font-bold text-gray-900 mb-4">Expired Pharmacies</h2>
+
+                {/* Migration Tool */}
+                <div className="mb-6">
+                  <button
+                    onClick={() => setShowMigrateTool(v => !v)}
+                    className="text-xs text-gray-400 hover:text-gray-600 underline"
+                  >
+                    {showMigrateTool ? '▲ Hide Migration Tool' : '▼ Show Migration Tool (one-time setup)'}
+                  </button>
+                  {showMigrateTool && (
+                    <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                      <div className="flex items-start gap-3 mb-3">
+                        <svg className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01M4.93 4.93l14.14 14.14M12 2a10 10 0 100 20A10 10 0 0012 2z" /></svg>
+                        <div>
+                          <p className="text-sm font-semibold text-amber-800">One-Time Migration Tool</p>
+                          <p className="text-xs text-amber-700 mt-1">Sets <code>isActive: true</code> on all existing pharmacies that don&apos;t have this field yet. Run once to bring all pharmacies into the new access control system without disrupting them.</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleMigrateAllActive}
+                        disabled={migrating}
+                        className="bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-lg hover:bg-amber-700 disabled:opacity-50 transition-colors"
+                      >
+                        {migrating ? 'Migrating…' : '⚡ Migrate: Set All Pharmacies Active'}
+                      </button>
+                      {migrateResult && (
+                        <p className="mt-2 text-sm font-medium text-amber-900">{migrateResult}</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
                 {expiredPharmacies.length === 0 ? (
                   <p className="text-gray-500">No expired pharmacies found.</p>
                 ) : (
@@ -408,6 +531,8 @@ export default function SubscriptionsPage() {
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Pharmacy</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expired On</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Listing</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
@@ -422,6 +547,32 @@ export default function SubscriptionsPage() {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
                               {pharm.expiresOn}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                                pharm.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {pharm.isActive ? 'Visible' : 'Hidden'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              {pharm.isActive ? (
+                                <button
+                                  onClick={() => handleDeactivate(pharm.id, pharm.name)}
+                                  disabled={actionLoading === pharm.id}
+                                  className="text-xs bg-red-100 text-red-700 hover:bg-red-200 font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {actionLoading === pharm.id ? 'Saving…' : 'Deactivate Listing'}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleReactivate(pharm.id)}
+                                  disabled={actionLoading === pharm.id}
+                                  className="text-xs bg-teal-100 text-teal-700 hover:bg-teal-200 font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                                >
+                                  {actionLoading === pharm.id ? 'Saving…' : 'Reactivate'}
+                                </button>
+                              )}
                             </td>
                           </tr>
                         ))}

@@ -20,6 +20,28 @@ class AppState: ObservableObject {
     @Published var currentPharmacy: Pharmacy?
     @Published var navigationPath = NavigationPath()
 
+    /// Computed subscription status based on the live currentPharmacy.
+    /// Used by PharmacyMainView to gate tab content without needing a ViewModel.
+    var subscriptionStatus: SubscriptionStatus {
+        guard let pharmacy = currentPharmacy else { return .unknown }
+        
+        // If the pharmacy is administratively deactivated, treat as expired
+        if !pharmacy.isActive {
+            return .expired
+        }
+
+        let now = Date()
+        if let endDate = pharmacy.subscriptionEndDate {
+            return endDate > now ? .premium(expiresOn: endDate) : .expired
+        }
+        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt) ?? pharmacy.createdAt
+        if trialEnd > now {
+            let days = max(0, Calendar.current.dateComponents([.day], from: now, to: trialEnd).day ?? 0)
+            return .freeTrial(daysRemaining: days)
+        }
+        return .expired
+    }
+
     private var authHandle: AuthStateDidChangeListenerHandle?
     /// Active Firestore real-time listener for the current pharmacy document.
     private var pharmacyListener: ListenerRegistration?
@@ -150,6 +172,7 @@ class AppState: ObservableObject {
                     createdAt: createdDate,
                     subscriptionEndDate: subEndDate,
                     registrationNumber: data["registrationNumber"] as? String ?? "",
+                    isActive: data["isActive"] as? Bool ?? true,
                     rating: data["rating"] as? Double ?? 0.0,
                     reviewCount: data["reviewCount"] as? Int ?? 0,
                     whatsappClicks: data["whatsappClicks"] as? Int ?? 0,
