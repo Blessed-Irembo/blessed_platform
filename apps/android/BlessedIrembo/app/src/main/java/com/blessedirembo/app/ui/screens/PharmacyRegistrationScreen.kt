@@ -65,18 +65,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material.icons.outlined.Cancel
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.R
 import com.blessedirembo.app.auth.AuthState
 import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.data.model.AllDays
+import com.blessedirembo.app.data.repository.PharmacyRepository
 import com.blessedirembo.app.ui.components.CustomTextField
 import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
  * Pharmacy Registration Screen
@@ -103,6 +111,14 @@ fun PharmacyRegistrationScreen(
     var physicalAddress by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+
+    // ─── License validation state ─────────────────────────────────
+    var licenseError by remember { mutableStateOf<String?>(null) }
+    var licenseVerified by remember { mutableStateOf(false) }
+    var licenseChecking by remember { mutableStateOf(false) }
+    val pharmacyRepo = remember { PharmacyRepository() }
+    val scope = rememberCoroutineScope()
+    var licenseDebounceJob by remember { mutableStateOf<Job?>(null) }
 
     // ─── Operating Hours state ────────────────────────────────────
     var is24Hours by remember { mutableStateOf(false) }
@@ -256,54 +272,171 @@ fun PharmacyRegistrationScreen(
                     }
                     Text("Format: NPC/A0000 — as issued by Rwanda FDA",
                         style = MaterialTheme.typography.labelSmall, color = Gray500)
-                    CustomTextField(
-                        value = licenseNumber,
-                        onValueChange = { licenseNumber = it.uppercase() },
-                        placeholder = "NPC/A0000",
-                        leadingIcon = Icons.Outlined.Description
-                    )
+                    // Field with trailing state icon
+                    Box {
+                        CustomTextField(
+                            value = licenseNumber,
+                            onValueChange = { newValue ->
+                                licenseNumber = newValue.uppercase()
+                                licenseError = null
+                                licenseVerified = false
+                                // Debounce: check after 700ms of idle typing
+                                licenseDebounceJob?.cancel()
+                                if (newValue.length >= 5) {
+                                    licenseChecking = true
+                                    licenseDebounceJob = scope.launch {
+                                        delay(700)
+                                        val result = pharmacyRepo.verifyLicense(newValue.uppercase().trim())
+                                        licenseChecking = false
+                                        if (result.isSuccess) {
+                                            licenseVerified = true
+                                            licenseError = null
+                                        } else {
+                                            licenseVerified = false
+                                            licenseError = "Not found in the Rwanda FDA licensed list"
+                                        }
+                                    }
+                                } else {
+                                    licenseChecking = false
+                                }
+                            },
+                            placeholder = "NPC/A0000",
+                            leadingIcon = Icons.Outlined.Description
+                        )
+                        // Trailing status icon
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterEnd)
+                                .padding(end = 12.dp)
+                        ) {
+                            when {
+                                licenseChecking -> CircularProgressIndicator(
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
+                                    color = Teal500
+                                )
+                                licenseVerified -> Icon(
+                                    Icons.Outlined.CheckCircle,
+                                    contentDescription = null,
+                                    tint = Color(0xFF22C55E),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                licenseError != null -> Icon(
+                                    Icons.Outlined.Cancel,
+                                    contentDescription = null,
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                    }
+                    // Inline error below field (matches iOS red error row)
+                    if (licenseError != null) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Outlined.Cancel,
+                                contentDescription = null,
+                                tint = Color.Red,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = licenseError!!,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = Color.Red
+                            )
+                        }
+                    }
                 }
 
                 // ── 2. Pharmacy Name ──
-                CustomTextField(
-                    value = pharmacyName,
-                    onValueChange = { pharmacyName = it },
-                    placeholder = "Pharmacy Name",
-                    leadingIcon = Icons.Outlined.Business
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Outlined.Business, contentDescription = null,
+                            tint = Gray500, modifier = Modifier.size(16.dp))
+                        Text("Pharmacy Name",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold)
+                    }
+                    CustomTextField(
+                        value = pharmacyName,
+                        onValueChange = { pharmacyName = it },
+                        placeholder = "Enter pharmacy name",
+                        leadingIcon = Icons.Outlined.Business
+                    )
+                }
 
                 // ── 3. Owner / Responsible Person ──
-                CustomTextField(
-                    value = ownerName,
-                    onValueChange = { ownerName = it },
-                    placeholder = "Owner / Responsible Person",
-                    leadingIcon = Icons.Outlined.Person
-                )
-
-                // ── 4. Phone Number (WhatsApp note) ──
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Outlined.Person, contentDescription = null,
+                            tint = Gray500, modifier = Modifier.size(16.dp))
+                        Text("Owner / Responsible Person",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold)
+                    }
                     CustomTextField(
-                        value = phoneNumber,
-                        onValueChange = { phoneNumber = it },
-                        placeholder = "+250 788 123 456",
-                        leadingIcon = Icons.Outlined.Phone,
-                        keyboardType = KeyboardType.Phone
+                        value = ownerName,
+                        onValueChange = { ownerName = it },
+                        placeholder = "Enter owner full name",
+                        leadingIcon = Icons.Outlined.Person
                     )
+                }
+
+                // ── 4. Phone Number ──
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Outlined.Phone, contentDescription = null,
+                            tint = Gray500, modifier = Modifier.size(16.dp))
+                        Text("Phone Number",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold)
+                    }
                     Text(
                         "Primary contact — used for WhatsApp & sign-in",
                         style = MaterialTheme.typography.labelSmall,
                         color = Gray500
                     )
+                    CustomTextField(
+                        value = phoneNumber,
+                        onValueChange = { phoneNumber = it },
+                        placeholder = "+250 7XX XXX XXX",
+                        leadingIcon = Icons.Outlined.Phone,
+                        keyboardType = KeyboardType.Phone
+                    )
                 }
 
                 // ── 5. Email ──
-                CustomTextField(
-                    value = email,
-                    onValueChange = { email = it },
-                    placeholder = "pharmacy@example.com",
-                    leadingIcon = Icons.Outlined.Email,
-                    keyboardType = KeyboardType.Email
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Icon(Icons.Outlined.Email, contentDescription = null,
+                            tint = Gray500, modifier = Modifier.size(16.dp))
+                        Text("Email Address",
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.SemiBold)
+                    }
+                    CustomTextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = "pharmacy@example.com",
+                        leadingIcon = Icons.Outlined.Email,
+                        keyboardType = KeyboardType.Email
+                    )
+                }
 
                 // ── 6. Physical Address ──
                 CustomTextField(
