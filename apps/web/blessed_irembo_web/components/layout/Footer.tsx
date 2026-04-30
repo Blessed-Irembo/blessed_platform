@@ -9,7 +9,7 @@ import Image from 'next/image';
  */
 export default function Footer() {
   const quickLinks = [
-    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Privacy Policy', href: '/privacy-policy' },
     { label: 'Terms and Conditions', href: '/terms' },
     { label: 'Help & Support', href: '/help' },
     { label: 'About Us', href: '/about' },

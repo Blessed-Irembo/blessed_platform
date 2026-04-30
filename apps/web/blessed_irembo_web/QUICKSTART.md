@@ -103,7 +103,7 @@ Based on the navigation links, you'll want to create:
 - `/about` - About page
 - `/how-it-works` - How it works page
 - `/for-pharmacies` - Pharmacy information page
-- `/privacy` - Privacy policy page
+- `/privacy-policy` - Privacy policy page
 
 ## Code Quality Features
 
