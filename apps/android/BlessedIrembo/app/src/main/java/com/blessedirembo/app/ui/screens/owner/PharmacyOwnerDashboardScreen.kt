@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.ui.components.StatCard
 import com.blessedirembo.app.ui.theme.Gray100
@@ -47,6 +48,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.blessedirembo.app.ui.screens.NotificationsSheet
+import com.blessedirembo.app.ui.viewmodel.NotificationViewModel
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 
 val BlueAccent = Color(0xFF3B82F6)
 val PurpleAccent = Color(0xFF4F46E5)
@@ -61,16 +66,27 @@ fun PharmacyOwnerDashboardScreen(
     onNotificationClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     authViewModel: com.blessedirembo.app.auth.AuthViewModel = viewModel(),
-    pharmacyViewModel: com.blessedirembo.app.ui.viewmodel.PharmacyViewModel = viewModel()
+    pharmacyViewModel: com.blessedirembo.app.ui.viewmodel.PharmacyViewModel = viewModel(),
+    notificationViewModel: NotificationViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
     val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
+    val unreadCount by notificationViewModel.unreadCount.collectAsState()
+    var showNotificationsSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         val uid = authViewModel.currentUser?.uid
         if (uid != null) {
             pharmacyViewModel.loadPharmacyByOwnerId(uid)
+            notificationViewModel.listenForNotifications(uid)
         }
+    }
+
+    if (showNotificationsSheet) {
+        NotificationsSheet(
+            onDismiss = { showNotificationsSheet = false },
+            notificationViewModel = notificationViewModel
+        )
     }
 
     Column(
@@ -105,14 +121,18 @@ fun PharmacyOwnerDashboardScreen(
             // Notification bell with badge
             BadgedBox(
                 badge = {
-                    Badge(
-                        containerColor = Color.Red,
-                        modifier = Modifier.size(8.dp)
-                    ) { }
+                    if (unreadCount > 0) {
+                        Badge(
+                            containerColor = Color.Red,
+                            modifier = Modifier.padding(top = 4.dp, end = 4.dp)
+                        ) {
+                            Text("$unreadCount", color = White)
+                        }
+                    }
                 }
             ) {
                 IconButton(
-                    onClick = onNotificationClick,
+                    onClick = { showNotificationsSheet = true },
                     modifier = Modifier
                         .size(44.dp)
                         .shadow(elevation = 2.dp, shape = CircleShape)

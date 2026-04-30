@@ -97,6 +97,7 @@ fun PharmacyDetailScreen(
 
     LaunchedEffect(pharmacyId) {
         pharmacyViewModel.loadPharmacyById(pharmacyId)
+        pharmacyViewModel.incrementProfileViews(pharmacyId)
         pharmacy?.let { AnalyticsManager.logPharmacyView(pharmacyId, it.name) }
     }
 
@@ -238,9 +239,10 @@ fun PharmacyDetailScreen(
                         Text("Call Pharmacy", fontWeight = FontWeight.SemiBold)
                     }
 
-                    // WhatsApp
+                        // WhatsApp
                     Button(
                         onClick = {
+                            pharmacyViewModel.incrementWhatsAppClicks(pharmacyId)
                             val msg = "Hello, I found your pharmacy via the Blessed Irembo platform."
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://wa.me/${p.whatsAppNumber.filter { it.isDigit() }}?text=${Uri.encode(msg)}"))
                             context.startActivity(intent)

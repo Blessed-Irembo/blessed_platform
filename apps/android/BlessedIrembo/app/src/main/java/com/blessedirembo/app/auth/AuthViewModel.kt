@@ -87,17 +87,25 @@ class AuthViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            val result = FirebaseAuthManager.signUp(email, password)
+            
+            val resolvedEmail = if (email.isBlank()) {
+                "${phone.trim().replace("+", "")}@blessed-irembo.app"
+            } else {
+                email
+            }
+            
+            val result = FirebaseAuthManager.signUp(resolvedEmail, password)
             result.fold(
                 onSuccess = { user ->
                     val profile = UserProfile(
                         uid = user.uid,
                         fullName = fullName,
-                        email = email,
+                        email = resolvedEmail,
                         phone = phone,
                         role = role
                     )
                     userRepository.saveUserProfile(profile)
+                    userRepository.savePhoneToEmailMapping(phone, resolvedEmail)
                     AnalyticsManager.logSignUp(role)
                     _authState.value = AuthState.Success(user, role)
                 },
@@ -136,19 +144,32 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
+            val licenseResult = pharmacyRepository.verifyLicense(licenseNumber)
+            if (licenseResult.isFailure) {
+                _authState.value = AuthState.Error(licenseResult.exceptionOrNull()?.message ?: "Invalid license number.")
+                return@launch
+            }
+
+            val resolvedEmail = if (email.isBlank()) {
+                "${phoneNumber.trim().replace("+", "")}@blessed-irembo.app"
+            } else {
+                email
+            }
+
             // Step 1 – create auth user
-            val authResult = FirebaseAuthManager.signUp(email, password)
+            val authResult = FirebaseAuthManager.signUp(resolvedEmail, password)
             authResult.fold(
                 onSuccess = { user ->
                     // Step 2 – save user profile
                     val profile = UserProfile(
                         uid = user.uid,
                         fullName = ownerName,
-                        email = email,
+                        email = resolvedEmail,
                         phone = phoneNumber,
                         role = UserRole.PHARMACY_OWNER
                     )
                     userRepository.saveUserProfile(profile)
+                    userRepository.savePhoneToEmailMapping(phoneNumber, resolvedEmail)
 
                     // Step 3 – create pharmacy document
                     pharmacyRepository.registerPharmacy(
@@ -156,7 +177,7 @@ class AuthViewModel : ViewModel() {
                         pharmacyName = pharmacyName,
                         ownerName = ownerName,
                         phoneNumber = phoneNumber,
-                        email = email,
+                        email = resolvedEmail,
                         licenseNumber = licenseNumber,
                         address = address,
                         latitude = latitude,

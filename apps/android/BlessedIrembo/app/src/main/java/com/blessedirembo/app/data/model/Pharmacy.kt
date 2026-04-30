@@ -45,7 +45,12 @@ data class Pharmacy(
     val whatsappClicks: Int = 0,
     val profileViews: Int = 0,
     val subscriptionPlan: String = "Free",
-    val isPremium: Boolean = false
+    val isPremium: Boolean = false,
+    val isActive: Boolean = true,
+    @com.google.firebase.firestore.ServerTimestamp
+    val subscriptionEndDate: com.google.firebase.Timestamp? = null,
+    @com.google.firebase.firestore.ServerTimestamp
+    val createdAt: com.google.firebase.Timestamp? = null
 ) {
     /**
      * Parse the structured operatingHours map into a typed OperatingHours object.
@@ -94,6 +99,31 @@ data class Pharmacy(
             if (hours.days.isEmpty()) return openingHours.ifBlank { "—" }
             val dayStr = hours.days.joinToString(", ") { it.take(3) }
             return "$dayStr: ${hours.openTime}–${hours.closeTime}"
+        }
+
+    /**
+     * Determine if the pharmacy has a valid subscription or is within the 90-day trial.
+     */
+    @get:com.google.firebase.firestore.Exclude
+    val hasValidSubscription: Boolean
+        get() {
+            if (!isActive) return false
+            
+            val now = java.util.Date()
+            if (subscriptionEndDate != null && subscriptionEndDate.toDate().after(now)) {
+                return true
+            }
+            
+            // Check 90-day trial based on createdAt
+            if (createdAt != null) {
+                val trialDurationMs = 90L * 24 * 60 * 60 * 1000
+                val trialEndDate = java.util.Date(createdAt.toDate().time + trialDurationMs)
+                if (trialEndDate.after(now)) {
+                    return true
+                }
+            }
+            
+            return false
         }
 }
 

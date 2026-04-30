@@ -86,4 +86,16 @@ class PharmacyViewModel(
             )
         }
     }
+
+    fun incrementWhatsAppClicks(pharmacyId: String) {
+        viewModelScope.launch {
+            repository.incrementWhatsAppClicks(pharmacyId)
+        }
+    }
+
+    fun incrementProfileViews(pharmacyId: String) {
+        viewModelScope.launch {
+            repository.incrementProfileViews(pharmacyId)
+        }
+    }
 }

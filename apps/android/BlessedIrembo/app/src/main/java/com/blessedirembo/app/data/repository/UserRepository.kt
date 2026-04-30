@@ -83,34 +83,33 @@ class UserRepository {
 
     /**
      * Phone-number sign-in: look up the email associated with a given phone number.
-     * Checks /users then /pharmacies, mirroring iOS phone-based sign-in path.
+     * Looks up in the `phone_to_email` collection, mirroring iOS phone-based sign-in path.
      */
     suspend fun fetchEmailByPhone(phone: String): Result<String?> {
         return try {
             // Normalise the phone: strip spaces and ensure leading +
             val normalised = phone.trim()
 
-            // Check users collection
-            var snapshot = usersCollection
-                .whereEqualTo("phone", normalised)
-                .limit(1)
-                .get()
-                .await()
-            snapshot.documents.firstOrNull()?.getString("email")?.let {
-                return Result.success(it)
-            }
-
-            // Check pharmacies collection (phone stored as phoneNumber)
-            snapshot = db.collection("pharmacies")
-                .whereEqualTo("phoneNumber", normalised)
-                .limit(1)
-                .get()
-                .await()
-            snapshot.documents.firstOrNull()?.getString("email")?.let {
-                return Result.success(it)
+            val doc = db.collection("phone_to_email").document(normalised).get().await()
+            if (doc.exists() && doc.data?.isNotEmpty() == true) {
+                return Result.success(doc.getString("email"))
             }
 
             Result.success(null)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Save the mapping from a phone number to an email to support phone-only login.
+     */
+    suspend fun savePhoneToEmailMapping(phone: String, email: String): Result<Unit> {
+        return try {
+            val normalised = phone.trim()
+            val data = mapOf("email" to email)
+            db.collection("phone_to_email").document(normalised).set(data).await()
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

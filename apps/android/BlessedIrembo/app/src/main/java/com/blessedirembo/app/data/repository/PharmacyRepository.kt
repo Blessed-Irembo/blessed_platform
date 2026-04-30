@@ -15,12 +15,40 @@ class PharmacyRepository {
     private val pharmaciesCollection = db.collection("pharmacies")
 
     /**
-     * Fetch all verified pharmacies.
+     * Verify a pharmacy license against the licensed_pharmacies collection.
+     */
+    suspend fun verifyLicense(licenseNumber: String): Result<Boolean> {
+        return try {
+            val doc = db.collection("licensed_pharmacies").document(licenseNumber).get().await()
+            if (!doc.exists()) {
+                return Result.failure(Exception("License number not found or invalid."))
+            }
+            
+            // Check if this license is already registered
+            val existingSnapshot = pharmaciesCollection
+                .whereEqualTo("licenseNumber", licenseNumber)
+                .limit(1)
+                .get()
+                .await()
+            
+            if (!existingSnapshot.isEmpty) {
+                return Result.failure(Exception("This license is already registered to another account."))
+            }
+            
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Fetch all verified and active pharmacies.
      */
     suspend fun getNearbyPharmacies(): Result<List<Pharmacy>> {
         return try {
             val snapshot = pharmaciesCollection
                 .whereEqualTo("isVerified", true)
+                .whereEqualTo("isActive", true)
                 .get()
                 .await()
             val pharmacies = snapshot.toObjects(Pharmacy::class.java)
@@ -182,6 +210,34 @@ class PharmacyRepository {
                     "is24_7" to is24Hours,
                     "updatedAt" to FieldValue.serverTimestamp()
                 )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Increment the WhatsApp clicks counter for a pharmacy.
+     */
+    suspend fun incrementWhatsAppClicks(pharmacyId: String): Result<Unit> {
+        return try {
+            pharmaciesCollection.document(pharmacyId).update(
+                "whatsappClicks", FieldValue.increment(1)
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Increment the profile views counter for a pharmacy.
+     */
+    suspend fun incrementProfileViews(pharmacyId: String): Result<Unit> {
+        return try {
+            pharmaciesCollection.document(pharmacyId).update(
+                "profileViews", FieldValue.increment(1)
             ).await()
             Result.success(Unit)
         } catch (e: Exception) {

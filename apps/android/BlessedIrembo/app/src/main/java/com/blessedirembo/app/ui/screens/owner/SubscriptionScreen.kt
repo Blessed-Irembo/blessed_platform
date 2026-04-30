@@ -47,6 +47,17 @@ import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
+import android.widget.Toast
 
 /**
  * Subscription Screen — mirrors iOS PharmacySubscriptionView exactly.
@@ -60,9 +71,43 @@ import com.blessedirembo.app.ui.theme.White
 @Composable
 fun SubscriptionScreen(
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    authViewModel: com.blessedirembo.app.auth.AuthViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val storageRepository = remember { com.blessedirembo.app.data.repository.StorageRepository() }
+    var isUploading by remember { mutableStateOf(false) }
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: android.net.Uri? ->
+        if (uri != null) {
+            val pharmacyId = authViewModel.currentUser?.uid ?: return@rememberLauncherForActivityResult
+            scope.launch {
+                isUploading = true
+                val result = storageRepository.uploadReceipt(uri, pharmacyId)
+                isUploading = false
+                if (result.isSuccess) {
+                    Toast.makeText(context, "Receipt uploaded successfully. Awaiting review.", Toast.LENGTH_LONG).show()
+                    
+                    // Trigger admin alert
+                    val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                    val notif = hashMapOf(
+                        "recipientId" to "ADMIN",
+                        "title" to "Receipt Uploaded",
+                        "message" to "Pharmacy $pharmacyId uploaded a payment receipt for review.",
+                        "isRead" to false,
+                        "createdAt" to com.google.firebase.firestore.FieldValue.serverTimestamp()
+                    )
+                    db.collection("notifications").add(notif)
+                } else {
+                    Toast.makeText(context, "Upload failed: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -245,15 +290,16 @@ fun SubscriptionScreen(
 
                         // "Upgrade Now" button
                         Button(
-                            onClick = { /* TODO: start payment flow */ },
+                            onClick = { launcher.launch("image/*") },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(52.dp),
                             shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Teal500)
+                            colors = ButtonDefaults.buttonColors(containerColor = Teal500),
+                            enabled = !isUploading
                         ) {
                             Text(
-                                text = "Upgrade Now",
+                                text = if (isUploading) "Uploading..." else "Upload Payment Receipt",
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.Bold
                             )

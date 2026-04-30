@@ -31,6 +31,9 @@ import com.blessedirembo.app.ui.theme.Gray400
 import com.blessedirembo.app.ui.theme.Teal50
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 
 /**
  * Navigation item for pharmacy owner bottom nav
@@ -58,10 +61,24 @@ private enum class ProfileSubScreen {
 @Composable
 fun PharmacyOwnerMainScreen(
     onSignOut: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    authViewModel: com.blessedirembo.app.auth.AuthViewModel = viewModel(),
+    pharmacyViewModel: com.blessedirembo.app.ui.viewmodel.PharmacyViewModel = viewModel()
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
     var profileSubScreen by remember { mutableStateOf(ProfileSubScreen.NONE) }
+    
+    val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
+
+    LaunchedEffect(Unit) {
+        val uid = authViewModel.currentUser?.uid
+        if (uid != null) {
+            pharmacyViewModel.loadPharmacyByOwnerId(uid)
+        }
+    }
+    
+    // Default to true to prevent flickering while loading
+    val hasValidSubscription = pharmacy?.hasValidSubscription ?: true
 
     // Navigate back from any sub-screen when back is pressed
     BackHandler(enabled = profileSubScreen != ProfileSubScreen.NONE) {
@@ -130,17 +147,29 @@ fun PharmacyOwnerMainScreen(
 
             // ── Main tab destinations ────────────────────────────────────────
             else -> when (selectedTab) {
-                0 -> PharmacyOwnerDashboardScreen(
-                    modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
-                )
-                1 -> AnalyticsScreen(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
-                2 -> PharmacyOwnerProfileScreen(
-                    onEditProfileClick   = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
-                    onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
-                    onNotificationsClick = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
-                    onSignOutClick       = onSignOut,
-                    modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
-                )
+                0 -> if (hasValidSubscription) {
+                    PharmacyOwnerDashboardScreen(
+                        modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                    )
+                } else {
+                    ExpiredSubscriptionView(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
+                }
+                1 -> if (hasValidSubscription) {
+                    AnalyticsScreen(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
+                } else {
+                    ExpiredSubscriptionView(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
+                }
+                2 -> if (hasValidSubscription) {
+                    PharmacyOwnerProfileScreen(
+                        onEditProfileClick   = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
+                        onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
+                        onNotificationsClick = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
+                        onSignOutClick       = onSignOut,
+                        modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                    )
+                } else {
+                    ExpiredSubscriptionView(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
+                }
                 3 -> SubscriptionScreen(
                     onBackClick = { selectedTab = 0 }, // Go back to home if they press back (though it's a tab now)
                     modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
