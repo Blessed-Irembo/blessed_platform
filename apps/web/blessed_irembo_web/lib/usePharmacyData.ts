@@ -19,6 +19,7 @@ export interface PharmacyData {
     phone?: string;
     address: string;
     registrationNumber: string;
+    district?: string;
     latitude: number;
     longitude: number;
     isVerified: boolean;
@@ -26,6 +27,8 @@ export interface PharmacyData {
     subscriptionEndDate?: { toDate: () => Date } | null;
     createdAt?: { toDate: () => Date } | null;
     whatsappClicks?: number;
+    profileViews?: number;
+    isActive?: boolean;
     operatingHours?: {
         is24Hours: boolean;
         days: string[];
