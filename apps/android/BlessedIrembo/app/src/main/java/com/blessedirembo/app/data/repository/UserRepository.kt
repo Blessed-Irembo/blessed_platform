@@ -7,11 +7,18 @@ import kotlinx.coroutines.tasks.await
 /**
  * UserRepository
  * Handles reading and writing user profiles in Firestore at /users/{uid}
+ *
+ * Role detection logic mirrors iOS FirebaseManager.fetchUserRole exactly:
+ *   1. Check pharmacies collection by ownerId field (pharmacy owner wins)
+ *   2. Check pharmacies by document ID (uid) as fallback
+ *   3. Check users collection for user role
+ *   4. Return null if not found in either (falls back to user in NavGraph)
  */
 class UserRepository {
 
     private val db = FirebaseFirestore.getInstance()
     private val usersCollection = db.collection("users")
+    private val pharmaciesCollection = db.collection("pharmacies")
 
     /**
      * Save a new user profile after sign-up.
@@ -40,25 +47,46 @@ class UserRepository {
     }
 
     /**
-     * Fetch user role by checking the `users` collection first, then `pharmacies`.
-     * Mirrors the iOS FirebaseManager.fetchUserRole behavior.
+     * Fetch user role - PHARMACY always wins over USER.
+     *
+     * Check order (mirrors iOS FirebaseManager.fetchUserRole):
+     *   1. pharmacies collection by document ID (uid) — most common for app-registered owners
+     *   2. pharmacies collection queried by ownerId field — for legacy/web-created accounts
+     *   3. users collection by document ID (uid) — for regular users
+     *
+     * This ensures that if an account exists in BOTH collections (a pharmacy owner
+     * who also has a user doc), they are correctly routed to the pharmacy dashboard.
      */
     suspend fun fetchUserRole(uid: String): Result<String?> {
         return try {
-            // First check users collection and use the stored role if available
-            val userDoc = usersCollection.document(uid).get().await()
-            if (userDoc.exists() && userDoc.data?.isNotEmpty() == true) {
-                val role = userDoc.getString("role") ?: com.blessedirembo.app.data.model.UserRole.USER
-                return Result.success(role)
-            }
-
-            // Then check pharmacies collection
-            val pharmacyDoc = db.collection("pharmacies").document(uid).get().await()
-            if (pharmacyDoc.exists() && pharmacyDoc.data?.isNotEmpty() == true) {
+            // 1. Check pharmacies by document ID (uid) first — fastest path
+            val pharmacyDocById = pharmaciesCollection.document(uid).get().await()
+            if (pharmacyDocById.exists() && pharmacyDocById.data?.isNotEmpty() == true) {
                 return Result.success(com.blessedirembo.app.data.model.UserRole.PHARMACY_OWNER)
             }
 
-            // Not found in either
+            // 2. Check pharmacies by ownerId field (web/admin created accounts)
+            val pharmacyByOwner = pharmaciesCollection
+                .whereEqualTo("ownerId", uid)
+                .limit(1)
+                .get()
+                .await()
+            if (!pharmacyByOwner.isEmpty) {
+                return Result.success(com.blessedirembo.app.data.model.UserRole.PHARMACY_OWNER)
+            }
+
+            // 3. Check users collection (regular user)
+            val userDoc = usersCollection.document(uid).get().await()
+            if (userDoc.exists() && userDoc.data?.isNotEmpty() == true) {
+                val role = userDoc.getString("role")
+                // If the user doc has role="pharmacy" treat as pharmacy owner too
+                if (role == "pharmacy" || role == "pharmacy_owner") {
+                    return Result.success(com.blessedirembo.app.data.model.UserRole.PHARMACY_OWNER)
+                }
+                return Result.success(com.blessedirembo.app.data.model.UserRole.USER)
+            }
+
+            // Not found in either — return null (caller will default to USER)
             Result.success(null)
         } catch (e: Exception) {
             Result.failure(e)
@@ -83,19 +111,37 @@ class UserRepository {
 
     /**
      * Phone-number sign-in: look up the email associated with a given phone number.
-     * Looks up in the `phone_to_email` collection, mirroring iOS phone-based sign-in path.
+     *
+     * Mirrors iOS FirebaseManager.fetchEmailByPhone():
+     *  1. Normalize the phone number to +250... format
+     *  2. Look up in phone_to_email collection
+     *  3. Fallback: generate synthetic email (phone@blessed-irembo.app)
      */
     suspend fun fetchEmailByPhone(phone: String): Result<String?> {
         return try {
-            // Normalise the phone: strip spaces and ensure leading +
-            val normalised = phone.trim()
+            val normalised = normalizePhoneNumber(phone)
 
+            // Try normalized form first
             val doc = db.collection("phone_to_email").document(normalised).get().await()
             if (doc.exists() && doc.data?.isNotEmpty() == true) {
-                return Result.success(doc.getString("email"))
+                val email = doc.getString("email")
+                if (!email.isNullOrBlank()) {
+                    return Result.success(email)
+                }
             }
 
-            Result.success(null)
+            // Try original (non-normalized) form in case it was stored differently
+            val rawDoc = db.collection("phone_to_email").document(phone.trim()).get().await()
+            if (rawDoc.exists() && rawDoc.data?.isNotEmpty() == true) {
+                val email = rawDoc.getString("email")
+                if (!email.isNullOrBlank()) {
+                    return Result.success(email)
+                }
+            }
+
+            // Fallback: generate synthetic email (mirrors iOS fallback)
+            val syntheticEmail = "${normalised.replace("+", "")}@blessed-irembo.app"
+            Result.success(syntheticEmail)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -103,16 +149,41 @@ class UserRepository {
 
     /**
      * Save the mapping from a phone number to an email to support phone-only login.
+     * Stores both normalized and raw versions for maximum compatibility.
      */
     suspend fun savePhoneToEmailMapping(phone: String, email: String): Result<Unit> {
         return try {
-            val normalised = phone.trim()
+            val normalised = normalizePhoneNumber(phone)
             val data = mapOf("email" to email)
             db.collection("phone_to_email").document(normalised).set(data).await()
+            // Also save raw phone in case lookup uses non-normalized form
+            if (normalised != phone.trim()) {
+                db.collection("phone_to_email").document(phone.trim()).set(data).await()
+            }
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
-}
 
+    /**
+     * Normalize a Rwandan phone number to +250XXXXXXXXX format.
+     * Mirrors iOS User.normalizePhoneNumber().
+     *
+     * Examples:
+     *   "0788123456"    → "+250788123456"
+     *   "250788123456"  → "+250788123456"
+     *   "+250788123456" → "+250788123456"
+     *   "788123456"     → "+250788123456"
+     */
+    fun normalizePhoneNumber(phone: String): String {
+        val digits = phone.trim().replace(Regex("[\\s\\-()]"), "")
+        return when {
+            digits.startsWith("+250") -> digits
+            digits.startsWith("250")  -> "+$digits"
+            digits.startsWith("0")    -> "+250${digits.drop(1)}"
+            digits.startsWith("+")    -> digits
+            else                      -> "+250$digits"
+        }
+    }
+}

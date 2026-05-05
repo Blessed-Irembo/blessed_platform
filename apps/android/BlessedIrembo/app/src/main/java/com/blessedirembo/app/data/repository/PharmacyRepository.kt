@@ -16,25 +16,34 @@ class PharmacyRepository {
 
     /**
      * Verify a pharmacy license against the licensed_pharmacies collection.
+     *
+     * IMPORTANT: iOS uses underscore instead of slash in Firestore document IDs
+     * because '/' is a Firestore path separator.
+     * e.g. NPC/A0001 → stored as NPC_A0001
      */
     suspend fun verifyLicense(licenseNumber: String): Result<Boolean> {
         return try {
-            val doc = db.collection("licensed_pharmacies").document(licenseNumber).get().await()
+            val normalised = licenseNumber.uppercase().trim()
+
+            // Quick format check (mirrors iOS): must match NPC/AXXXX
+            val formatOk = Regex("^NPC/A\\d{4}$").containsMatchIn(normalised)
+            if (!formatOk) {
+                return Result.failure(Exception("Invalid format. Use NPC/A0000 as issued by Rwanda FDA."))
+            }
+
+            // Convert to Firestore-safe doc ID (mirrors iOS: replace / with _)
+            val docId = normalised.replace("/", "_")
+
+            val doc = db.collection("licensed_pharmacies").document(docId).get().await()
             if (!doc.exists()) {
-                return Result.failure(Exception("License number not found or invalid."))
+                return Result.failure(Exception("Not found in the Rwanda FDA licensed list"))
             }
-            
-            // Check if this license is already registered
-            val existingSnapshot = pharmaciesCollection
-                .whereEqualTo("licenseNumber", licenseNumber)
-                .limit(1)
-                .get()
-                .await()
-            
-            if (!existingSnapshot.isEmpty) {
-                return Result.failure(Exception("This license is already registered to another account."))
+
+            val isRegistered = doc.getBoolean("isRegistered") ?: false
+            if (isRegistered) {
+                return Result.failure(Exception("This pharmacy is already registered. Please sign in instead."))
             }
-            
+
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)

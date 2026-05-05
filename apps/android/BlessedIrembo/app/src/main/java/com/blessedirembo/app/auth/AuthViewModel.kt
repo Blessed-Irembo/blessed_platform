@@ -26,7 +26,7 @@ sealed class AuthState {
 /**
  * AuthViewModel
  * Manages authentication flows for Sign In, Sign Up (User & Pharmacy Owner), and
- * password reset. Mirrors iOS AuthViewModel.
+ * password reset. Mirrors iOS AuthViewModel exactly.
  */
 class AuthViewModel : ViewModel() {
 
@@ -51,19 +51,46 @@ class AuthViewModel : ViewModel() {
     /**
      * Sign in with email (or phone-derived email) and password.
      * Mirrors iOS AuthViewModel.signIn(identifier:password:rememberMe:).
+     *
+     * Phone sign-in flow:
+     *   1. Normalize phone to +250XXXXXXXXX
+     *   2. Look up email in phone_to_email collection
+     *   3. Fallback to synthetic email (phone@blessed-irembo.app)
+     *   4. Sign in with resolved email
+     *   5. Check pharmacies FIRST for role (pharmacy always wins over user)
      */
-    fun signIn(email: String, password: String) {
+    fun signIn(identifier: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            // If the identifier looks like a phone number, try to find the matching email in Firestore.
-            val resolvedEmail = if (email.contains("@")) {
-                email
-            } else {
-                userRepository.fetchEmailByPhone(email).getOrNull() ?: email
+
+            val trimmed = identifier.trim()
+            if (trimmed.isEmpty()) {
+                _authState.value = AuthState.Error("Please enter your email or phone number")
+                return@launch
             }
+            if (password.isEmpty()) {
+                _authState.value = AuthState.Error("Please enter your password")
+                return@launch
+            }
+
+            // Resolve the actual Firebase Auth email
+            val resolvedEmail: String = if (trimmed.contains("@")) {
+                // Already an email — use directly
+                trimmed
+            } else {
+                // Phone-number path: normalize first, then look up in phone_to_email
+                val normalized = userRepository.normalizePhoneNumber(trimmed)
+                val emailResult = userRepository.fetchEmailByPhone(normalized)
+                emailResult.getOrNull() ?: run {
+                    _authState.value = AuthState.Error("No account found with this phone number. Please check and try again.")
+                    return@launch
+                }
+            }
+
             val result = FirebaseAuthManager.signIn(resolvedEmail, password)
             result.fold(
                 onSuccess = { user ->
+                    // PHARMACY always wins: fetchUserRole checks pharmacies before users
                     val roleResult = userRepository.fetchUserRole(user.uid)
                     val role = roleResult.getOrNull() ?: UserRole.USER
                     AnalyticsManager.logSignIn()
@@ -78,6 +105,11 @@ class AuthViewModel : ViewModel() {
 
     // ─── Sign Up (User) ───────────────────────────────────────────────────────
 
+    /**
+     * Sign up a regular user (looking for pharmacies).
+     * Phone number is primary; email is optional (synthetic email generated if blank).
+     * Mirrors iOS AuthViewModel.signUpUser().
+     */
     fun signUpWithProfile(
         email: String,
         password: String,
@@ -87,13 +119,15 @@ class AuthViewModel : ViewModel() {
     ) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
-            
+
+            val normalizedPhone = userRepository.normalizePhoneNumber(phone)
+
             val resolvedEmail = if (email.isBlank()) {
-                "${phone.trim().replace("+", "")}@blessed-irembo.app"
+                "${normalizedPhone.replace("+", "")}@blessed-irembo.app"
             } else {
                 email
             }
-            
+
             val result = FirebaseAuthManager.signUp(resolvedEmail, password)
             result.fold(
                 onSuccess = { user ->
@@ -101,11 +135,11 @@ class AuthViewModel : ViewModel() {
                         uid = user.uid,
                         fullName = fullName,
                         email = resolvedEmail,
-                        phone = phone,
+                        phone = normalizedPhone,
                         role = role
                     )
                     userRepository.saveUserProfile(profile)
-                    userRepository.savePhoneToEmailMapping(phone, resolvedEmail)
+                    userRepository.savePhoneToEmailMapping(normalizedPhone, resolvedEmail)
                     AnalyticsManager.logSignUp(role)
                     _authState.value = AuthState.Success(user, role)
                 },
@@ -120,9 +154,11 @@ class AuthViewModel : ViewModel() {
 
     /**
      * Register a new pharmacy owner account:
-     *   1. Create Firebase Auth user
-     *   2. Save user profile to Firestore /users
-     *   3. Create pharmacy document in Firestore /pharmacies
+     *   1. Verify license against licensed_pharmacies Firestore collection
+     *   2. Create Firebase Auth user
+     *   3. Save user profile to Firestore /users
+     *   4. Create pharmacy document in Firestore /pharmacies
+     *   5. Save phone_to_email mapping
      *
      * Mirrors iOS AuthViewModel.signUpPharmacy().
      */
@@ -144,40 +180,47 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
 
+            // Normalize phone (mirrors iOS User.normalizePhoneNumber)
+            val normalizedPhone = userRepository.normalizePhoneNumber(phoneNumber)
+
+            // Verify license against Rwanda FDA list (with underscore doc IDs like iOS)
             val licenseResult = pharmacyRepository.verifyLicense(licenseNumber)
             if (licenseResult.isFailure) {
-                _authState.value = AuthState.Error(licenseResult.exceptionOrNull()?.message ?: "Invalid license number.")
+                _authState.value = AuthState.Error(
+                    licenseResult.exceptionOrNull()?.message ?: "Invalid license number."
+                )
                 return@launch
             }
 
-            val resolvedEmail = if (email.isBlank()) {
-                "${phoneNumber.trim().replace("+", "")}@blessed-irembo.app"
-            } else {
-                email
+            // Email is required for pharmacy (unlike user where it's optional)
+            if (email.isBlank()) {
+                _authState.value = AuthState.Error("Please enter a valid email address")
+                return@launch
             }
 
             // Step 1 – create auth user
-            val authResult = FirebaseAuthManager.signUp(resolvedEmail, password)
+            val authResult = FirebaseAuthManager.signUp(email, password)
             authResult.fold(
                 onSuccess = { user ->
-                    // Step 2 – save user profile
+                    // Step 2 – save user profile document (role = PHARMACY_OWNER)
                     val profile = UserProfile(
                         uid = user.uid,
                         fullName = ownerName,
-                        email = resolvedEmail,
-                        phone = phoneNumber,
+                        email = email,
+                        phone = normalizedPhone,
                         role = UserRole.PHARMACY_OWNER
                     )
                     userRepository.saveUserProfile(profile)
-                    userRepository.savePhoneToEmailMapping(phoneNumber, resolvedEmail)
+                    // Save phone→email mapping for future phone-based sign-in
+                    userRepository.savePhoneToEmailMapping(normalizedPhone, email)
 
-                    // Step 3 – create pharmacy document
+                    // Step 3 – create pharmacy document (doc ID = uid, mirrors iOS)
                     pharmacyRepository.registerPharmacy(
                         uid = user.uid,
                         pharmacyName = pharmacyName,
                         ownerName = ownerName,
-                        phoneNumber = phoneNumber,
-                        email = resolvedEmail,
+                        phoneNumber = normalizedPhone,
+                        email = email,
                         licenseNumber = licenseNumber,
                         address = address,
                         latitude = latitude,
@@ -201,11 +244,38 @@ class AuthViewModel : ViewModel() {
     // ─── Forgot Password ──────────────────────────────────────────────────────
 
     /**
-     * Send a password reset email. Mirrors iOS AuthViewModel.resetPassword().
+     * Send a password reset email.
+     * Accepts either email or phone number as identifier.
+     * If phone number given, resolves it to email first via phone_to_email collection.
+     * Mirrors iOS AuthViewModel.resetPassword().
      */
-    fun resetPassword(email: String) {
+    fun resetPassword(identifier: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
+
+            val trimmed = identifier.trim()
+            if (trimmed.isEmpty()) {
+                _authState.value = AuthState.Error("Please enter your email address")
+                return@launch
+            }
+
+            val email: String = if (trimmed.contains("@")) {
+                trimmed
+            } else {
+                // Phone mode: resolve to email first
+                val normalized = userRepository.normalizePhoneNumber(trimmed)
+                val emailResult = userRepository.fetchEmailByPhone(normalized)
+                val resolved = emailResult.getOrNull()
+                if (resolved.isNullOrBlank() || resolved.endsWith("@blessed-irembo.app")) {
+                    // Can't send reset to synthetic email — prompt for real email
+                    _authState.value = AuthState.Error(
+                        "Please enter your email address to reset your password."
+                    )
+                    return@launch
+                }
+                resolved
+            }
+
             val result = FirebaseAuthManager.sendPasswordResetEmail(email)
             result.fold(
                 onSuccess = {
@@ -225,6 +295,10 @@ class AuthViewModel : ViewModel() {
 
     // ─── Role resolution ──────────────────────────────────────────────────────
 
+    /**
+     * Get the current user's role (for use on Splash screen auto-login).
+     * Checks pharmacies before users — pharmacy always wins.
+     */
     fun getCurrentUserRole(onResult: (String?) -> Unit) {
         val uid = FirebaseAuthManager.currentUser?.uid ?: run {
             onResult(null)
@@ -263,7 +337,9 @@ class AuthViewModel : ViewModel() {
 
             val repoResult = userRepository.updateUserDocument(uid, name, phone)
             if (repoResult.isFailure) {
-                _editProfileState.value = AuthState.Error(repoResult.exceptionOrNull()?.message ?: "Database update failed")
+                _editProfileState.value = AuthState.Error(
+                    repoResult.exceptionOrNull()?.message ?: "Database update failed"
+                )
                 return@launch
             }
 
@@ -272,7 +348,9 @@ class AuthViewModel : ViewModel() {
             if (!newPassword.isNullOrBlank()) {
                 val passResult = FirebaseAuthManager.updatePassword(newPassword)
                 if (passResult.isFailure) {
-                    _editProfileState.value = AuthState.Error(passResult.exceptionOrNull()?.message ?: "Password update failed")
+                    _editProfileState.value = AuthState.Error(
+                        passResult.exceptionOrNull()?.message ?: "Password update failed"
+                    )
                     return@launch
                 }
             }

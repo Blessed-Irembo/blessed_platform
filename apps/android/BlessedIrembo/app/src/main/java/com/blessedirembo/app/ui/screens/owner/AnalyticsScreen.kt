@@ -2,6 +2,7 @@ package com.blessedirembo.app.ui.screens.owner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,41 +10,73 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.Divider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.blessedirembo.app.ui.components.DualBarChart
-import com.blessedirembo.app.ui.components.SimpleBarChart
-import com.blessedirembo.app.ui.components.StatCardSmall
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.ui.theme.Gray100
+import com.blessedirembo.app.ui.theme.Gray500
+import com.blessedirembo.app.ui.theme.Gray900
+import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 
-// Analytics color palette
-val TealLight = Color(0xFF99E0DB)
-val MagentaChart = Color(0xFFD946EF)
+private val WhatsAppGreen = Color(0xFF25D366)
+private val PurpleIndigo = Color(0xFF4F46E5)
+private val BlueColor = Color(0xFF3B82F6)
+private val RedColor = Color(0xFFEF4444)
 
 /**
- * Analytics Screen for pharmacy owners
- * Shows stats cards and charts
+ * Analytics Screen - mirrors iOS PharmacyAnalyticsView exactly
  */
 @Composable
 fun AnalyticsScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    authViewModel: AuthViewModel = viewModel(),
+    pharmacyViewModel: PharmacyViewModel = viewModel()
 ) {
     val scrollState = rememberScrollState()
-    
-    // Sample chart data
-    val profileViewsData = remember { listOf(65f, 40f, 45f, 80f, 55f, 90f, 85f) }
-    val inquiriesData = remember { listOf(70f, 25f, 45f, 55f, 40f, 50f, 85f) }
-    
+    val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
+
+    LaunchedEffect(Unit) {
+        val uid = authViewModel.currentUser?.uid ?: return@LaunchedEffect
+        pharmacyViewModel.loadPharmacyByOwnerId(uid)
+    }
+
+    val whatsappClicks = pharmacy?.whatsappClicks ?: 0
+    val profileViews = pharmacy?.profileViews ?: 0
+    val subscriptionPlan = pharmacy?.subscriptionPlan ?: "Free"
+    val isPremium = pharmacy?.isPremium == true
+    val isOpen = pharmacy?.isCurrentlyOpen == true
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -51,84 +84,221 @@ fun AnalyticsScreen(
             .verticalScroll(scrollState)
             .padding(16.dp)
     ) {
-        // Stats Grid
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatCardSmall(
-                title = "Total Visits",
-                value = "3,450",
-                percentageChange = "+15%",
-                isPositive = true,
-                modifier = Modifier.weight(1f)
+        // ── Page Header ──────────────────────────────────────────────────────
+        Column {
+            Text(
+                text = "Analytics",
+                fontSize = 28.sp,
+                fontWeight = FontWeight.Bold,
+                color = Gray900
             )
-            StatCardSmall(
-                title = "Impressions",
-                value = "12.5k",
-                percentageChange = "+8%",
-                isPositive = true,
-                modifier = Modifier.weight(1f)
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(SuccessGreen)
+                )
+                Text(
+                    text = "Live data",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Gray500
+                )
+            }
         }
-        
-        Spacer(modifier = Modifier.height(12.dp))
-        
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatCardSmall(
-                title = "Click Rate",
-                value = "4.2%",
-                percentageChange = "-1%",
-                isPositive = false,
-                modifier = Modifier.weight(1f)
-            )
-            StatCardSmall(
-                title = "Avg Time",
-                value = "1m 30s",
-                percentageChange = "+12%",
-                isPositive = true,
-                modifier = Modifier.weight(1f)
-            )
-        }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
-        // Profile Views Chart
-        Card(
+
+        // ── Summary Cards (2x2 grid) ─────────────────────────────────────────
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            DualBarChart(
+            AnalyticsCard(
+                title = "WhatsApp Clicks",
+                value = "$whatsappClicks",
+                icon = Icons.Filled.Email,
+                color = WhatsAppGreen,
+                modifier = Modifier.weight(1f)
+            )
+            AnalyticsCard(
                 title = "Profile Views",
-                data = profileViewsData,
-                primaryColor = TealLight,
-                secondaryColor = Teal500,
-                modifier = Modifier.padding(16.dp)
+                value = "$profileViews",
+                icon = Icons.Filled.Visibility,
+                color = BlueColor,
+                modifier = Modifier.weight(1f)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(16.dp))
-        
-        // Inquiries Over Time Chart
-        Card(
+
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SimpleBarChart(
-                title = "Inquiries Over Time",
-                data = inquiriesData,
-                barColor = MagentaChart,
-                modifier = Modifier.padding(16.dp)
+            AnalyticsCard(
+                title = "Subscription",
+                value = subscriptionPlan,
+                icon = if (isPremium) Icons.Filled.Star else Icons.Filled.Person,
+                color = if (isPremium) PurpleIndigo else Teal500,
+                modifier = Modifier.weight(1f)
+            )
+            AnalyticsCard(
+                title = "Status",
+                value = if (isOpen) "Open" else "Closed",
+                icon = Icons.Filled.Schedule,
+                color = if (isOpen) SuccessGreen else RedColor,
+                modifier = Modifier.weight(1f)
             )
         }
-        
-        Spacer(modifier = Modifier.height(80.dp)) // Bottom nav spacing
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ── WhatsApp Engagement Section ──────────────────────────────────────
+        Text(
+            text = "WhatsApp Engagement",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Gray900
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        EngagementCard(
+            icon = Icons.Filled.Email,
+            iconColor = WhatsAppGreen,
+            count = whatsappClicks,
+            label = "Total WhatsApp contacts",
+            description = "Every tap on \"Chat on WhatsApp\" from your pharmacy details by the user on this platform is counted here in real time."
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ── Profile Views Section ────────────────────────────────────────────
+        Text(
+            text = "Profile Views",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = Gray900
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+        EngagementCard(
+            icon = Icons.Filled.Visibility,
+            iconColor = BlueColor,
+            count = profileViews,
+            label = "Users who opened your pharmacy profile",
+            description = "A view is counted each time any user taps into the full details screen of your pharmacy — both from the map and from search results."
+        )
+
+        Spacer(modifier = Modifier.height(80.dp))
+    }
+}
+
+// ── Analytics Card (2x2 grid item) ─────────────────────────────────────────────
+@Composable
+private fun AnalyticsCard(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp), ambientColor = Color.Black.copy(alpha = 0.05f))
+            .clip(RoundedCornerShape(12.dp))
+            .background(White)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Row {
+            Box(
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(CircleShape)
+                    .background(color.copy(alpha = 0.1f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = color,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        }
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Gray900
+        )
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelSmall,
+            color = Gray500
+        )
+    }
+}
+
+// ── Engagement Card (WhatsApp / Profile Views detail) ──────────────────────────
+@Composable
+private fun EngagementCard(
+    icon: ImageVector,
+    iconColor: Color,
+    count: Int,
+    label: String,
+    description: String
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .shadow(elevation = 2.dp, shape = RoundedCornerShape(12.dp), ambientColor = Color.Black.copy(alpha = 0.05f))
+            .clip(RoundedCornerShape(12.dp))
+            .background(White)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp)
+    ) {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(iconColor.copy(alpha = 0.12f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = iconColor,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "$count",
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray900
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Gray500
+                )
+            }
+        }
+
+        Divider()
+
+        Text(
+            text = description,
+            style = MaterialTheme.typography.labelSmall,
+            color = Gray500
+        )
     }
 }

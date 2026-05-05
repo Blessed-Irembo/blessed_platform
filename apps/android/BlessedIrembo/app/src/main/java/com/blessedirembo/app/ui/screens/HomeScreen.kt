@@ -12,10 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
@@ -34,21 +35,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.blessedirembo.app.R
 import com.blessedirembo.app.ui.theme.Gray400
 import com.blessedirembo.app.ui.theme.Gray500
+import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal50
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
-import androidx.compose.foundation.shape.RoundedCornerShape
 
 /**
- * Home Screen
- * Main screen with pharmacy finder CTA and bottom navigation
+ * Home Screen – mirrors iOS OpeningScreenView / UserMainView
+ * Shows the Blessed Irembo logo in a teal circle, "Find pharmacies near you" CTA,
+ * description matching iOS copy, and "Open Map" button.
  */
 @Composable
 fun HomeScreen(
@@ -61,7 +68,7 @@ fun HomeScreen(
         bottomBar = {
             BottomAppBar(
                 containerColor = White,
-                tonalElevation = 8.dp
+                tonalElevation = 0.dp
             ) {
                 NavigationBarItem(
                     selected = selectedTab == 0,
@@ -78,7 +85,7 @@ fun HomeScreen(
                         selectedTextColor = Teal500,
                         unselectedIconColor = Gray400,
                         unselectedTextColor = Gray400,
-                        indicatorColor = Teal50
+                        indicatorColor = Color.Transparent
                     )
                 )
                 NavigationBarItem(
@@ -99,7 +106,7 @@ fun HomeScreen(
                         selectedTextColor = Teal500,
                         unselectedIconColor = Gray400,
                         unselectedTextColor = Gray400,
-                        indicatorColor = Teal50
+                        indicatorColor = Color.Transparent
                     )
                 )
             }
@@ -114,55 +121,59 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Circular logo container
+            // ── Circular logo container ──────────────────────────────────────
             Box(
                 modifier = Modifier
-                    .size(200.dp)
+                    .size(220.dp)
                     .clip(CircleShape)
                     .background(Teal50),
                 contentAlignment = Alignment.Center
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.logo2),
-                        contentDescription = "Blessed Irembo Logo",
-                        modifier = Modifier.size(100.dp)
-                    )
-                }
+                // Use logo2 which shows the full branded logo with text
+                Image(
+                    painter = painterResource(id = R.drawable.logo2),
+                    contentDescription = "Blessed Irembo Logo",
+                    modifier = Modifier.size(170.dp)
+                )
             }
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Title
+            // ── Title ────────────────────────────────────────────────────────
             Text(
                 text = "Find pharmacies near you",
-                style = MaterialTheme.typography.headlineMedium,
+                fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                color = Gray900
             )
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Description
+            // ── Description (matching iOS copy exactly) ──────────────────────
             Text(
-                text = "Discover verified pharmacies in your area\nwith real-time availability and easy\nnavigation",
+                text = buildAnnotatedString {
+                    append("Operating under ")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append("Blessed HealthConnect Ltd")
+                    }
+                    append(", Blessed Irembo connects you with verified pharmacies nationwide. Search by location, check availability, and get the medication you need, when you need it.")
+                },
                 style = MaterialTheme.typography.bodyMedium,
                 color = Gray500,
                 textAlign = TextAlign.Center,
-                lineHeight = MaterialTheme.typography.bodyMedium.lineHeight
+                lineHeight = 22.sp
             )
 
             Spacer(modifier = Modifier.height(40.dp))
 
-            // Open Map Button
+            // ── Open Map Button ──────────────────────────────────────────────
             Button(
                 onClick = onOpenMap,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Teal500,
                     contentColor = White
@@ -172,15 +183,26 @@ fun HomeScreen(
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Map,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp)
-                    )
-                    Spacer(modifier = Modifier.size(8.dp))
+                    // Map pin icon (using logo1 as decorative icon – small)
+                    Box(
+                        modifier = Modifier
+                            .size(28.dp)
+                            .clip(CircleShape)
+                            .background(White.copy(alpha = 0.2f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo1),
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                     Text(
                         text = "Open Map",
-                        style = MaterialTheme.typography.labelLarge
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 16.sp
                     )
                 }
             }
