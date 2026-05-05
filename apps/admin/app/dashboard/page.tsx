@@ -8,7 +8,15 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
 import { useRequireAdmin } from '@/lib/adminAuthHooks';
-import { collection, getDocs } from 'firebase/firestore';
+import {
+  collection,
+  getCountFromServer,
+  query,
+  where,
+  getDocs,
+  orderBy,
+  limit,
+} from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface ActivityItem {
@@ -30,18 +38,33 @@ export default function DashboardPage() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        // Fetch pharmacies
-        const pharmaciesSnap = await getDocs(collection(db, 'pharmacies'));
-        let pharmsCount = 0;
-        let pendingCount = 0;
+        // ── Fast count queries — no documents downloaded ──────────────
+        const [pharmsCount, pendingCount, usersCount] = await Promise.all([
+          getCountFromServer(collection(db, 'pharmacies')),
+          getCountFromServer(
+            query(collection(db, 'pharmacies'), where('isVerified', '==', false))
+          ),
+          getCountFromServer(collection(db, 'users')),
+        ]);
+
+        setTotalPharmacies(pharmsCount.data().count);
+        setPendingApprovals(pendingCount.data().count);
+        setTotalUsers(usersCount.data().count);
+
+        // ── Recent activity — fetch only the 3 newest docs from each ──
+        const [recentPharmsSnap, recentUsersSnap] = await Promise.all([
+          getDocs(
+            query(collection(db, 'pharmacies'), orderBy('createdAt', 'desc'), limit(3))
+          ),
+          getDocs(
+            query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(3))
+          ),
+        ]);
+
         const activities: ActivityItem[] = [];
 
-        pharmaciesSnap.forEach((doc) => {
-          pharmsCount++;
+        recentPharmsSnap.forEach((doc) => {
           const data = doc.data();
-          if (!data.isVerified) {
-            pendingCount++;
-          }
           if (data.createdAt) {
             activities.push({
               id: doc.id,
@@ -51,18 +74,11 @@ export default function DashboardPage() {
             });
           }
         });
-        
-        setTotalPharmacies(pharmsCount);
-        setPendingApprovals(pendingCount);
 
-        // Fetch users
-        const usersSnap = await getDocs(collection(db, 'users'));
-        let usersCount = 0;
-        usersSnap.forEach((doc) => {
-          usersCount++;
+        recentUsersSnap.forEach((doc) => {
           const data = doc.data();
           if (data.createdAt) {
-             activities.push({
+            activities.push({
               id: doc.id,
               type: 'user',
               name: data.fullName || data.email || 'Unknown User',
@@ -70,13 +86,9 @@ export default function DashboardPage() {
             });
           }
         });
-        
-        setTotalUsers(usersCount);
 
-        // Sort and limit activities
         activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
         setRecentActivity(activities.slice(0, 3));
-
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -92,22 +104,22 @@ export default function DashboardPage() {
   // Format date helper
   const formatTimeAgo = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
-    
+
     let interval = seconds / 31536000;
     if (interval > 1) return Math.floor(interval) + ' years ago';
-    
+
     interval = seconds / 2592000;
     if (interval > 1) return Math.floor(interval) + ' months ago';
-    
+
     interval = seconds / 86400;
     if (interval > 1) return Math.floor(interval) + ' days ago';
-    
+
     interval = seconds / 3600;
     if (interval > 1) return Math.floor(interval) + ' hours ago';
-    
+
     interval = seconds / 60;
     if (interval > 1) return Math.floor(interval) + ' minutes ago';
-    
+
     return Math.floor(seconds) + ' seconds ago';
   };
 
@@ -116,10 +128,10 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       <div className="flex">
         <Sidebar />
-        
+
         <main className="flex-1 p-4 sm:p-8 pb-20 sm:pb-8 w-full overflow-hidden">
           {/* Page Header */}
           <div className="mb-6 sm:mb-8">
@@ -140,9 +152,13 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                {dataLoading ? '-' : totalPharmacies}
+                {dataLoading ? (
+                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded" />
+                ) : totalPharmacies}
               </div>
-              <div className="text-sm text-teal-600 font-medium">{dataLoading ? '-' : `${totalPharmacies} registered`}</div>
+              <div className="text-sm text-teal-600 font-medium">
+                {dataLoading ? <div className="h-4 w-28 bg-gray-100 animate-pulse rounded" /> : `${totalPharmacies} registered`}
+              </div>
             </div>
 
             {/* Total Users */}
@@ -156,7 +172,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="text-3xl font-bold text-gray-900 mb-2">
-                {dataLoading ? '-' : totalUsers}
+                {dataLoading ? (
+                  <div className="h-9 w-16 bg-gray-200 animate-pulse rounded" />
+                ) : totalUsers}
               </div>
               <div className="text-sm text-teal-600 font-medium">Registered accounts</div>
             </div>
@@ -211,37 +229,47 @@ export default function DashboardPage() {
           {/* Recent Activity */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-            
+
             <div className="space-y-4">
-               {dataLoading ? (
-                  <p className="text-gray-500 text-sm">Loading activity...</p>
-               ) : recentActivity.length === 0 ? (
-                 <p className="text-gray-500 text-sm">No recent activity found.</p>
-               ) : (
-                  recentActivity.map((activity, index) => (
-                    <div key={activity.id + index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div className={`p-2 rounded-lg shrink-0 ${activity.type === 'pharmacy' ? 'bg-teal-100' : 'bg-purple-100'}`}>
-                        {activity.type === 'pharmacy' ? (
-                          <svg className="w-5 h-5 text-teal-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                          </svg>
-                        ) : (
-                          <svg className="w-5 h-5 text-purple-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                            <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-gray-900">
-                          {activity.type === 'pharmacy' ? 'New pharmacy registration' : 'New user registration'}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {activity.name} • {formatTimeAgo(activity.timestamp)}
-                        </p>
+              {dataLoading ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg animate-pulse">
+                      <div className="w-9 h-9 bg-gray-200 rounded-lg shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-1/3" />
+                        <div className="h-3 bg-gray-100 rounded w-1/2" />
                       </div>
                     </div>
-                  ))
-               )}
+                  ))}
+                </>
+              ) : recentActivity.length === 0 ? (
+                <p className="text-gray-500 text-sm">No recent activity found.</p>
+              ) : (
+                recentActivity.map((activity, index) => (
+                  <div key={activity.id + index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
+                    <div className={`p-2 rounded-lg shrink-0 ${activity.type === 'pharmacy' ? 'bg-teal-100' : 'bg-purple-100'}`}>
+                      {activity.type === 'pharmacy' ? (
+                        <svg className="w-5 h-5 text-teal-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                      ) : (
+                        <svg className="w-5 h-5 text-purple-600" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                          <path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                        </svg>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900">
+                        {activity.type === 'pharmacy' ? 'New pharmacy registration' : 'New user registration'}
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        {activity.name} • {formatTimeAgo(activity.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </main>
@@ -251,4 +279,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

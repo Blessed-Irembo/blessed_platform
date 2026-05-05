@@ -17,6 +17,9 @@ import { doc, getDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { auth, db } from './firebase';
 
+// ─── Local storage key for caching the admin role ──────────────────────────
+const ADMIN_ROLE_CACHE_KEY = 'blessed_admin_role_verified';
+
 export type AdminRole = 'admin' | null;
 
 interface AdminAuthContextType {
@@ -41,39 +44,61 @@ export function useAdminAuth() {
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
   const [currentAdmin, setCurrentAdmin] = useState<User | null>(null);
   const [adminRole, setAdminRole] = useState<AdminRole>(null);
+  // Check localStorage for a cached role to initialize loading as false immediately
+  // if we already know this browser session is an admin.
   const [loading, setLoading] = useState(true);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      // Re-engage loading guard during mid-session auth changes
-      setLoading(true);
 
-      setCurrentAdmin(user);
+    // ── Check if we have a cached admin session ─────────────────────────────
+    // Firebase persists auth in IndexedDB, but onAuthStateChanged is async.
+    // By caching the admin role in localStorage, we can skip the loading spinner
+    // for returning admins who are already verified.
+    const cachedRole = localStorage.getItem(ADMIN_ROLE_CACHE_KEY);
+
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        // If cache says this user is admin, trust it instantly — no Firestore round-trip
+        if (cachedRole === user.uid) {
+          console.log('[AdminAuth] Restored admin session from cache. UID:', user.uid);
+          setCurrentAdmin(user);
+          setAdminRole('admin');
+          setLoading(false);
+          return;
+        }
+
+        // No cache — verify against Firestore (first-time login or cache cleared)
         try {
-          console.log('[AdminAuthHook] User logged in:', user.uid);
-          // Check if user exists in the "admins" collection
+          console.log('[AdminAuth] Verifying admin role for UID:', user.uid);
+          setLoading(true);
           const adminDoc = await getDoc(doc(db, 'admins', user.uid));
 
           if (adminDoc.exists()) {
-            console.log('[AdminAuthHook] Admin role verified!');
+            console.log('[AdminAuth] Admin role verified!');
+            // Cache the verified admin uid so future loads are instant
+            localStorage.setItem(ADMIN_ROLE_CACHE_KEY, user.uid);
+            setCurrentAdmin(user);
             setAdminRole('admin');
           } else {
-            console.warn('[AdminAuthHook] Not an admin, forcing logout. UID:', user.uid);
-            // Not an admin, kick them out
+            console.warn('[AdminAuth] Not an admin, forcing logout. UID:', user.uid);
+            localStorage.removeItem(ADMIN_ROLE_CACHE_KEY);
             setAdminRole(null);
             await firebaseSignOut(auth);
             setCurrentAdmin(null);
           }
         } catch (error) {
           console.error('Error fetching admin role:', error);
+          localStorage.removeItem(ADMIN_ROLE_CACHE_KEY);
           setAdminRole(null);
           setCurrentAdmin(null);
         }
       } else {
+        // Signed out — clear cache
+        localStorage.removeItem(ADMIN_ROLE_CACHE_KEY);
+        setCurrentAdmin(null);
         setAdminRole(null);
       }
       setLoading(false);
@@ -83,44 +108,45 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string): Promise<AdminRole> => {
-    console.log('[AdminAuthHook] Attempting sign in for:', email);
+    console.log('[AdminAuth] Attempting sign in for:', email);
     setIsSigningIn(true);
     let roleValid = false;
-    
+
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-      console.log('[AdminAuthHook] Sign in successful. Verifying role for UID:', user.uid);
+      console.log('[AdminAuth] Sign in successful. Verifying role for UID:', user.uid);
 
-    // Verify admin role strictly before returning successfully
-    const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-    
-    if (!adminDoc.exists()) {
-      console.warn('[AdminAuthHook] SignIn Role Verification Failed. UID not in admins collection.');
-      await firebaseSignOut(auth);
-      throw new Error('Unauthorized: This account does not have admin privileges.');
-    }
+      // Verify admin role strictly before returning successfully
+      const adminDoc = await getDoc(doc(db, 'admins', user.uid));
 
-    console.log('[AdminAuthHook] SignIn successful and role verified.');
-    roleValid = true;
-    
-    // Explicitly update state here to avoid race condition on redirect
-    setCurrentAdmin(user);
-    setAdminRole('admin');
-    
-    return 'admin';
-  } finally {
-    // Keep isSigningIn true just a bit longer to let Next.js router transition safely if valid
-    if (!roleValid) {
+      if (!adminDoc.exists()) {
+        console.warn('[AdminAuth] Role verification failed. UID not in admins collection.');
+        localStorage.removeItem(ADMIN_ROLE_CACHE_KEY);
+        await firebaseSignOut(auth);
+        throw new Error('Unauthorized: This account does not have admin privileges.');
+      }
+
+      console.log('[AdminAuth] Sign in and role verified successfully.');
+      // Cache role so future page loads/navigations are instant
+      localStorage.setItem(ADMIN_ROLE_CACHE_KEY, user.uid);
+      roleValid = true;
+
+      // Explicitly update state here to avoid race condition on redirect
+      setCurrentAdmin(user);
+      setAdminRole('admin');
+
+      return 'admin';
+    } finally {
       setIsSigningIn(false);
-    } else {
-      setTimeout(() => setIsSigningIn(false), 2000);
     }
-  }
-};
+  };
 
   const signOut = async () => {
+    localStorage.removeItem(ADMIN_ROLE_CACHE_KEY);
     await firebaseSignOut(auth);
+    setCurrentAdmin(null);
+    setAdminRole(null);
   };
 
   const value: AdminAuthContextType = {
@@ -134,7 +160,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AdminAuthContext.Provider value={value}>
-      {/* Show full-screen spinner on initial load to prevent flashing protected content, but skip during SSR to prevent Next.js build hangs */}
+      {/* Show full-screen spinner on initial load to prevent flashing protected content.
+          Skip during SSR and skip if we already resolved quickly via cache. */}
       {isMounted && loading ? (
         <div className="fixed inset-0 min-h-screen bg-white flex flex-col items-center justify-center z-50">
           <div className="flex flex-col items-center gap-4">

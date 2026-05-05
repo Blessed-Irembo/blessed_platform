@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useRequireAdmin } from '@/lib/adminAuthHooks';
 import Header from '@/components/layout/Header';
@@ -16,6 +16,8 @@ export default function PharmaciesPage() {
   const [pharmacies, setPharmacies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPharmacy, setSelectedPharmacy] = useState<any | null>(null);
+  // Use a ref to track selected ID so the snapshot listener never needs to restart
+  const selectedIdRef = useRef<string | null>(null);
 
   const { loading: authLoading } = useRequireAdmin();
 
@@ -27,7 +29,7 @@ export default function PharmaciesPage() {
       const list = snapshot.docs.map(doc => {
         const data = doc.data();
         const endData = data.subscriptionEndDate?.toDate();
-        
+
         let subscriptionStatus = 'Expired';
         let isActive = false;
 
@@ -54,21 +56,23 @@ export default function PharmaciesPage() {
           ...data
         };
       });
-      
+
       // Sort alphabetically
       list.sort((a, b) => a.name.localeCompare(b.name));
       setPharmacies(list);
       setLoading(false);
-      
-      // Update selected pharmacy if it's currently open
-      if (selectedPharmacy) {
-        const updated = list.find(p => p.id === selectedPharmacy.id);
+
+      // Keep the modal in sync if a pharmacy is currently open — use ref to
+      // avoid adding selectedPharmacy to the dep array (which would restart the listener)
+      if (selectedIdRef.current) {
+        const updated = list.find(p => p.id === selectedIdRef.current);
         if (updated) setSelectedPharmacy(updated);
       }
     });
 
     return () => unsub();
-  }, [authLoading, selectedPharmacy]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading]); // intentionally omit selectedPharmacy — use ref instead
 
   const filteredPharmacies = pharmacies.filter(pharmacy => {
     return pharmacy.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -176,7 +180,7 @@ export default function PharmaciesPage() {
                     {/* Action Buttons */}
                     <div className="shrink-0 w-full sm:w-auto">
                       <button 
-                        onClick={() => setSelectedPharmacy(pharmacy)}
+                        onClick={() => { selectedIdRef.current = pharmacy.id; setSelectedPharmacy(pharmacy); }}
                         className="w-full sm:w-auto px-6 py-2.5 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors shadow-sm"
                       >
                         View Details
@@ -209,7 +213,7 @@ export default function PharmaciesPage() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
               <h2 className="text-xl font-bold text-gray-900">Pharmacy Details</h2>
-              <button onClick={() => setSelectedPharmacy(null)} className="text-gray-400 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-1 transition-colors">
+              <button onClick={() => { selectedIdRef.current = null; setSelectedPharmacy(null); }} className="text-gray-400 hover:text-gray-700 bg-gray-200 hover:bg-gray-300 rounded-full p-1 transition-colors">
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -331,7 +335,7 @@ export default function PharmaciesPage() {
             
             <div className="p-5 border-t border-gray-100 flex justify-end bg-gray-50">
               <button 
-                onClick={() => setSelectedPharmacy(null)}
+                onClick={() => { selectedIdRef.current = null; setSelectedPharmacy(null); }}
                 className="px-8 py-2.5 bg-gray-800 text-white font-semibold rounded-lg hover:bg-gray-900 transition-colors shadow-sm"
               >
                 Close Profile

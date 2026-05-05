@@ -3,22 +3,21 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useAdminAuth } from '@/lib/AdminAuthContext';
 import { useRedirectAdminIfAuth } from '@/lib/adminAuthHooks';
 
 /**
  * Admin Login Page
- * 
+ *
  * Admin authentication page with email/password login.
  */
 
 // Removed DEMO_ADMIN_CREDENTIALS
 
 export default function LoginPage() {
-  const router = useRouter();
   const { signIn } = useAdminAuth();
   const { loading: authLoading } = useRedirectAdminIfAuth();
+
   
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,18 +45,17 @@ export default function LoginPage() {
         return;
       }
 
-      // Authenticate with Firebase via Context
+      // Authenticate — context sets currentAdmin + adminRole + caches role in localStorage
       await signIn(email, password);
 
-      // Redirect to admin dashboard immediately after context has verified the role
-      router.push('/dashboard');
+      // useRedirectAdminIfAuth() will automatically navigate to /dashboard
+      // now that adminRole === 'admin'. No manual router.push needed.
 
     } catch (error: any) {
       console.error('Login error:', error);
       if (error.message?.includes('Unauthorized')) {
         setErrors({ general: error.message });
       } else {
-        // Show the actual Firebase error message for debugging
         setErrors({ general: error.message || 'Invalid email or password. Please check your credentials.' });
       }
       setIsLoading(false);

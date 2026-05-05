@@ -5,11 +5,21 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
 import { useRequireAdmin } from '@/lib/adminAuthHooks';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, getCountFromServer, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface DistrictCount { district: string; count: number; }
 interface MonthlyCount { month: string; pharmacies: number; users: number; }
+
+// ─── Skeleton ──────────────────────────────────────────────────────────────
+function StatSkeleton() {
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 animate-pulse">
+      <div className="h-3 w-28 bg-gray-200 rounded mb-3" />
+      <div className="h-8 w-16 bg-gray-300 rounded" />
+    </div>
+  );
+}
 
 export default function AnalyticsPage() {
   const { loading: authLoading } = useRequireAdmin();
@@ -21,26 +31,49 @@ export default function AnalyticsPage() {
   const [totalProfileViews, setTotalProfileViews] = useState(0);
   const [districtData, setDistrictData] = useState<DistrictCount[]>([]);
   const [monthlyData, setMonthlyData] = useState<MonthlyCount[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
+
+  // Split loading into two phases: fast counts + slower document data
+  const [countsLoading, setCountsLoading] = useState(true);
+  const [chartsLoading, setChartsLoading] = useState(true);
 
   useEffect(() => {
     if (authLoading) return;
 
-    async function fetchAnalytics() {
+    // ── Phase 1: Fast counts — show instantly ─────────────────────────────
+    async function fetchCounts() {
       try {
-        // ── Pharmacies ──────────────────────────────────────────────
-        const pharmsSnap = await getDocs(collection(db, 'pharmacies'));
-        let pharmsCount = 0;
-        let verCount = 0;
+        const [pharmsCount, verifiedCountSnap, usersCount] = await Promise.all([
+          getCountFromServer(collection(db, 'pharmacies')),
+          getCountFromServer(query(collection(db, 'pharmacies'), where('isVerified', '==', true))),
+          getCountFromServer(collection(db, 'users')),
+        ]);
+        setTotalPharmacies(pharmsCount.data().count);
+        setVerifiedCount(verifiedCountSnap.data().count);
+        setTotalUsers(usersCount.data().count);
+      } catch (err) {
+        console.error('Counts fetch error:', err);
+      } finally {
+        setCountsLoading(false);
+      }
+    }
+
+    // ── Phase 2: Full document scan for charts & engagement totals ────────
+    async function fetchChartData() {
+      try {
+        // Fetch both collections in parallel
+        const [pharmsSnap, usersSnap] = await Promise.all([
+          getDocs(collection(db, 'pharmacies')),
+          getDocs(collection(db, 'users')),
+        ]);
+
         let waClicks = 0;
         let pViews = 0;
         const districtMap: Record<string, number> = {};
         const pharmByMonth: Record<string, number> = {};
+        const userByMonth: Record<string, number> = {};
 
         pharmsSnap.forEach((doc) => {
-          pharmsCount++;
           const d = doc.data();
-          if (d.isVerified) verCount++;
           waClicks += d.whatsappClicks ?? 0;
           pViews += d.profileViews ?? 0;
 
@@ -57,13 +90,7 @@ export default function AnalyticsPage() {
           }
         });
 
-        // ── Users ───────────────────────────────────────────────────
-        const usersSnap = await getDocs(collection(db, 'users'));
-        let usersCount = 0;
-        const userByMonth: Record<string, number> = {};
-
         usersSnap.forEach((doc) => {
-          usersCount++;
           const d = doc.data();
           if (d.createdAt) {
             const date: Date = d.createdAt.toDate();
@@ -72,12 +99,12 @@ export default function AnalyticsPage() {
           }
         });
 
-        // ── District bars ────────────────────────────────────────────
+        // ── District bars ───────────────────────────────────────────────
         const districts = Object.entries(districtMap)
           .sort((a, b) => b[1] - a[1])
           .map(([district, count]) => ({ district, count }));
 
-        // ── Monthly chart (last 6 months) ────────────────────────────
+        // ── Monthly chart (last 6 months) ───────────────────────────────
         const months: MonthlyCount[] = [];
         for (let i = 5; i >= 0; i--) {
           const d = new Date();
@@ -87,21 +114,20 @@ export default function AnalyticsPage() {
           months.push({ month: label, pharmacies: pharmByMonth[key] ?? 0, users: userByMonth[key] ?? 0 });
         }
 
-        setTotalPharmacies(pharmsCount);
-        setTotalUsers(usersCount);
-        setVerifiedCount(verCount);
         setTotalWhatsappClicks(waClicks);
         setTotalProfileViews(pViews);
         setDistrictData(districts);
         setMonthlyData(months);
       } catch (err) {
-        console.error('Analytics fetch error:', err);
+        console.error('Chart data fetch error:', err);
       } finally {
-        setDataLoading(false);
+        setChartsLoading(false);
       }
     }
 
-    fetchAnalytics();
+    // Kick off both phases at the same time — Phase 1 will resolve first
+    fetchCounts();
+    fetchChartData();
   }, [authLoading]);
 
   if (authLoading) return null;
@@ -120,29 +146,68 @@ export default function AnalyticsPage() {
             <p className="text-sm sm:text-base text-gray-600">Live data from the platform database</p>
           </div>
 
-          {/* Summary Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-            {[
-              { label: 'Total Pharmacies', value: totalPharmacies, color: 'teal' },
-              { label: 'Verified Pharmacies', value: verifiedCount, color: 'green' },
-              { label: 'Total Users', value: totalUsers, color: 'purple' },
-              { label: 'WhatsApp Clicks', value: totalWhatsappClicks, color: 'emerald' },
-              { label: 'Profile Views', value: totalProfileViews, color: 'blue' },
-            ].map(({ label, value, color }) => (
-              <div key={label} className="bg-white rounded-xl border border-gray-200 p-5">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">{label}</p>
-                <p className={`text-3xl font-bold text-${color}-600`}>
-                  {dataLoading ? '—' : value}
-                </p>
-              </div>
-            ))}
+          {/* Summary Stats — Phase 1: fast counts appear first */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            {countsLoading ? (
+              <>
+                <StatSkeleton />
+                <StatSkeleton />
+                <StatSkeleton />
+              </>
+            ) : (
+              <>
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Total Pharmacies</p>
+                  <p className="text-3xl font-bold text-teal-600">{totalPharmacies}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Verified Pharmacies</p>
+                  <p className="text-3xl font-bold text-green-600">{verifiedCount}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Total Users</p>
+                  <p className="text-3xl font-bold text-purple-600">{totalUsers}</p>
+                </div>
+              </>
+            )}
+
+            {/* Phase 2: engagement numbers (require full doc scan) */}
+            {chartsLoading ? (
+              <>
+                <StatSkeleton />
+                <StatSkeleton />
+              </>
+            ) : (
+              <>
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">WhatsApp Clicks</p>
+                  <p className="text-3xl font-bold text-emerald-600">{totalWhatsappClicks}</p>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 p-5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Profile Views</p>
+                  <p className="text-3xl font-bold text-blue-600">{totalProfileViews}</p>
+                </div>
+              </>
+            )}
           </div>
 
           {/* Monthly Registrations Chart */}
           <div className="bg-white rounded-xl border border-gray-200 p-6 mb-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Monthly Registrations (Last 6 Months)</h2>
-            {dataLoading ? (
-              <div className="h-64 flex items-center justify-center text-gray-400">Loading chart…</div>
+            {chartsLoading ? (
+              <div className="h-64 flex flex-col gap-3 animate-pulse">
+                <div className="flex items-end gap-6 h-56">
+                  {[40, 70, 55, 90, 60, 80].map((h, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                      <div className="flex items-end gap-1 w-full justify-center" style={{ height: 220 }}>
+                        <div className="w-5 bg-gray-200 rounded-t-sm" style={{ height: h }} />
+                        <div className="w-5 bg-gray-100 rounded-t-sm" style={{ height: h * 0.6 }} />
+                      </div>
+                      <div className="h-3 w-6 bg-gray-200 rounded" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
               <>
                 {/* Legend */}
@@ -187,8 +252,17 @@ export default function AnalyticsPage() {
           {/* Pharmacies by District */}
           <div className="bg-white rounded-xl border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-6">Pharmacies by District / Area</h2>
-            {dataLoading ? (
-              <div className="h-32 flex items-center justify-center text-gray-400">Loading…</div>
+            {chartsLoading ? (
+              <div className="space-y-4 animate-pulse">
+                {[80, 60, 45, 35, 20].map((w, i) => (
+                  <div key={i} className="flex items-center gap-4">
+                    <div className="w-32 h-4 bg-gray-200 rounded" />
+                    <div className="flex-1 h-10 bg-gray-100 rounded-lg overflow-hidden">
+                      <div className="h-full bg-gray-200 rounded-lg" style={{ width: `${w}%` }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : districtData.length === 0 ? (
               <p className="text-gray-500 text-sm">No district data found.</p>
             ) : (
