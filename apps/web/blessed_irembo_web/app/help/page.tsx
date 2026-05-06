@@ -2,38 +2,11 @@
 
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function HelpPage() {
-  const faqs = [
-    {
-      question: 'How do I find a pharmacy near me?',
-      answer: 'Visit the home page and use the search bar or the interactive map to explore pharmacies in your area. You can also filter by district.'
-    },
-    {
-      question: 'Is Blessed Irembo free to use?',
-      answer: 'Yes! Blessed Irembo is completely free for users looking for pharmacies. Only pharmacies pay a subscription fee to list their services on the platform.'
-    },
-    {
-      question: 'How do I register my pharmacy?',
-      answer: 'Click "For Pharmacies" in the navigation menu, then follow the registration steps. You will need your Rwanda FDA Council Registration Number (NPC/Axxxx) to sign up.'
-    },
-    {
-      question: 'What is the pharmacy free trial?',
-      answer: 'Every newly registered pharmacy receives a 90-day free trial. After that, a subscription plan is required to maintain your listing on the platform.'
-    },
-    {
-      question: 'How do I pay for a subscription?',
-      answer: 'Go to your pharmacy dashboard and click "Subscription". Choose a plan and dial the USSD code provided using MTN Mobile Money. Then click "I Intend to Pay" and optionally upload a screenshot of your receipt. Our team will review and approve your subscription within 24 hours.'
-    },
-    {
-      question: 'How do I update my pharmacy information?',
-      answer: 'Log in to your pharmacy dashboard, go to "Settings" to update your operating hours, location, contact information, and more.'
-    },
-    {
-      question: 'I forgot my password. What do I do?',
-      answer: 'On the login page, click "Forgot Password" and enter your email address. You will receive a link to reset your password.'
-    },
-  ];
+  const { t } = useLanguage();
+  const faqs = t.help.faqs;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -48,9 +21,9 @@ export default function HelpPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Help & Support</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">{t.help.title}</h1>
           <p className="text-gray-600 max-w-xl mx-auto">
-            Find answers to common questions below. If you still need help, our team is always happy to assist!
+            {t.help.subtitle}
           </p>
         </div>
 
@@ -66,8 +39,8 @@ export default function HelpPage() {
 
         {/* Contact Card */}
         <div className="bg-teal-50 border border-teal-200 rounded-2xl p-8 text-center">
-          <h2 className="text-xl font-bold text-gray-900 mb-2">Still need help?</h2>
-          <p className="text-gray-600 text-sm mb-6">Our support team is available to assist you directly.</p>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">{t.help.stillNeedHelp}</h2>
+          <p className="text-gray-600 text-sm mb-6">{t.help.stillNeedHelpSubtitle}</p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <a
               href="mailto:blessedirembo@gmail.com"
@@ -96,3 +69,4 @@ export default function HelpPage() {
     </div>
   );
 }
+

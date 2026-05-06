@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/LanguageContext';
 
 /**
  * Footer Component
@@ -8,12 +9,13 @@ import Image from 'next/image';
  * Includes copyright notice and company details.
  */
 export default function Footer() {
+  const { t } = useLanguage();
   const quickLinks = [
-    { label: 'Privacy Policy', href: '/privacy-policy' },
-    { label: 'Terms and Conditions', href: '/terms' },
-    { label: 'Help & Support', href: '/help' },
-    { label: 'About Us', href: '/about' },
-    { label: 'For Pharmacies', href: '/for-pharmacies' },
+    { label: t.footer.links.privacy, href: '/privacy-policy' },
+    { label: t.footer.links.terms, href: '/terms' },
+    { label: t.footer.links.help, href: '/help' },
+    { label: t.footer.links.about, href: '/about' },
+    { label: t.footer.links.forPharmacies, href: '/for-pharmacies' },
   ];
 
   return (
@@ -33,16 +35,16 @@ export default function Footer() {
               <span className="text-xl font-bold text-gray-900">Blessed Irembo</span>
             </div>
             <p className="text-gray-600 text-sm leading-relaxed">
-              Connecting Rwandans with trusted pharmacies nationwide. Find medication quickly and easily.
+              {t.footer.desc}
             </p>
             <p className="text-gray-500 text-sm mt-3 font-medium">
-              A healthcare digital solution by <span className="text-teal-600 font-semibold">Blessed HealthConnect Ltd</span>.
+              {t.footer.solution} <span className="text-teal-600 font-semibold">Blessed HealthConnect Ltd</span>.
             </p>
           </div>
 
           {/* Quick Links Column */}
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">Quick Links</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">{t.footer.quickLinks}</h3>
             <ul className="space-y-3">
               {quickLinks.map((link, index) => (
                 <li key={index}>
@@ -59,7 +61,7 @@ export default function Footer() {
 
           {/* Contact Column */}
           <div>
-            <h3 className="text-gray-900 font-semibold mb-4">Contact</h3>
+            <h3 className="text-gray-900 font-semibold mb-4">{t.footer.contact}</h3>
             <ul className="space-y-3">
               <li className="flex items-start text-gray-600 text-sm">
                 <svg
@@ -123,13 +125,14 @@ export default function Footer() {
         {/* Copyright */}
         <div className="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <p className="text-gray-600 text-sm">
-            &copy; {new Date().getFullYear()} Blessed Irembo. All rights reserved.
+            &copy; {new Date().getFullYear()} Blessed Irembo. {t.footer.rights}
           </p>
           <p className="text-gray-500 text-xs font-medium">
-            Operated by Blessed HealthConnect Ltd.
+            {t.footer.operatedBy} Blessed HealthConnect Ltd.
           </p>
         </div>
       </div>
     </footer>
   );
 }
+

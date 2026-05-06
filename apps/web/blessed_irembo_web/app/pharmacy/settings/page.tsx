@@ -1,9 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { usePharmacyData } from '@/lib/usePharmacyData';
@@ -14,12 +12,13 @@ import LoadingScreen from '@/components/ui/LoadingScreen';
 import ExpiredSubscriptionWall from '@/components/ui/ExpiredSubscriptionWall';
 import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 import { APIProvider, Map, Marker } from '@vis.gl/react-google-maps';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function PharmacySettings() {
-  const router = useRouter();
   const { loading: authLoading } = useRequireAuth();
-  const { currentUser, signOut } = useAuth();
+  const { currentUser } = useAuth();
   const { pharmacy, loading: pharmacyLoading } = usePharmacyData();
+  const { t, language } = useLanguage();
 
   const [activeTab, setActiveTab] = useState('account');
 
@@ -66,6 +65,19 @@ export default function PharmacySettings() {
     'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'
   ];
 
+  const getDayLabel = (day: string) => {
+    switch (day) {
+      case 'Monday': return t.pharmacyDetail.days.monday;
+      case 'Tuesday': return t.pharmacyDetail.days.tuesday;
+      case 'Wednesday': return t.pharmacyDetail.days.wednesday;
+      case 'Thursday': return t.pharmacyDetail.days.thursday;
+      case 'Friday': return t.pharmacyDetail.days.friday;
+      case 'Saturday': return t.pharmacyDetail.days.saturday;
+      case 'Sunday': return t.pharmacyDetail.days.sunday;
+      default: return day;
+    }
+  };
+
   // Populate hoursData when pharmacy loads
   useEffect(() => {
     if (pharmacy) {
@@ -84,11 +96,6 @@ export default function PharmacySettings() {
     }
   }, [pharmacy]);
 
-  const handleLogout = async () => {
-    await signOut();
-    router.replace('/');
-  };
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -102,10 +109,10 @@ export default function PharmacySettings() {
     setPasswordSuccess('');
 
     if (formData.newPassword !== formData.confirmPassword) {
-      return setPasswordError('New passwords do not match.');
+      return setPasswordError(t.registerPharmacy.errors.passwordsMismatch);
     }
     if (formData.newPassword.length < 6) {
-      return setPasswordError('Password must be at least 6 characters.');
+      return setPasswordError(t.registerPharmacy.errors.passwordMinLength);
     }
     if (!currentUser?.email) return;
 
@@ -114,14 +121,14 @@ export default function PharmacySettings() {
       const credential = EmailAuthProvider.credential(currentUser.email, formData.currentPassword);
       await reauthenticateWithCredential(currentUser, credential);
       await updatePassword(currentUser, formData.newPassword);
-      setPasswordSuccess('Password successfully updated!');
+      setPasswordSuccess(t.pharmacyDashboard.settings.account.success);
       setFormData({ currentPassword: '', newPassword: '', confirmPassword: '' });
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential') {
-        setPasswordError('Incorrect current password.');
+        setPasswordError(t.pharmacyDashboard.settings.location.errors.incorrectPassword);
       } else {
-        setPasswordError('Failed to update password. Please try again.');
+        setPasswordError(t.registerPharmacy.errors.generic);
       }
     } finally {
       setIsUpdatingPassword(false);
@@ -135,7 +142,7 @@ export default function PharmacySettings() {
     setHoursSuccess('');
 
     if (!hoursData.is24Hours && (!hoursData.openTime || !hoursData.closeTime || hoursData.days.length === 0)) {
-      return setHoursError('Please fill out all operating hours fields or select 24/7.');
+      return setHoursError(t.pharmacyDashboard.settings.location.errors.fillHours);
     }
 
     setIsUpdatingHours(true);
@@ -148,11 +155,11 @@ export default function PharmacySettings() {
           closeTime: hoursData.is24Hours ? '23:59' : hoursData.closeTime
         }
       });
-      setHoursSuccess('Operating hours updated successfully!');
+      setHoursSuccess(t.pharmacyDashboard.settings.workingHours.success);
       setTimeout(() => setHoursSuccess(''), 3000);
     } catch (err) {
       console.error(err);
-      setHoursError('Failed to update operating hours.');
+      setHoursError(t.pharmacyDashboard.settings.location.errors.hoursUpdateFailed);
     } finally {
       setIsUpdatingHours(false);
     }
@@ -165,7 +172,7 @@ export default function PharmacySettings() {
     setLocationSuccess('');
 
     if (!address.trim()) {
-      return setLocationError('Address cannot be empty.');
+      return setLocationError(t.pharmacyDashboard.settings.location.errors.addressEmpty);
     }
 
     setIsUpdatingLocation(true);
@@ -207,11 +214,11 @@ export default function PharmacySettings() {
         district
       });
       
-      setLocationSuccess('Location and map coordinates updated successfully!');
+      setLocationSuccess(t.pharmacyDashboard.settings.location.success);
       setTimeout(() => setLocationSuccess(''), 3000);
     } catch (err) {
       console.error(err);
-      setLocationError('Failed to update location.');
+      setLocationError(t.pharmacyDashboard.settings.location.errors.locationUpdateFailed);
     } finally {
       setIsUpdatingLocation(false);
     }
@@ -227,7 +234,7 @@ export default function PharmacySettings() {
   };
 
   const handleDeleteAccount = async () => {
-    if (!deletePassword) return setDeleteError('Please enter your password to confirm.');
+    if (!deletePassword) return setDeleteError(t.pharmacyDashboard.settings.location.errors.deleteConfirmPassword);
     if (!currentUser?.email) return;
 
     setIsDeleting(true);
@@ -241,20 +248,20 @@ export default function PharmacySettings() {
       // Delete Auth user
       await deleteUser(currentUser);
 
-      router.replace('/');
+      window.location.href = '/';
     } catch (err: any) {
       console.error(err);
       if (err.code === 'auth/invalid-credential') {
-        setDeleteError('Incorrect password.');
+        setDeleteError(t.pharmacyDashboard.settings.location.errors.incorrectPassword);
       } else {
-        setDeleteError('Failed to delete account. Please try again.');
+        setDeleteError(t.pharmacyDashboard.settings.location.errors.deleteAccountFailed);
       }
       setIsDeleting(false);
     }
   };
 
   if (authLoading || pharmacyLoading) {
-    return <LoadingScreen text="Loading settings…" />;
+    return <LoadingScreen text={language === 'en' ? "Loading settings…" : "Igenamiterere rirategurwa..."} />;
   }
 
   const subscriptionStatus = getSubscriptionStatus(pharmacy);
@@ -263,534 +270,383 @@ export default function PharmacySettings() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Image src="/logo1.png" alt="Blessed Irembo" width={40} height={40} className="shrink-0" />
-              <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold text-sm sm:text-base">
-                My Pharmacy
-              </Link>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-teal-50 rounded-lg">
-                <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-teal-600 font-medium text-sm">Pharmacy</span>
-              </div>
-              <button onClick={handleLogout} className="text-sm px-3 py-2 text-gray-700 hover:text-gray-900 font-medium">
-                Logout
-              </button>
-            </div>
-          </div>
+    <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
+      <div className="max-w-4xl">
+        {/* Back to Dashboard Link */}
+        <div className="flex items-center gap-4 mb-8">
+          <Link
+            href="/pharmacy/dashboard"
+            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            {t.pharmacyDashboard.profile.backToDashboard}
+          </Link>
         </div>
-      </header>
 
-      <div className="flex pb-16 md:pb-0">
-        {/* Sidebar — hidden on mobile */}
-        <aside className="hidden md:flex md:flex-col w-64 bg-white border-r border-gray-200 min-h-screen shrink-0">
-          <div className="p-6">
-            {/* Main Navigation */}
-            <nav className="space-y-2">
-              <Link
-                href="/pharmacy/dashboard"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
-                </svg>
-                <span className="font-medium">Overview</span>
-              </Link>
+        <div className="mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{t.pharmacyDashboard.settings.title}</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">{t.pharmacyDashboard.settings.subtitle}</p>
+        </div>
 
+        {/* Tab switcher */}
+        <div className="flex gap-2 mb-8 overflow-x-auto pb-1 no-scrollbar">
+          <button
+            onClick={() => setActiveTab('account')}
+            className={`shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+              activeTab === 'account' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-100 hover:border-teal-200'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            {t.pharmacyDashboard.settings.tabs.account}
+          </button>
+          <button
+            onClick={() => setActiveTab('general')}
+            className={`shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+              activeTab === 'general' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-100 hover:border-teal-200'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {t.pharmacyDashboard.settings.tabs.workingHours}
+          </button>
+          <button
+            onClick={() => setActiveTab('location')}
+            className={`shrink-0 flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
+              activeTab === 'location' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-100 hover:border-teal-200'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            {t.pharmacyDashboard.settings.tabs.location}
+          </button>
+        </div>
 
-
-              <Link
-                href="/pharmacy/subscription"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                <span className="font-medium">Subscription</span>
-              </Link>
-            </nav>
-
-            {/* Divider */}
-            <div className="my-6 border-t border-gray-200"></div>
-
-            {/* Profile & Settings */}
-            <nav className="space-y-2">
-              <Link
-                href="/pharmacy/profile"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="font-medium">Profile</span>
-              </Link>
-
-              <Link
-                href="/pharmacy/settings"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg bg-teal-600 text-white transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                <span className="font-medium">Settings</span>
-              </Link>
-            </nav>
-          </div>
-        </aside>
-
-        {/* Main Content */}
-        <main className="flex-1">
-          <div className="p-4 sm:p-6 md:p-8">
-            {/* Header */}
-            <div className="flex items-center gap-4 mb-8">
-              <Link
-                href="/pharmacy/dashboard"
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                </svg>
-                Back to Dashboard
-              </Link>
-            </div>
-
-            <div className="mb-5">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Settings</h1>
-              <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your account preferences and settings</p>
-            </div>
-
-            {/* Mobile tab bar — horizontal scrollable */}
-            <div className="flex gap-2 mb-6 overflow-x-auto pb-1 md:hidden">
-              <button
-                onClick={() => setActiveTab('account')}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'account' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
-              >
-                Account
-              </button>
-              <button
-                onClick={() => setActiveTab('general')}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'general' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
-              >
-                Working Hours
-              </button>
-              <button
-                onClick={() => setActiveTab('location')}
-                className={`shrink-0 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === 'location' ? 'bg-teal-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}
-              >
-                Location & Address
-              </button>
-            </div>
-
-            <div className="flex gap-6 md:gap-8">
-              {/* Settings Sidebar — hidden on mobile */}
-              <div className="hidden md:block w-56 shrink-0">
-                <nav className="bg-white rounded-xl border border-gray-200 p-4 space-y-2">
-                <button
-                  onClick={() => setActiveTab('account')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'account'
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                  </svg>
-                  <span className="font-medium">Account</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('general')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'general'
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span className="font-medium">Working Hours</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('location')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left transition-colors ${activeTab === 'location'
-                      ? 'bg-teal-600 text-white'
-                      : 'text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="font-medium">Location</span>
-                </button>
-
-                <div className="border-t border-gray-200 my-4"></div>
-
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-red-600 hover:bg-red-50 transition-colors"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  <span className="font-medium">Logout</span>
-                </button>
-              </nav>
-              </div>
-
-              {/* Settings Content */}
-              <div className="flex-1 space-y-6">
-                {activeTab === 'account' && (
-                  <>
-                    {/* Change Password */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                      <h2 className="text-xl font-bold text-gray-900 mb-6">Change Password</h2>
-                      {passwordSuccess && (
-                        <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200">{passwordSuccess}</div>
-                      )}
-                      {passwordError && (
-                        <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{passwordError}</div>
-                      )}
-                      <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-2xl">
-                        <div>
-                          <label htmlFor="currentPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                            Current Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showCurrentPassword ? 'text' : 'password'}
-                              id="currentPassword"
-                              name="currentPassword"
-                              value={formData.currentPassword}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                              className="absolute right-4 top-1/2 -translate-y-1/2"
-                            >
-                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label htmlFor="newPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                            New Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showNewPassword ? 'text' : 'password'}
-                              id="newPassword"
-                              name="newPassword"
-                              value={formData.newPassword}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowNewPassword(!showNewPassword)}
-                              className="absolute right-4 top-1/2 -translate-y-1/2"
-                            >
-                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">
-                            Confirm New Password
-                          </label>
-                          <div className="relative">
-                            <input
-                              type={showConfirmPassword ? 'text' : 'password'}
-                              id="confirmPassword"
-                              name="confirmPassword"
-                              value={formData.confirmPassword}
-                              onChange={handleInputChange}
-                              className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                              className="absolute right-4 top-1/2 -translate-y-1/2"
-                            >
-                              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-
-                        <button
-                          type="submit"
-                          disabled={isUpdatingPassword}
-                          className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50"
-                        >
-                          {isUpdatingPassword ? 'Updating...' : 'Update Password'}
-                        </button>
-                      </form>
+        <div className="space-y-6">
+          {activeTab === 'account' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Change Password Card */}
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden mb-6">
+                <div className="p-6 sm:p-8">
+                  <h2 className="text-xl font-bold text-gray-900 mb-6">{t.pharmacyDashboard.settings.account.changePassword}</h2>
+                  {passwordSuccess && (
+                    <div className="p-4 mb-6 bg-teal-50 text-teal-700 rounded-lg border border-teal-200 flex items-center gap-3">
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      {passwordSuccess}
                     </div>
-
-                    {/* Two-Factor Authentication */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-6">
-                      <h2 className="text-xl font-bold text-gray-900 mb-2">Two-Factor Authentication</h2>
-                      <p className="text-gray-600 mb-6">Add an extra layer of security to your account</p>
-                      <button
-                        onClick={() => alert('2FA setup will be implemented')}
-                        className="flex items-center gap-2 px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors font-medium"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                        Enable 2FA
-                      </button>
-                    </div>
-
-                    {/* Delete Account */}
-                    <div className="bg-white rounded-xl border-2 border-red-200 p-6">
-                      <h2 className="text-xl font-bold text-red-600 mb-2">Delete Account</h2>
-                      <p className="text-gray-600 mb-6">
-                        Permanently delete your account and all associated data. This action cannot be undone.
-                      </p>
-
-                      {!showDeletePrompt ? (
-                        <button
-                          onClick={() => setShowDeletePrompt(true)}
-                          className="flex items-center gap-2 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold"
-                        >
-                          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
-                          Delete Account
-                        </button>
-                      ) : (
-                        <div className="bg-red-50 p-4 rounded-lg border border-red-200 max-w-2xl">
-                          <p className="text-red-800 font-semibold mb-4">Please confirm your current password to delete your account.</p>
-
-                          {deleteError && (
-                            <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-sm">{deleteError}</div>
-                          )}
-
+                  )}
+                  {passwordError && (
+                    <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{passwordError}</div>
+                  )}
+                  <form onSubmit={handleUpdatePassword} className="space-y-6 max-w-2xl">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="sm:col-span-2">
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.pharmacyDashboard.settings.account.currentPassword}</label>
+                        <div className="relative">
                           <input
-                            type="password"
-                            placeholder="Current Password"
-                            value={deletePassword}
-                            onChange={(e) => setDeletePassword(e.target.value)}
-                            className="w-full px-4 py-3 mb-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                            type={showCurrentPassword ? 'text' : 'password'}
+                            name="currentPassword"
+                            value={formData.currentPassword}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all outline-none"
+                            required
                           />
-                          <div className="flex gap-3">
-                            <button
-                              onClick={handleDeleteAccount}
-                              disabled={isDeleting}
-                              className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:opacity-50"
-                            >
-                              {isDeleting ? 'Deleting...' : 'Confirm Deletion'}
-                            </button>
-                            <button
-                              onClick={() => { setShowDeletePrompt(false); setDeletePassword(''); setDeleteError(''); }}
-                              disabled={isDeleting}
-                              className="px-6 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50"
-                            >
-                              Cancel
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            {showCurrentPassword ? (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L3 3m18 18l-6.888-6.888m4.432-4.432a9.95 9.95 0 001.454-3.68c-1.274-4.057-5.064-7-9.542-7-1.274 0-2.483.236-3.597.666" /></svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            )}
+                          </button>
                         </div>
-                      )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.pharmacyDashboard.settings.account.newPassword}</label>
+                        <div className="relative">
+                          <input
+                            type={showNewPassword ? 'text' : 'password'}
+                            name="newPassword"
+                            value={formData.newPassword}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all outline-none"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowNewPassword(!showNewPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            {showNewPassword ? (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L3 3m18 18l-6.888-6.888m4.432-4.432a9.95 9.95 0 001.454-3.68c-1.274-4.057-5.064-7-9.542-7-1.274 0-2.483.236-3.597.666" /></svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.pharmacyDashboard.settings.account.confirmPassword}</label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? 'text' : 'password'}
+                            name="confirmPassword"
+                            value={formData.confirmPassword}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all outline-none"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                          >
+                            {showConfirmPassword ? (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.888 9.888L3 3m18 18l-6.888-6.888m4.432-4.432a9.95 9.95 0 001.454-3.68c-1.274-4.057-5.064-7-9.542-7-1.274 0-2.483.236-3.597.666" /></svg>
+                            ) : (
+                              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                            )}
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                  </>
-                )}
+                    <button
+                      type="submit"
+                      disabled={isUpdatingPassword}
+                      className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50 disabled:shadow-none"
+                    >
+                      {isUpdatingPassword ? t.pharmacyDashboard.settings.account.updating : t.pharmacyDashboard.settings.account.updateButton}
+                    </button>
+                  </form>
+                </div>
+              </div>
 
-                {activeTab === 'general' && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Working Hours</h2>
-                    {hoursSuccess && (
-                      <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200">{hoursSuccess}</div>
+              {/* 2FA Placeholder Card */}
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8 mb-6">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">{t.pharmacyDashboard.settings.account.twoFactor}</h2>
+                <p className="text-gray-500 text-sm mb-6">{t.pharmacyDashboard.settings.account.twoFactorSubtitle}</p>
+                <button
+                  onClick={() => alert('2FA setup will be implemented')}
+                  className="flex items-center gap-2 px-6 py-2.5 border-2 border-teal-100 text-teal-600 rounded-xl font-bold hover:bg-teal-50 transition-all"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                  {t.pharmacyDashboard.settings.account.enable2FA}
+                </button>
+              </div>
+
+              {/* Danger Zone Card */}
+              <div className="bg-white rounded-2xl border-2 border-red-50 shadow-sm p-6 sm:p-8">
+                <h2 className="text-xl font-bold text-red-600 mb-2">{t.pharmacyDashboard.settings.account.deleteAccount}</h2>
+                <p className="text-gray-500 text-sm mb-6">{t.pharmacyDashboard.settings.account.deleteSubtitle}</p>
+                
+                {!showDeletePrompt ? (
+                  <button
+                    onClick={() => setShowDeletePrompt(true)}
+                    className="flex items-center gap-2 px-6 py-2.5 bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                    {t.pharmacyDashboard.settings.account.deleteAccount}
+                  </button>
+                ) : (
+                  <div className="bg-red-50 rounded-xl p-5 border border-red-100 max-w-2xl">
+                    <p className="text-red-900 font-bold mb-4">{t.pharmacyDashboard.settings.account.confirmDelete}</p>
+                    {deleteError && (
+                      <div className="p-3 mb-4 bg-red-100 text-red-700 rounded-lg text-xs font-bold">{deleteError}</div>
                     )}
-                    {hoursError && (
-                      <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{hoursError}</div>
-                    )}
-
-                    <form onSubmit={handleUpdateHours} className="space-y-6 max-w-2xl">
-                      {/* Checkbox for 24/7 */}
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          id="is24Hours"
-                          checked={hoursData.is24Hours}
-                          onChange={(e) => setHoursData({ ...hoursData, is24Hours: e.target.checked })}
-                          className="w-5 h-5 text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                        />
-                        <label htmlFor="is24Hours" className="font-semibold text-gray-700">Open 24/7</label>
-                      </div>
-
-                      {!hoursData.is24Hours && (
-                        <div className="space-y-6">
-                          <div className="space-y-3">
-                            <label className="block text-sm font-semibold text-gray-700">Operating Days</label>
-                            <div className="flex flex-wrap gap-2">
-                              {DAYS_OF_WEEK.map((day) => (
-                                <button
-                                  type="button"
-                                  key={day}
-                                  onClick={() => toggleDay(day)}
-                                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors border ${hoursData.days.includes(day)
-                                      ? 'bg-teal-600 text-white border-teal-600'
-                                      : 'bg-white text-gray-600 border-gray-300 hover:border-teal-600 hover:text-teal-600'
-                                    }`}
-                                >
-                                  {day}
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-semibold text-gray-700 mb-2">Opening Time</label>
-                              <input
-                                type="time"
-                                value={hoursData.openTime}
-                                onChange={(e) => setHoursData({ ...hoursData, openTime: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-sm font-semibold text-gray-700 mb-2">Closing Time</label>
-                              <input
-                                type="time"
-                                value={hoursData.closeTime}
-                                onChange={(e) => setHoursData({ ...hoursData, closeTime: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
+                    <input
+                      type="password"
+                      placeholder={t.pharmacyDashboard.settings.account.currentPassword}
+                      value={deletePassword}
+                      onChange={(e) => setDeletePassword(e.target.value)}
+                      className="w-full px-4 py-3 bg-white border border-red-100 rounded-xl focus:ring-2 focus:ring-red-600 outline-none mb-4 transition-all"
+                    />
+                    <div className="flex flex-wrap gap-3">
                       <button
-                        type="submit"
-                        disabled={isUpdatingHours}
-                        className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50"
+                        onClick={handleDeleteAccount}
+                        disabled={isDeleting}
+                        className="px-6 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-all disabled:opacity-50"
                       >
-                        {isUpdatingHours ? 'Saving...' : 'Save Working Hours'}
+                        {isDeleting ? (language === 'en' ? 'Deleting...' : 'Gusiba...') : t.pharmacyDashboard.settings.account.confirmButton}
                       </button>
-                    </form>
-                  </div>
-                )}
-
-                {activeTab === 'location' && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-6">
-                    <h2 className="text-xl font-bold text-gray-900 mb-6">Location & Address</h2>
-                    {locationSuccess && (
-                      <div className="p-4 mb-6 bg-green-50 text-green-700 rounded-lg border border-green-200">{locationSuccess}</div>
-                    )}
-                    {locationError && (
-                      <div className="p-4 mb-6 bg-red-50 text-red-700 rounded-lg border border-red-200">{locationError}</div>
-                    )}
-
-                    <form onSubmit={handleUpdateLocation} className="space-y-6 max-w-2xl">
-                      <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Pin Location
-                        </label>
-                        <p className="text-xs text-gray-500 mb-3">Click on the map to set your exact location.</p>
-                        <div className="w-full h-64 rounded-xl overflow-hidden border border-gray-300 relative">
-                          <APIProvider apiKey={MAPS_API_KEY}>
-                            <Map
-                              defaultCenter={mapLocation}
-                              defaultZoom={14}
-                              mapTypeControl={false}
-                              streetViewControl={false}
-                              onClick={(e) => {
-                                if (e.detail.latLng) {
-                                  setMapLocation({ lat: e.detail.latLng.lat, lng: e.detail.latLng.lng });
-                                }
-                              }}
-                            >
-                              <Marker position={mapLocation} />
-                            </Map>
-                          </APIProvider>
-                        </div>
-                      </div>
-
-                      <div>
-                        <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
-                          Pharmacy Address
-                        </label>
-                        <input
-                          type="text"
-                          id="address"
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          placeholder="e.g. KN 5 Rd, Kigali"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-                        />
-                      </div>
-
                       <button
-                        type="submit"
-                        disabled={isUpdatingLocation}
-                        className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-semibold disabled:opacity-50"
+                        onClick={() => { setShowDeletePrompt(false); setDeletePassword(''); setDeleteError(''); }}
+                        disabled={isDeleting}
+                        className="px-6 py-2 bg-white text-gray-700 border border-red-200 rounded-lg font-bold hover:bg-red-50 transition-all disabled:opacity-50"
                       >
-                        {isUpdatingLocation ? 'Saving...' : 'Save Location'}
+                        {t.pharmacyDashboard.settings.account.cancelButton}
                       </button>
-                    </form>
-                  </div>
-                )}
-
-                {activeTab !== 'account' && activeTab !== 'general' && activeTab !== 'location' && (
-                  <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
-                    <p className="text-gray-500 text-lg">
-                      {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} settings coming soon
-                    </p>
+                    </div>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </main>
-      </div>
+          )}
 
-      {/* Bottom Nav — mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30">
-        <div className="grid grid-cols-4 h-16">
-          <Link href="/pharmacy/dashboard" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" /></svg>
-            <span className="text-xs font-medium">Overview</span>
-          </Link>
-          <Link href="/pharmacy/subscription" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-            <span className="text-xs font-medium">Subscription</span>
-          </Link>
-          <Link href="/pharmacy/profile" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            <span className="text-xs font-medium">Profile</span>
-          </Link>
-          <Link href="/pharmacy/settings" className="flex flex-col items-center justify-center gap-1 text-teal-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            <span className="text-xs font-medium">Settings</span>
-          </Link>
+          {activeTab === 'general' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">{t.pharmacyDashboard.settings.workingHours.title}</h2>
+                {hoursSuccess && (
+                  <div className="p-4 mb-6 bg-teal-50 text-teal-700 rounded-lg border border-teal-200 flex items-center gap-3">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {hoursSuccess}
+                  </div>
+                )}
+                <form onSubmit={handleUpdateHours} className="space-y-8 max-w-2xl">
+                  <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <div className="relative">
+                      <input
+                        type="checkbox"
+                        id="is24Hours"
+                        checked={hoursData.is24Hours}
+                        onChange={(e) => setHoursData({ ...hoursData, is24Hours: e.target.checked })}
+                        className="w-6 h-6 text-teal-600 border-gray-300 rounded-lg focus:ring-teal-500 cursor-pointer"
+                      />
+                    </div>
+                    <label htmlFor="is24Hours" className="font-bold text-gray-900 cursor-pointer">{t.pharmacyDashboard.settings.workingHours.is24Hours}</label>
+                  </div>
+
+                  {!hoursData.is24Hours && (
+                    <div className="space-y-8 animate-in fade-in duration-300">
+                      <div className="space-y-4">
+                        <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">{t.pharmacyDashboard.settings.workingHours.days}</label>
+                        <div className="flex flex-wrap gap-2">
+                          {DAYS_OF_WEEK.map((day) => (
+                            <button
+                              type="button"
+                              key={day}
+                              onClick={() => toggleDay(day)}
+                              className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-all border-2 ${
+                                hoursData.days.includes(day)
+                                  ? 'bg-teal-600 text-white border-teal-600 shadow-md scale-105'
+                                  : 'bg-white text-gray-600 border-gray-100 hover:border-teal-200 hover:text-teal-600'
+                              }`}
+                            >
+                              {getDayLabel(day)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.pharmacyDashboard.settings.workingHours.openTime}</label>
+                          <input
+                            type="time"
+                            value={hoursData.openTime}
+                            onChange={(e) => setHoursData({ ...hoursData, openTime: e.target.value })}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">{t.pharmacyDashboard.settings.workingHours.closeTime}</label>
+                          <input
+                            type="time"
+                            value={hoursData.closeTime}
+                            onChange={(e) => setHoursData({ ...hoursData, closeTime: e.target.value })}
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingHours}
+                    className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+                  >
+                    {isUpdatingHours ? t.pharmacyDashboard.settings.workingHours.saving : t.pharmacyDashboard.settings.workingHours.saveButton}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'location' && (
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 sm:p-8">
+                <h2 className="text-xl font-bold text-gray-900 mb-6">{t.pharmacyDashboard.settings.location.title}</h2>
+                {locationSuccess && (
+                  <div className="p-4 mb-6 bg-teal-50 text-teal-700 rounded-lg border border-teal-200 flex items-center gap-3">
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    {locationSuccess}
+                  </div>
+                )}
+                <form onSubmit={handleUpdateLocation} className="space-y-8 max-w-2xl">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                      {t.pharmacyDashboard.settings.location.pinLocation}
+                    </label>
+                    <p className="text-sm text-gray-500 mb-4">{t.pharmacyDashboard.settings.location.pinSubtitle}</p>
+                    <div className="w-full h-80 rounded-2xl overflow-hidden border-2 border-gray-100 relative shadow-inner">
+                      <APIProvider apiKey={MAPS_API_KEY}>
+                        <Map
+                          defaultCenter={mapLocation}
+                          defaultZoom={14}
+                          mapId="PHARMACY_SETTINGS_MAP"
+                          disableDefaultUI={true}
+                          zoomControl={true}
+                          onClick={(e) => {
+                            if (e.detail.latLng) {
+                              setMapLocation({ lat: e.detail.latLng.lat, lng: e.detail.latLng.lng });
+                            }
+                          }}
+                        >
+                          <Marker position={mapLocation} />
+                        </Map>
+                      </APIProvider>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                      {t.pharmacyDashboard.settings.location.address}
+                    </label>
+                    <input
+                      type="text"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder={t.pharmacyDashboard.settings.location.addressPlaceholder}
+                      className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isUpdatingLocation}
+                    className="w-full sm:w-auto px-8 py-3 bg-teal-600 text-white rounded-xl font-bold hover:bg-teal-700 transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+                  >
+                    {isUpdatingLocation ? t.pharmacyDashboard.settings.location.saving : t.pharmacyDashboard.settings.location.saveButton}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
-      </nav>
+      </div>
     </div>
   );
 }

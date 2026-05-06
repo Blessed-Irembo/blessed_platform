@@ -12,18 +12,23 @@ import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firesto
 import { db } from '@/lib/firebase';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
 const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
-      <div className="text-center">
-        <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
-        <p className="text-sm text-gray-500">Loading map…</p>
+  loading: () => {
+    const { t } = useLanguage();
+    return (
+      <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-10 h-10 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+          <p className="text-sm text-gray-500">{t.common.loading}</p>
+        </div>
       </div>
-    </div>
-  ),
+    );
+  },
 });
 
 
@@ -31,10 +36,11 @@ const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
 // ─── Page Component ────────────────────────────────────────────────────────────
 
 export default function PharmaciesPage() {
+  const { t, language } = useLanguage();
   // Require authentication — redirects to /login if not signed in
   // useRequireUserRole: redirects to /login if unauthenticated, to /pharmacy/dashboard if pharmacy
   const { loading, userRole } = useRequireUserRole();
-  const { currentUser, signOut } = useAuth();
+  const { currentUser } = useAuth();
   const router = useRouter();
 
   const [pharmacies, setPharmacies] = useState<Pharmacy[]>([]);
@@ -55,7 +61,6 @@ export default function PharmaciesPage() {
     async function loadPharmacies() {
       try {
         // Only show pharmacies where isActive is not explicitly false
-        // (undefined/missing = active, for backwards-compat with existing pharmacies)
         const q = query(
           collection(db, 'pharmacies'),
           where('isActive', '!=', false)
@@ -63,8 +68,6 @@ export default function PharmaciesPage() {
         const snapshot = await getDocs(q);
         const list: Pharmacy[] = snapshot.docs.map((docSnap) => {
           const data = docSnap.data();
-          // Normalize district to Title Case so it matches dropdown values
-          // e.g. 'muhanga' stored in Firestore → 'Muhanga' in the dropdown
           const rawDistrict: string = data.district ?? '';
           const district = rawDistrict
             .split(' ')
@@ -87,7 +90,6 @@ export default function PharmaciesPage() {
             longitude: data.longitude ?? 0,
           };
         });
-        // Only show pharmacies that have valid coordinates on the map
         setPharmacies(list.filter((p) => p.latitude !== 0 && p.longitude !== 0));
       } catch (err) {
         console.error('Failed to load pharmacies from Firestore:', err);
@@ -121,11 +123,6 @@ export default function PharmaciesPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace('/');
-  };
-
   // Derive display name and initials from Firebase user
   const displayName = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'User';
   const email = currentUser?.email || '';
@@ -136,11 +133,9 @@ export default function PharmaciesPage() {
     .toUpperCase()
     .slice(0, 2);
 
-  // Request the user's GPS location and select the nearest pharmacy
-  // Must be defined before any early returns (Rules of Hooks)
   const handleNearMe = useCallback(() => {
     if (!navigator.geolocation) {
-      setLocationError('Geolocation is not supported by your browser.');
+      setLocationError(t.pharmacies.locationUnable);
       return;
     }
 
@@ -152,7 +147,6 @@ export default function PharmaciesPage() {
         setIsLocating(false);
         const { latitude, longitude } = position.coords;
 
-        // Find nearest pharmacy using Haversine-like approximation
         let nearestId: string | null = null;
         let minDist = Infinity;
 
@@ -172,25 +166,21 @@ export default function PharmaciesPage() {
         setIsLocating(false);
         switch (error.code) {
           case error.PERMISSION_DENIED:
-            setLocationError('Location access denied. Please allow location access in your browser settings.');
+            setLocationError(t.pharmacies.locationDenied);
             break;
           case error.POSITION_UNAVAILABLE:
-            setLocationError('Location information is unavailable.');
+            setLocationError(t.pharmacies.locationUnavailable);
             break;
           default:
-            setLocationError('Unable to determine your location.');
+            setLocationError(t.pharmacies.locationUnable);
         }
       },
       { enableHighAccuracy: true, timeout: 8000 }
     );
-  }, [pharmacies]);
+  }, [pharmacies, t]);
 
-  // Show spinner while:
-  //  - Firebase is resolving auth (loading)
-  //  - Pharmacy data is loading
-  //  - User is a pharmacy role (redirect is in-flight, hide map completely)
   if (loading || pharmaciesLoading || userRole === 'pharmacy') {
-    return <LoadingScreen text="Loading pharmacies…" />;
+    return <LoadingScreen text={t.common.loading} />;
   }
 
   // Filter pharmacies based on search, district, and open status
@@ -208,142 +198,14 @@ export default function PharmaciesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* ── Header ────────────────────────────────────────────────────── */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="shrink-0">
-              <div className="flex items-center gap-2 cursor-default">
-                <Image
-                  src="/logo1.png"
-                  alt="Blessed Irembo"
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
-                <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-              </div>
-            </div>
-
-
-            {/* User profile avatar + dropdown */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                id="user-menu-btn"
-                onClick={() => setDropdownOpen((prev) => !prev)}
-                className="flex items-center gap-2 focus:outline-none group"
-                aria-haspopup="true"
-                aria-expanded={dropdownOpen}
-              >
-                {/* Avatar circle */}
-                <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-bold shrink-0 ring-2 ring-teal-200 group-hover:ring-teal-400 transition-all">
-                  {currentUser?.photoURL ? (
-                    <Image
-                      src={currentUser.photoURL}
-                      alt={displayName}
-                      width={36}
-                      height={36}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    initials
-                  )}
-                </div>
-                {/* Name — hidden on small screens */}
-                <span className="hidden md:block text-sm font-medium text-gray-900 max-w-[120px] truncate">
-                  {displayName}
-                </span>
-                {/* Chevron */}
-                <svg
-                  className={`hidden md:block w-4 h-4 text-gray-500 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`}
-                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {/* Dropdown panel */}
-              {dropdownOpen && (
-                <div
-                  className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border border-gray-100 z-50 overflow-hidden"
-                  role="menu"
-                >
-                  {/* User info header */}
-                  <div className="bg-teal-600 px-4 py-4 flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-teal-800 flex items-center justify-center text-white text-lg font-bold shrink-0">
-                      {currentUser?.photoURL ? (
-                        <Image
-                          src={currentUser.photoURL}
-                          alt={displayName}
-                          width={48}
-                          height={48}
-                          className="rounded-full object-cover"
-                        />
-                      ) : (
-                        initials
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-bold text-sm truncate uppercase">{displayName}</p>
-                      <p className="text-teal-100 text-xs truncate">{email}</p>
-                      {userPhone && <p className="text-teal-200 text-xs truncate mt-0.5">{userPhone}</p>}
-                    </div>
-                  </div>
-
-                  {/* Menu items */}
-                  <div className="py-2">
-                    <Link
-                      href="/profile"
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                      </svg>
-                      My Profile
-                    </Link>
-
-                    <Link
-                      href="/settings"
-                      className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                      onClick={() => setDropdownOpen(false)}
-                      role="menuitem"
-                    >
-                      <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      Settings
-                    </Link>
-
-                    {/* Divider */}
-                    <div className="border-t border-gray-100 my-1" />
-
-                    <button
-                      onClick={handleSignOut}
-                      className="flex items-center gap-3 w-full px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                      role="menuitem"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                      </svg>
-                      Log out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* ── Page title ──────────────────────────────────────────────── */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Find Pharmacies</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">{t.pharmacies.title}</h1>
           <p className="text-gray-600">
-            Search and discover verified pharmacies across Rwanda
+            {t.pharmacies.subtitle}
           </p>
         </div>
 
@@ -369,7 +231,7 @@ export default function PharmaciesPage() {
                 <input
                   type="text"
                   id="pharmacy-search"
-                  placeholder="Search by name or location…"
+                  placeholder={t.pharmacies.searchPlaceholder}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
@@ -385,20 +247,20 @@ export default function PharmaciesPage() {
                 onChange={(e) => setSelectedDistrict(e.target.value)}
                 className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
               >
-                <option value="all">All Districts</option>
-                <optgroup label="Kigali City">
+                <option value="all">{t.pharmacies.allDistricts}</option>
+                <optgroup label={t.pharmacies.districts.kigali}>
                   <option value="Gasabo">Gasabo</option>
                   <option value="Kicukiro">Kicukiro</option>
                   <option value="Nyarugenge">Nyarugenge</option>
                 </optgroup>
-                <optgroup label="Northern Province">
+                <optgroup label={t.pharmacies.districts.northern}>
                   <option value="Burera">Burera</option>
                   <option value="Gakenke">Gakenke</option>
                   <option value="Gicumbi">Gicumbi</option>
                   <option value="Musanze">Musanze</option>
                   <option value="Rulindo">Rulindo</option>
                 </optgroup>
-                <optgroup label="Southern Province">
+                <optgroup label={t.pharmacies.districts.southern}>
                   <option value="Gisagara">Gisagara</option>
                   <option value="Huye">Huye</option>
                   <option value="Kamonyi">Kamonyi</option>
@@ -408,7 +270,7 @@ export default function PharmaciesPage() {
                   <option value="Nyaruguru">Nyaruguru</option>
                   <option value="Ruhango">Ruhango</option>
                 </optgroup>
-                <optgroup label="Eastern Province">
+                <optgroup label={t.pharmacies.districts.eastern}>
                   <option value="Bugesera">Bugesera</option>
                   <option value="Gatsibo">Gatsibo</option>
                   <option value="Kayonza">Kayonza</option>
@@ -417,7 +279,7 @@ export default function PharmaciesPage() {
                   <option value="Nyagatare">Nyagatare</option>
                   <option value="Rwamagana">Rwamagana</option>
                 </optgroup>
-                <optgroup label="Western Province">
+                <optgroup label={t.pharmacies.districts.western}>
                   <option value="Karongi">Karongi</option>
                   <option value="Ngororero">Ngororero</option>
                   <option value="Nyabihu">Nyabihu</option>
@@ -439,7 +301,7 @@ export default function PharmaciesPage() {
                   onChange={(e) => setShowOpenOnly(e.target.checked)}
                   className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded"
                 />
-                <span className="ml-2 text-sm text-gray-700">Open now</span>
+                <span className="ml-2 text-sm text-gray-700">{t.pharmacies.openNow}</span>
               </label>
             </div>
 
@@ -454,7 +316,7 @@ export default function PharmaciesPage() {
                 {isLocating ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    Locating…
+                    {t.pharmacies.locating}
                   </>
                 ) : (
                   <>
@@ -470,7 +332,7 @@ export default function PharmaciesPage() {
                       <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                       <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                     </svg>
-                    Near Me
+                    {t.pharmacies.nearMe}
                   </>
                 )}
               </button>
@@ -489,9 +351,9 @@ export default function PharmaciesPage() {
 
           {/* Results count */}
           <div className="mt-4 text-sm text-gray-600">
-            Found{' '}
+            {t.pharmacies.foundCount}{' '}
             <span className="font-semibold text-gray-900">{filteredPharmacies.length}</span>{' '}
-            {filteredPharmacies.length === 1 ? 'pharmacy' : 'pharmacies'}
+            {filteredPharmacies.length === 1 ? t.pharmacies.pharmacySingle : t.pharmacies.pharmacyPlural}
           </div>
         </div>
 
@@ -542,7 +404,7 @@ export default function PharmaciesPage() {
                             : 'bg-red-100 text-red-800'
                             }`}
                         >
-                          {pharmacy.isOpen ? 'Open' : 'Closed'}
+                          {pharmacy.isOpen ? t.pharmacies.open : t.pharmacies.closed}
                         </span>
                         <span className="flex items-center text-yellow-600">
                           <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -590,7 +452,7 @@ export default function PharmaciesPage() {
                       </svg>
                       <span className={`font-medium ${pharmacy.isOpen ? 'text-green-600' : 'text-red-500'
                         }`}>
-                        {pharmacy.isOpen ? 'Open now' : 'Closed'}
+                        {pharmacy.isOpen ? t.pharmacies.openNow : t.pharmacies.closed}
                       </span>
                       <span className="text-gray-400">·</span>
                       <span className="truncate text-gray-600">{pharmacy.hours}</span>
@@ -615,22 +477,35 @@ export default function PharmaciesPage() {
                           {ALL_DAYS.map((day) => {
                             const isToday = day === todayName;
                             const isDayOpen = oh?.is24Hours || openDays.includes(day);
+                            // Localize day name if needed (e.g. for Kinyarwanda)
+                            const localizedDay = language === 'rw' 
+                              ? {
+                                'Monday': 'Kuwa Mbere',
+                                'Tuesday': 'Kuwa Kabiri',
+                                'Wednesday': 'Kuwa Gatatu',
+                                'Thursday': 'Kuwa Kane',
+                                'Friday': 'Kuwa Gatanu',
+                                'Saturday': 'Kuwa Gatandatu',
+                                'Sunday': 'Ku cyumweru'
+                              }[day] || day
+                              : day;
+
                             return (
                               <div
                                 key={day}
                                 className={`flex justify-between px-2.5 py-1.5 border-b border-gray-50 last:border-0 ${isToday ? 'bg-teal-50' : 'bg-white'
                                   }`}
                               >
-                                <span className={isToday ? 'font-semibold text-teal-700' : 'text-gray-600'}>{day}</span>
+                                <span className={isToday ? 'font-semibold text-teal-700' : 'text-gray-600'}>{localizedDay}</span>
                                 <span className={`${isToday
                                     ? isDayOpen ? 'text-teal-600 font-semibold' : 'text-red-500 font-semibold'
                                     : isDayOpen ? 'text-gray-500' : 'text-gray-400'
                                   }`}>
                                   {oh?.is24Hours
-                                    ? 'Open 24 hours'
+                                    ? t.pharmacies.open24Hours
                                     : isDayOpen
                                       ? `${oh?.openTime ?? '?'} – ${oh?.closeTime ?? '?'}`
-                                      : 'Closed'
+                                      : t.pharmacies.closed
                                   }
                                 </span>
                               </div>
@@ -664,13 +539,13 @@ export default function PharmaciesPage() {
                       className="flex-1 bg-teal-600 text-white text-sm py-2 px-3 rounded-md font-medium hover:bg-teal-700 transition-colors text-center"
                       onClick={(e) => e.stopPropagation()}
                     >
-                      View Details
+                      {t.pharmacies.viewDetails}
                     </Link>
                     <a
                       href={`tel:${pharmacy.phone.replace(/\D/g, '')}`}
                       className="bg-gray-100 text-gray-700 text-sm py-2 px-3 rounded-md font-medium hover:bg-gray-200 transition-colors flex items-center justify-center w-10 shrink-0"
                       onClick={(e) => e.stopPropagation()}
-                      title={`Call ${pharmacy.name}`}
+                      title={`${t.pharmacies.call} ${pharmacy.name}`}
                     >
                       <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                         <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
@@ -684,7 +559,7 @@ export default function PharmaciesPage() {
                         e.stopPropagation();
                         fetch(`/api/pharmacies/${pharmacy.id}/track-whatsapp`, { method: 'POST' }).catch(console.error);
                       }}
-                      title={`WhatsApp ${pharmacy.name}`}
+                      title={`${t.pharmacies.whatsapp} ${pharmacy.name}`}
                     >
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                         <path fillRule="evenodd" clipRule="evenodd" d="M2.004 22l1.352-4.968A9.992 9.992 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.989 9.989 0 01-5.02-1.341L2.004 22zm10-18.3A8.309 8.309 0 003.7 12c0 1.458.375 2.874 1.085 4.108l-.87 3.2 3.275-.86A8.286 8.309 0 0012 20.3c4.586 0 8.3-3.714 8.3-8.3S16.586 3.7 12 3.7zm4.27 11.517c-.234-.117-1.385-.685-1.599-.763-.214-.078-.37-.117-.526.117-.156.234-.606.763-.742.92-.136.156-.273.175-.507.058-.234-.117-.988-.363-1.882-1.026-.694-.515-1.163-1.15-1.3-1.384-.136-.234-.015-.36.102-.477.105-.105.234-.273.351-.409.117-.136.156-.234.234-.39.078-.156.039-.293-.02-.409-.058-.117-.526-1.27-.721-1.74-.191-.46-.386-.398-.526-.405-.136-.007-.292-.007-.448-.007s-.409.058-.624.293c-.214.234-.818.8-.818 1.95s.838 2.264.954 2.42c.117.156 1.652 2.52 3.998 3.513 1.956.826 2.535.79 3.003.738.537-.06 1.385-.566 1.58-1.112.195-.546.195-1.015.136-1.112-.058-.098-.214-.156-.448-.273z" />
@@ -707,8 +582,8 @@ export default function PharmaciesPage() {
                   >
                     <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <p className="text-gray-600 font-medium">No pharmacies found</p>
-                  <p className="text-sm text-gray-500 mt-1">Try adjusting your filters</p>
+                  <p className="text-gray-600 font-medium">{t.pharmacies.noPharmacies}</p>
+                  <p className="text-sm text-gray-500 mt-1">{t.pharmacies.adjustFilters}</p>
                 </div>
               )}
             </div>
@@ -718,3 +593,4 @@ export default function PharmaciesPage() {
     </div>
   );
 }
+

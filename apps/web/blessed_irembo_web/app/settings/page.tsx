@@ -15,10 +15,13 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 export default function SettingsPage() {
+    const { t } = useLanguage();
     const { loading } = useRequireAuth();
-    const { currentUser, signOut } = useAuth();
+    const { currentUser } = useAuth();
     const router = useRouter();
 
     // ─── Profile state ─────────────────────────────────────────────────────────
@@ -65,11 +68,6 @@ export default function SettingsPage() {
 
     // ─── Handlers ─────────────────────────────────────────────────────────────
 
-    const handleSignOut = async () => {
-        await signOut();
-        router.replace('/');
-    };
-
     const handleUpdateProfile = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!currentUser) return;
@@ -83,9 +81,9 @@ export default function SettingsPage() {
             });
             // Update Firebase Auth display name
             await updateProfile(currentUser, { displayName: profileFullName.trim() });
-            setProfileMessage({ type: 'success', text: 'Profile updated successfully.' });
+            setProfileMessage({ type: 'success', text: t.settings.profile.success });
         } catch {
-            setProfileMessage({ type: 'error', text: 'Failed to update profile. Please try again.' });
+            setProfileMessage({ type: 'error', text: t.settings.profile.error });
         } finally {
             setProfileLoading(false);
         }
@@ -96,11 +94,11 @@ export default function SettingsPage() {
         setPasswordMessage(null);
 
         if (newPassword.length < 6) {
-            setPasswordMessage({ type: 'error', text: 'New password must be at least 6 characters.' });
+            setPasswordMessage({ type: 'error', text: t.settings.password.errorMinLength });
             return;
         }
         if (newPassword !== confirmPassword) {
-            setPasswordMessage({ type: 'error', text: 'Passwords do not match.' });
+            setPasswordMessage({ type: 'error', text: t.settings.password.errorMismatch });
             return;
         }
         if (!currentUser?.email) return;
@@ -110,7 +108,7 @@ export default function SettingsPage() {
             const credential = EmailAuthProvider.credential(currentUser.email, currentPassword);
             await reauthenticateWithCredential(currentUser, credential);
             await updatePassword(currentUser, newPassword);
-            setPasswordMessage({ type: 'success', text: 'Password updated successfully.' });
+            setPasswordMessage({ type: 'success', text: t.settings.password.success });
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
@@ -118,13 +116,13 @@ export default function SettingsPage() {
             switch (error.code) {
                 case 'auth/wrong-password':
                 case 'auth/invalid-credential':
-                    setPasswordMessage({ type: 'error', text: 'Current password is incorrect.' });
+                    setPasswordMessage({ type: 'error', text: t.settings.password.errorIncorrect });
                     break;
                 case 'auth/too-many-requests':
-                    setPasswordMessage({ type: 'error', text: 'Too many attempts. Please try again later.' });
+                    setPasswordMessage({ type: 'error', text: t.login.errors.tooManyRequests });
                     break;
                 default:
-                    setPasswordMessage({ type: 'error', text: 'Something went wrong. Please try again.' });
+                    setPasswordMessage({ type: 'error', text: t.settings.password.errorGeneric });
             }
         } finally {
             setPasswordLoading(false);
@@ -148,13 +146,13 @@ export default function SettingsPage() {
             switch (error.code) {
                 case 'auth/wrong-password':
                 case 'auth/invalid-credential':
-                    setDeleteError('Password is incorrect.');
+                    setDeleteError(t.settings.delete.errorIncorrect);
                     break;
                 case 'auth/too-many-requests':
-                    setDeleteError('Too many attempts. Please try again later.');
+                    setDeleteError(t.login.errors.tooManyRequests);
                     break;
                 default:
-                    setDeleteError('Something went wrong. Please try again.');
+                    setDeleteError(t.settings.delete.errorGeneric);
             }
         } finally {
             setDeleteLoading(false);
@@ -171,29 +169,7 @@ export default function SettingsPage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200">
-                <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
-                        {/* Non-clickable logo */}
-                        <div className="flex items-center gap-2 cursor-default">
-                            <Image src="/logo1.png" alt="Blessed Irembo" width={40} height={40} className="object-contain" />
-                            <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <Link href="/pharmacies" className="text-sm font-medium text-gray-700 hover:text-teal-600 transition-colors">
-                                Find Pharmacies
-                            </Link>
-                            <button
-                                onClick={handleSignOut}
-                                className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors"
-                            >
-                                Log out
-                            </button>
-                        </div>
-                    </div>
-                </nav>
-            </header>
+            <Header />
 
             {/* Main Content */}
             <main className="max-w-2xl mx-auto px-4 py-12">
@@ -205,10 +181,10 @@ export default function SettingsPage() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
-                    Back to Pharmacies
+                    {t.profile.backToPharmacies}
                 </Link>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-8">Account Settings</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-8">{t.settings.title}</h1>
 
                 <div className="space-y-6">
 
@@ -221,8 +197,8 @@ export default function SettingsPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="font-semibold text-gray-900">Profile Information</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Update your name and phone number</p>
+                                <h2 className="font-semibold text-gray-900">{t.settings.profile.title}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{t.settings.profile.subtitle}</p>
                             </div>
                         </div>
 
@@ -237,7 +213,7 @@ export default function SettingsPage() {
 
                             <div>
                                 <label htmlFor="profile-name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Full Name
+                                    {t.settings.profile.fullName}
                                 </label>
                                 <input
                                     id="profile-name"
@@ -245,13 +221,13 @@ export default function SettingsPage() {
                                     value={profileFullName}
                                     onChange={(e) => setProfileFullName(e.target.value)}
                                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
-                                    placeholder="Your full name"
+                                    placeholder={t.settings.profile.fullNamePlaceholder}
                                 />
                             </div>
 
                             <div>
                                 <label htmlFor="profile-phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Phone Number
+                                    {t.settings.profile.phone}
                                 </label>
                                 <input
                                     id="profile-phone"
@@ -259,18 +235,18 @@ export default function SettingsPage() {
                                     value={profilePhone}
                                     onChange={(e) => setProfilePhone(e.target.value)}
                                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
-                                    placeholder="+250 7XX XXX XXX"
+                                    placeholder={t.settings.profile.phonePlaceholder}
                                 />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-medium text-gray-500 mb-1.5">
-                                    Email Address
+                                    {t.settings.profile.email}
                                 </label>
                                 <p className="block w-full px-3 py-2.5 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 text-sm">
                                     {currentUser?.email ?? '—'}
                                 </p>
-                                <p className="text-xs text-gray-400 mt-1">Email cannot be changed here.</p>
+                                <p className="text-xs text-gray-400 mt-1">{t.settings.profile.emailLocked}</p>
                             </div>
 
                             <button
@@ -278,7 +254,7 @@ export default function SettingsPage() {
                                 disabled={profileLoading}
                                 className="w-full py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                {profileLoading ? 'Saving...' : 'Save Profile'}
+                                {profileLoading ? t.settings.profile.saving : t.settings.profile.save}
                             </button>
                         </form>
                     </div>
@@ -292,8 +268,8 @@ export default function SettingsPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="font-semibold text-gray-900">Change Password</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Update your account password</p>
+                                <h2 className="font-semibold text-gray-900">{t.settings.password.title}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{t.settings.password.subtitle}</p>
                             </div>
                         </div>
 
@@ -308,7 +284,7 @@ export default function SettingsPage() {
 
                             <div>
                                 <label htmlFor="current-password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Current Password
+                                    {t.settings.password.current}
                                 </label>
                                 <input
                                     id="current-password"
@@ -317,13 +293,13 @@ export default function SettingsPage() {
                                     value={currentPassword}
                                     onChange={(e) => setCurrentPassword(e.target.value)}
                                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
-                                    placeholder="Enter current password"
+                                    placeholder={t.settings.password.currentPlaceholder}
                                 />
                             </div>
 
                             <div>
                                 <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    New Password
+                                    {t.settings.password.new}
                                 </label>
                                 <input
                                     id="new-password"
@@ -332,13 +308,13 @@ export default function SettingsPage() {
                                     value={newPassword}
                                     onChange={(e) => setNewPassword(e.target.value)}
                                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
-                                    placeholder="At least 6 characters"
+                                    placeholder={t.settings.password.newPlaceholder}
                                 />
                             </div>
 
                             <div>
                                 <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                                    Confirm New Password
+                                    {t.settings.password.confirm}
                                 </label>
                                 <input
                                     id="confirm-password"
@@ -347,7 +323,7 @@ export default function SettingsPage() {
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
-                                    placeholder="Repeat new password"
+                                    placeholder={t.settings.password.confirmPlaceholder}
                                 />
                             </div>
 
@@ -356,7 +332,7 @@ export default function SettingsPage() {
                                 disabled={passwordLoading}
                                 className="w-full py-2.5 bg-teal-600 text-white text-sm font-medium rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
-                                {passwordLoading ? 'Updating...' : 'Update Password'}
+                                {passwordLoading ? t.settings.password.updating : t.settings.password.update}
                             </button>
                         </form>
                     </div>
@@ -370,15 +346,15 @@ export default function SettingsPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="font-semibold text-gray-900">Notifications</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Manage how we contact you</p>
+                                <h2 className="font-semibold text-gray-900">{t.settings.notifications.title}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{t.settings.notifications.subtitle}</p>
                             </div>
                         </div>
                         <div className="px-6 py-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Push Notifications</p>
-                                    <p className="text-xs text-gray-500">Receive alerts on your device</p>
+                                    <p className="text-sm font-medium text-gray-900">{t.settings.notifications.push}</p>
+                                    <p className="text-xs text-gray-500">{t.settings.notifications.pushDesc}</p>
                                 </div>
                                 <button 
                                     onClick={() => setNotificationsEnabled(!notificationsEnabled)}
@@ -389,8 +365,8 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Email Alerts</p>
-                                    <p className="text-xs text-gray-500">Updates and promotional emails</p>
+                                    <p className="text-sm font-medium text-gray-900">{t.settings.notifications.email}</p>
+                                    <p className="text-xs text-gray-500">{t.settings.notifications.emailDesc}</p>
                                 </div>
                                 <button 
                                     onClick={() => setEmailAlerts(!emailAlerts)}
@@ -411,15 +387,15 @@ export default function SettingsPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="font-semibold text-gray-900">Location & Privacy</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Control your data and location access</p>
+                                <h2 className="font-semibold text-gray-900">{t.settings.privacy.title}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{t.settings.privacy.subtitle}</p>
                             </div>
                         </div>
                         <div className="px-6 py-6 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Location Services</p>
-                                    <p className="text-xs text-gray-500">Allow app to use your precise location</p>
+                                    <p className="text-sm font-medium text-gray-900">{t.settings.privacy.location}</p>
+                                    <p className="text-xs text-gray-500">{t.settings.privacy.locationDesc}</p>
                                 </div>
                                 <button 
                                     onClick={() => setLocationEnabled(!locationEnabled)}
@@ -430,8 +406,8 @@ export default function SettingsPage() {
                             </div>
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Analytics & Sharing</p>
-                                    <p className="text-xs text-gray-500">Help improve the platform with usage data</p>
+                                    <p className="text-sm font-medium text-gray-900">{t.settings.privacy.analytics}</p>
+                                    <p className="text-xs text-gray-500">{t.settings.privacy.analyticsDesc}</p>
                                 </div>
                                 <button 
                                     onClick={() => setDataSharing(!dataSharing)}
@@ -452,15 +428,15 @@ export default function SettingsPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="font-semibold text-gray-900">Appearance</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Customize your app interface</p>
+                                <h2 className="font-semibold text-gray-900">{t.settings.appearance.title}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{t.settings.appearance.subtitle}</p>
                             </div>
                         </div>
                         <div className="px-6 py-6">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-900">Dark Mode</p>
-                                    <p className="text-xs text-gray-500">Switch between light and dark themes</p>
+                                    <p className="text-sm font-medium text-gray-900">{t.settings.appearance.darkMode}</p>
+                                    <p className="text-xs text-gray-500">{t.settings.appearance.darkModeDesc}</p>
                                 </div>
                                 <button 
                                     onClick={() => setDarkMode(!darkMode)}
@@ -481,8 +457,8 @@ export default function SettingsPage() {
                                 </svg>
                             </div>
                             <div>
-                                <h2 className="font-semibold text-red-600">Delete Account</h2>
-                                <p className="text-xs text-gray-500 mt-0.5">Permanently remove your account and all data</p>
+                                <h2 className="font-semibold text-red-600">{t.settings.delete.title}</h2>
+                                <p className="text-xs text-gray-500 mt-0.5">{t.settings.delete.subtitle}</p>
                             </div>
                         </div>
 
@@ -490,19 +466,19 @@ export default function SettingsPage() {
                             {!showDeleteConfirm ? (
                                 <div className="flex items-center justify-between">
                                     <p className="text-sm text-gray-600">
-                                        Once deleted, your account cannot be recovered.
+                                        {t.settings.delete.warning}
                                     </p>
                                     <button
                                         onClick={() => setShowDeleteConfirm(true)}
                                         className="ml-4 px-4 py-2 border border-red-300 text-red-600 text-sm font-medium rounded-lg hover:bg-red-50 transition-colors shrink-0"
                                     >
-                                        Delete Account
+                                        {t.settings.delete.button}
                                     </button>
                                 </div>
                             ) : (
                                 <form onSubmit={handleDeleteAccount} className="space-y-4">
                                     <p className="text-sm text-gray-700 font-medium">
-                                        Please enter your password to confirm account deletion.
+                                        {t.settings.delete.confirmPrompt}
                                     </p>
                                     {deleteError && (
                                         <div className="px-4 py-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
@@ -515,7 +491,7 @@ export default function SettingsPage() {
                                         value={deletePassword}
                                         onChange={(e) => setDeletePassword(e.target.value)}
                                         className="block w-full px-3 py-2.5 border border-red-300 rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400 focus:border-red-400 text-sm"
-                                        placeholder="Enter your password"
+                                        placeholder={t.settings.delete.passwordPlaceholder}
                                     />
                                     <div className="flex gap-3">
                                         <button
@@ -523,14 +499,14 @@ export default function SettingsPage() {
                                             onClick={() => { setShowDeleteConfirm(false); setDeleteError(null); setDeletePassword(''); }}
                                             className="flex-1 py-2.5 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors"
                                         >
-                                            Cancel
+                                            {t.settings.delete.cancel}
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={deleteLoading}
                                             className="flex-1 py-2.5 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                                         >
-                                            {deleteLoading ? 'Deleting...' : 'Confirm Delete'}
+                                            {deleteLoading ? t.settings.delete.deleting : t.settings.delete.confirm}
                                         </button>
                                     </div>
                                 </form>
@@ -543,3 +519,4 @@ export default function SettingsPage() {
         </div>
     );
 }
+

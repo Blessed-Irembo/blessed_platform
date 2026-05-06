@@ -7,8 +7,11 @@ import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 export default function SignUpPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { signUp } = useAuth();
   const [registered, setRegistered] = useState(false);
@@ -39,26 +42,26 @@ export default function SignUpPage() {
     const newErrors: Record<string, string> = {};
 
     if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+      newErrors.fullName = t.signup.errors.fullNameRequired;
     }
     if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
+      newErrors.email = t.signup.errors.emailRequired;
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      newErrors.email = 'Email is invalid';
+      newErrors.email = t.signup.errors.emailInvalid;
     }
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
+      newErrors.phone = t.signup.errors.phoneRequired;
     }
     if (!formData.password) {
-      newErrors.password = 'Password is required';
+      newErrors.password = t.signup.errors.passwordRequired;
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+      newErrors.password = t.signup.errors.passwordMinLength;
     }
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+      newErrors.confirmPassword = t.signup.errors.passwordsMismatch;
     }
     if (!acceptTerms) {
-      newErrors.terms = 'You must accept the terms and conditions';
+      newErrors.terms = t.signup.errors.termsRequired;
     }
 
     setErrors(newErrors);
@@ -80,16 +83,16 @@ export default function SignUpPage() {
     } catch (error: any) {
       switch (error.code) {
         case 'auth/email-already-in-use':
-          setErrors({ email: 'An account with this email already exists. Try logging in.' });
+          setErrors({ email: t.signup.errors.emailInUse });
           break;
         case 'auth/weak-password':
-          setErrors({ password: 'Password is too weak. Use at least 6 characters.' });
+          setErrors({ password: t.signup.errors.weakPassword });
           break;
         case 'auth/invalid-email':
-          setErrors({ email: 'Please enter a valid email address.' });
+          setErrors({ email: t.signup.errors.invalidEmail });
           break;
         default:
-          setErrors({ general: 'Something went wrong. Please try again.' });
+          setErrors({ general: t.signup.errors.generic });
       }
     } finally {
       setIsSubmitting(false);
@@ -108,19 +111,19 @@ export default function SignUpPage() {
             </svg>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Account Created!</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.signup.successTitle}</h1>
           <p className="text-gray-500 text-sm mb-1">
             Welcome to Blessed Irembo.
           </p>
           <p className="text-gray-500 text-sm mb-8">
-            Your account has been created successfully. Please sign in to continue.
+            {t.signup.successDesc}
           </p>
 
           <Link
             href="/login"
             className="block w-full py-3 bg-teal-600 text-white font-semibold rounded-lg hover:bg-teal-700 transition-colors"
           >
-            Go to Login
+            {t.signup.loginLink}
           </Link>
         </div>
       </div>
@@ -130,19 +133,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Link href="/get-started" className="flex items-center text-gray-700 hover:text-teal-600 transition-colors">
-              <svg className="w-6 h-6 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <span className="text-lg font-semibold text-gray-900 mx-auto">Sign Up</span>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -157,8 +148,8 @@ export default function SignUpPage() {
               className="object-contain"
             />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Sign Up</h1>
-          <p className="text-lg text-gray-600">Create your account to get started</p>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">{t.signup.title}</h1>
+          <p className="text-lg text-gray-600">{t.signup.subtitle}</p>
         </div>
 
         {/* Sign Up Form */}
@@ -173,7 +164,7 @@ export default function SignUpPage() {
             )}
             {/* Full Name */}
             <div>
-              <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">Full Name</label>
+              <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-2">{t.signup.fullNameLabel}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -186,7 +177,7 @@ export default function SignUpPage() {
                   name="fullName"
                   value={formData.fullName}
                   onChange={handleInputChange}
-                  placeholder="Enter your full name"
+                  placeholder={t.signup.fullNamePlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.fullName ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -195,7 +186,7 @@ export default function SignUpPage() {
 
             {/* Phone Number */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">{t.signup.phoneLabel}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -208,7 +199,7 @@ export default function SignUpPage() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  placeholder="+250 788 123 456"
+                  placeholder={t.signup.phonePlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.phone ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -217,7 +208,7 @@ export default function SignUpPage() {
 
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">{t.signup.emailLabel}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -230,7 +221,7 @@ export default function SignUpPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  placeholder="your.email@example.com"
+                  placeholder={t.signup.emailPlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -239,7 +230,7 @@ export default function SignUpPage() {
 
             {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">{t.signup.passwordLabel}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -252,7 +243,7 @@ export default function SignUpPage() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  placeholder="Create secure password (min. 6 characters)"
+                  placeholder={t.signup.passwordPlaceholder}
                   className={`block w-full pl-14 pr-14 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
                 <button
@@ -274,7 +265,7 @@ export default function SignUpPage() {
 
             {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">{t.signup.confirmPasswordLabel}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -287,7 +278,7 @@ export default function SignUpPage() {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  placeholder="Re-enter your password"
+                  placeholder={t.signup.confirmPasswordPlaceholder}
                   className={`block w-full pl-14 pr-14 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
                 <button
@@ -321,9 +312,9 @@ export default function SignUpPage() {
                 />
               </button>
               <label className="text-base text-gray-700">
-                I accept the{' '}
+                {t.signup.acceptTerms}{' '}
                 <Link href="/terms" className="text-teal-600 hover:text-teal-700 font-semibold">
-                  Terms & Conditions
+                  {t.signup.termsLink}
                 </Link>
               </label>
             </div>
@@ -338,19 +329,19 @@ export default function SignUpPage() {
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Signing Up...
+                  {t.signup.submitting}
                 </span>
               ) : (
-                'Sign Up'
+                t.signup.submitButton
               )}
             </button>
           </form>
 
           {/* Sign In Link */}
           <p className="text-center mt-8 text-base text-gray-600">
-            Already have an account?{' '}
+            {t.signup.alreadyAccount}{' '}
             <Link href="/login" className="text-teal-600 hover:text-teal-700 font-semibold">
-              Sign In
+              {t.signup.signIn}
             </Link>
           </p>
         </div>

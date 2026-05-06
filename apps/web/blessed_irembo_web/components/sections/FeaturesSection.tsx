@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useLanguage } from '@/lib/LanguageContext';
 
 /**
  * Features Section Component
@@ -9,6 +10,7 @@ import { useState, useEffect } from 'react';
  * Blessed Irembo. Includes metrics and feature cards with icons.
  */
 export default function FeaturesSection() {
+  const { t } = useLanguage();
   const [pharmaciesCount, setPharmaciesCount] = useState<number | string>('...');
   const [usersCount, setUsersCount] = useState<number | string>('...');
   const [citiesCount, setCitiesCount] = useState<number | string>('...');
@@ -34,16 +36,16 @@ export default function FeaturesSection() {
   }, []);
 
   const stats = [
-    { label: 'Registered Pharmacies', value: `${pharmaciesCount}` },
-    { label: 'Active Users', value: `${usersCount}` },
-    { label: 'Cities/Districts Covered', value: `${citiesCount}` },
-    { label: 'Support Available', value: '24/7' }
+    { label: t.features.stats.pharmacies, value: `${pharmaciesCount}` },
+    { label: t.features.stats.users, value: `${usersCount}` },
+    { label: t.features.stats.cities, value: `${citiesCount}` },
+    { label: t.features.stats.support, value: '24/7' }
   ];
 
   const features = [
     {
-      title: 'Nationwide Coverage',
-      description: 'Access pharmacies across all provinces and districts in Rwanda',
+      title: t.features.f1.title,
+      description: t.features.f1.desc,
       icon: (
         <svg className="w-8 h-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
           <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -52,8 +54,8 @@ export default function FeaturesSection() {
       )
     },
     {
-      title: 'Verified Pharmacies',
-      description: 'All pharmacies are licensed and verified by health authorities',
+      title: t.features.f2.title,
+      description: t.features.f2.desc,
       icon: (
         <svg className="w-8 h-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
           <path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -61,8 +63,8 @@ export default function FeaturesSection() {
       )
     },
     {
-      title: '24/7 Availability',
-      description: 'Find pharmacies with emergency services and round-the-clock access',
+      title: t.features.f3.title,
+      description: t.features.f3.desc,
       icon: (
         <svg className="w-8 h-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
           <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -70,8 +72,8 @@ export default function FeaturesSection() {
       )
     },
     {
-      title: 'Quality Assured',
-      description: 'Connect with trusted pharmacies committed to quality healthcare',
+      title: t.features.f4.title,
+      description: t.features.f4.desc,
       icon: (
         <svg className="w-8 h-8" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
           <path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
@@ -86,10 +88,10 @@ export default function FeaturesSection() {
         {/* Section Header */}
         <div className="text-center mb-10">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3">
-            Why Choose Blessed Irembo?
+            {t.features.title}
           </h2>
           <p className="text-base text-gray-600 max-w-2xl mx-auto">
-            The most comprehensive pharmacy locator platform in Rwanda
+            {t.features.subtitle}
           </p>
         </div>
 
@@ -130,3 +132,4 @@ export default function FeaturesSection() {
     </section>
   );
 }
+

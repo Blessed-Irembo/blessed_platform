@@ -10,28 +10,24 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
 import PageTransition from '@/components/PageTransition';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 const PharmacyDetailMap = dynamic(() => import('@/components/PharmacyDetailMap'), {
   ssr: false,
-  loading: () => (
-    <div className="w-full h-64 rounded-xl bg-gray-100 animate-pulse flex items-center justify-center">
-      <div className="text-gray-400 text-sm">Loading map…</div>
-    </div>
-  ),
+  loading: () => {
+    const { t } = useLanguage();
+    return (
+      <div className="w-full h-64 rounded-xl bg-gray-100 animate-pulse flex items-center justify-center">
+        <div className="text-gray-400 text-sm">{t.common.loading}</div>
+      </div>
+    );
+  },
 });
 
-/**
- * Pharmacy Detail Page
- * 
- * Shows complete pharmacy information including:
- * - Full details and badges
- * - Location map with coordinates
- * - Inquiry form for contacting pharmacy
- */
-
-// Removed DEMO_PHARMACIES
 
 export default function PharmacyDetailPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const params = useParams();
   const { currentUser: user, loading: authLoading } = useRequireUserRole();
@@ -96,7 +92,7 @@ export default function PharmacyDetailPage() {
             verified: data.isVerified ?? false,
             is24_7: data.is24_7 ?? false,
             isPremium: data.isPremium ?? false,
-            description: data.description ?? 'A verified pharmacy on Blessed Irembo.',
+            description: data.description ?? t.pharmacyDetail.defaultDescription,
             latitude: data.latitude ?? 0,
             longitude: data.longitude ?? 0,
           });
@@ -127,10 +123,10 @@ export default function PharmacyDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Pharmacy Not Found</h1>
-          <p className="text-gray-600 mb-4">The pharmacy you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t.pharmacyDetail.notFound}</h1>
+          <p className="text-gray-600 mb-4">{t.pharmacyDetail.notFoundDesc}</p>
           <Link href="/pharmacies" className="text-teal-600 hover:text-teal-700 font-medium">
-            Back to Pharmacies
+            {t.pharmacyDetail.backToPharmacies}
           </Link>
         </div>
       </div>
@@ -141,25 +137,7 @@ export default function PharmacyDetailPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-gray-50">
-        {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="shrink-0">
-              <Link href="/" className="flex items-center gap-2">
-                <Image
-                  src="/logo1.png"
-                  alt="Blessed Irembo"
-                  width={40}
-                  height={40}
-                  className="object-contain"
-                />
-                <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+        <Header />
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -171,7 +149,7 @@ export default function PharmacyDetailPage() {
           <svg className="w-5 h-5 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
             <path d="M15 19l-7-7 7-7" />
           </svg>
-          Back
+          {t.pharmacyDetail.back}
         </button>
 
         {/* Pharmacy Details Card */}
@@ -185,7 +163,7 @@ export default function PharmacyDetailPage() {
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                Verified
+                {t.pharmacyDetail.verified}
               </span>
             )}
             {pharmacy.is24_7 && (
@@ -193,12 +171,12 @@ export default function PharmacyDetailPage() {
                 <svg className="w-4 h-4 mr-1" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                   <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                24/7 Available
+                {t.pharmacyDetail.available247}
               </span>
             )}
             {pharmacy.isPremium && (
               <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-white text-blue-600 border-2 border-blue-600">
-                Premium Member
+                {t.pharmacyDetail.premiumMember}
               </span>
             )}
           </div>
@@ -215,7 +193,7 @@ export default function PharmacyDetailPage() {
               <svg className="w-5 h-5 mr-3 text-teal-600" fill="none" strokeWidth="2" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
               </svg>
-              Call Pharmacy
+              {t.pharmacyDetail.callPharmacy}
             </a>
             <a
               href={`https://wa.me/${pharmacy.phone.replace(/\D/g, '')}?text=${encodeURIComponent('Hello, I found your pharmacy via the Blessed Irembo platform.')}`}
@@ -229,7 +207,7 @@ export default function PharmacyDetailPage() {
               <svg className="w-5 h-5 mr-3 text-white" fill="currentColor" viewBox="0 0 24 24">
                  <path fillRule="evenodd" clipRule="evenodd" d="M2.004 22l1.352-4.968A9.992 9.992 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10a9.989 9.989 0 01-5.02-1.341L2.004 22zm10-18.3A8.309 8.309 0 003.7 12c0 1.458.375 2.874 1.085 4.108l-.87 3.2 3.275-.86A8.286 8.309 0 0012 20.3c4.586 0 8.3-3.714 8.3-8.3S16.586 3.7 12 3.7zm4.27 11.517c-.234-.117-1.385-.685-1.599-.763-.214-.078-.37-.117-.526.117-.156.234-.606.763-.742.92-.136.156-.273.175-.507.058-.234-.117-.988-.363-1.882-1.026-.694-.515-1.163-1.15-1.3-1.384-.136-.234-.015-.36.102-.477.105-.105.234-.273.351-.409.117-.136.156-.234.234-.39.078-.156.039-.293-.02-.409-.058-.117-.526-1.27-.721-1.74-.191-.46-.386-.398-.526-.405-.136-.007-.292-.007-.448-.007s-.409.058-.624.293c-.214.234-.818.8-.818 1.95s.838 2.264.954 2.42c.117.156 1.652 2.52 3.998 3.513 1.956.826 2.535.79 3.003.738.537-.06 1.385-.566 1.58-1.112.195-.546.195-1.015.136-1.112-.058-.098-.214-.156-.448-.273z" />
               </svg>
-              Chat on WhatsApp
+              {t.pharmacyDetail.chatWhatsApp}
             </a>
           </div>
 
@@ -244,7 +222,7 @@ export default function PharmacyDetailPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <div className="text-sm font-medium text-gray-500">Address</div>
+                <div className="text-sm font-medium text-gray-500">{t.pharmacyDetail.address}</div>
                 <div className="text-gray-900 font-medium">{pharmacy.address}</div>
               </div>
             </div>
@@ -257,7 +235,7 @@ export default function PharmacyDetailPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <div className="text-sm font-medium text-gray-500">Phone</div>
+                <div className="text-sm font-medium text-gray-500">{t.pharmacyDetail.phone}</div>
                 <div className="text-gray-900 font-medium">{pharmacy.phone}</div>
               </div>
             </div>
@@ -270,7 +248,7 @@ export default function PharmacyDetailPage() {
                 </svg>
               </div>
               <div className="ml-4">
-                <div className="text-sm font-medium text-gray-500">Email</div>
+                <div className="text-sm font-medium text-gray-500">{t.pharmacyDetail.email}</div>
                 <div className="text-gray-900 font-medium">{pharmacy.email}</div>
               </div>
             </div>
@@ -283,7 +261,7 @@ export default function PharmacyDetailPage() {
                 </svg>
               </div>
               <div className="ml-4 flex-1">
-                <div className="text-sm font-medium text-gray-500 mb-1">Hours</div>
+                <div className="text-sm font-medium text-gray-500 mb-1">{t.pharmacyDetail.hours}</div>
 
                 {/* Trigger row */}
                 <button
@@ -297,7 +275,7 @@ export default function PharmacyDetailPage() {
                     <span className={`w-2 h-2 rounded-full ${
                       pharmacy.isOpen ? 'bg-green-500' : 'bg-red-500'
                     }`} />
-                    {pharmacy.isOpen ? 'Open now' : 'Closed now'}
+                    {pharmacy.isOpen ? t.pharmacyDetail.openNow : t.pharmacyDetail.closedNow}
                   </span>
 
                   {/* Summary */}
@@ -318,45 +296,52 @@ export default function PharmacyDetailPage() {
                 {/* Expanded day-by-day schedule */}
                 {hoursExpanded && (() => {
                   const oh = pharmacy.operatingHours;
-                  const ALL_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
-                  const todayName = ALL_DAYS[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
+                  const ALL_DAYS_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+                  const ALL_DAYS_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+                  const todayName = ALL_DAYS_NAMES[new Date().getDay() === 0 ? 6 : new Date().getDay() - 1];
 
                   if (!oh) return (
-                    <p className="mt-2 text-sm text-gray-500 italic">Hours not specified</p>
+                    <p className="mt-2 text-sm text-gray-500 italic">{t.pharmacyDetail.hoursNotSpecified}</p>
                   );
 
                   if (oh.is24Hours) return (
                     <div className="mt-3 rounded-lg border border-gray-100 overflow-hidden">
-                      {ALL_DAYS.map((day) => (
-                        <div
-                          key={day}
-                          className={`flex justify-between items-center px-3 py-2 text-sm ${
-                            day === todayName ? 'bg-teal-50 font-semibold' : 'bg-white'
-                          } ${ day !== 'Sunday' ? 'border-b border-gray-100' : ''}`}
-                        >
-                          <span className={day === todayName ? 'text-teal-700' : 'text-gray-700'}>{day}</span>
-                          <span className={day === todayName ? 'text-teal-600' : 'text-gray-500'}>Open 24 hours</span>
-                        </div>
-                      ))}
+                      {ALL_DAYS_KEYS.map((dayKey, index) => {
+                        const dayName = ALL_DAYS_NAMES[index];
+                        const displayDay = (t.pharmacyDetail.days as any)[dayKey];
+                        return (
+                          <div
+                            key={dayKey}
+                            className={`flex justify-between items-center px-3 py-2 text-sm ${
+                              dayName === todayName ? 'bg-teal-50 font-semibold' : 'bg-white'
+                            } ${ index !== 6 ? 'border-b border-gray-100' : ''}`}
+                          >
+                            <span className={dayName === todayName ? 'text-teal-700' : 'text-gray-700'}>{displayDay}</span>
+                            <span className={dayName === todayName ? 'text-teal-600' : 'text-gray-500'}>{t.pharmacyDetail.available247}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   );
 
                   const openDays: string[] = Array.isArray(oh.days) ? oh.days : [];
                   return (
                     <div className="mt-3 rounded-lg border border-gray-100 overflow-hidden">
-                      {ALL_DAYS.map((day) => {
-                        const isToday = day === todayName;
-                        const isOpen = openDays.includes(day);
+                      {ALL_DAYS_KEYS.map((dayKey, index) => {
+                        const dayName = ALL_DAYS_NAMES[index];
+                        const displayDay = (t.pharmacyDetail.days as any)[dayKey];
+                        const isToday = dayName === todayName;
+                        const isOpen = openDays.includes(dayName);
                         return (
                           <div
-                            key={day}
+                            key={dayKey}
                             className={`flex justify-between items-center px-3 py-2 text-sm border-b border-gray-100 last:border-0 ${
                               isToday ? 'bg-teal-50' : 'bg-white'
                             }`}
                           >
                             <span className={`${
                               isToday ? 'font-semibold text-teal-700' : 'text-gray-700'
-                            }`}>{day}</span>
+                            }`}>{displayDay}</span>
                             <span className={`${
                               isToday
                                 ? isOpen ? 'text-teal-600 font-semibold' : 'text-red-500 font-semibold'
@@ -364,7 +349,7 @@ export default function PharmacyDetailPage() {
                             }`}>
                               {isOpen
                                 ? `${oh.openTime || '?'} – ${oh.closeTime || '?'}`
-                                : 'Closed'
+                                : t.pharmacyDetail.closedNow.replace(' now', '') // Simple 'Closed'
                               }
                             </span>
                           </div>
@@ -382,7 +367,7 @@ export default function PharmacyDetailPage() {
         <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden mb-6">
           {/* Header bar */}
           <div className="px-6 md:px-8 pt-6 pb-4 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-gray-900">Location</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t.pharmacyDetail.location}</h2>
             <span className="text-xs font-mono text-gray-400">
               {pharmacy.latitude.toFixed(4)}, {pharmacy.longitude.toFixed(4)}
             </span>
@@ -418,14 +403,14 @@ export default function PharmacyDetailPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                     </svg>
-                    Getting your location…
+                    {t.pharmacyDetail.gettingLocation}
                   </>
                 ) : (
                   <>
                     <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
                       <path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
-                    Get Directions
+                    {t.pharmacyDetail.getDirections}
                   </>
                 )}
               </button>
@@ -434,7 +419,7 @@ export default function PharmacyDetailPage() {
             {/* Geolocation error */}
             {geoStatus === 'error' && (
               <p className="text-red-500 text-sm text-center">
-                Location access denied. Please enable location in your browser settings.
+                {t.pharmacies.locationDenied}
               </p>
             )}
 
@@ -444,11 +429,11 @@ export default function PharmacyDetailPage() {
                 {/* Summary row */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex-1 bg-teal-50 border border-teal-100 rounded-xl px-4 py-3 text-center">
-                    <div className="text-xs text-teal-600 font-medium mb-0.5">Duration</div>
+                    <div className="text-xs text-teal-600 font-medium mb-0.5">{t.pharmacyDetail.duration}</div>
                     <div className="text-lg font-bold text-teal-700">{directions.duration}</div>
                   </div>
                   <div className="flex-1 bg-gray-50 border border-gray-100 rounded-xl px-4 py-3 text-center">
-                    <div className="text-xs text-gray-500 font-medium mb-0.5">Distance</div>
+                    <div className="text-xs text-gray-500 font-medium mb-0.5">{t.pharmacyDetail.distance}</div>
                     <div className="text-lg font-bold text-gray-700">{directions.distance}</div>
                   </div>
                   <button
@@ -488,7 +473,7 @@ export default function PharmacyDetailPage() {
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                 </svg>
-                Calculating route…
+                {t.pharmacyDetail.calculatingRoute}
               </div>
             )}
           </div>
@@ -498,3 +483,4 @@ export default function PharmacyDetailPage() {
     </PageTransition>
   );
 }
+

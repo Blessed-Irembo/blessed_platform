@@ -8,10 +8,13 @@ import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 export default function UserProfilePage() {
+    const { t } = useLanguage();
     const { loading } = useRequireAuth();
-    const { currentUser, signOut } = useAuth();
+    const { currentUser } = useAuth();
     const router = useRouter();
 
     const [userPhone, setUserPhone] = useState('');
@@ -34,11 +37,6 @@ export default function UserProfilePage() {
         loadProfile();
     }, [currentUser]);
 
-    const handleSignOut = async () => {
-        await signOut();
-        router.replace('/');
-    };
-
     if (loading || profileLoading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -58,25 +56,7 @@ export default function UserProfilePage() {
 
     return (
         <div className="min-h-screen bg-gray-50">
-            {/* Header */}
-            <header className="bg-white border-b border-gray-200">
-                <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex justify-between items-center h-16">
-                        <div className="flex items-center gap-2 cursor-default">
-                            <Image src="/logo1.png" alt="Blessed Irembo" width={40} height={40} className="object-contain" />
-                            <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-                        </div>
-                        <div className="flex items-center gap-6">
-                            <Link href="/pharmacies" className="text-sm font-medium text-gray-700 hover:text-teal-600 transition-colors">
-                                Find Pharmacies
-                            </Link>
-                            <button onClick={handleSignOut} className="text-sm font-medium text-red-600 hover:text-red-700 transition-colors">
-                                Log out
-                            </button>
-                        </div>
-                    </div>
-                </nav>
-            </header>
+            <Header />
 
             {/* Main Content */}
             <main className="max-w-2xl mx-auto px-4 py-12">
@@ -87,7 +67,7 @@ export default function UserProfilePage() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                     </svg>
-                    Back to Pharmacies
+                    {t.profile.backToPharmacies}
                 </Link>
 
                 {/* Profile Card */}
@@ -125,7 +105,7 @@ export default function UserProfilePage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Full Name</p>
+                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.profile.fullName}</p>
                                 <p className="text-gray-900 font-medium">{displayName}</p>
                             </div>
                         </div>
@@ -140,7 +120,7 @@ export default function UserProfilePage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Email Address</p>
+                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.profile.email}</p>
                                 <p className="text-gray-900 font-medium">{email}</p>
                             </div>
                         </div>
@@ -155,9 +135,9 @@ export default function UserProfilePage() {
                                 </svg>
                             </div>
                             <div>
-                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Phone Number</p>
+                                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.profile.phone}</p>
                                 <p className={`font-medium ${userPhone ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                                    {userPhone || 'Not provided'}
+                                    {userPhone || t.profile.notProvided}
                                 </p>
                             </div>
                         </div>
@@ -173,7 +153,7 @@ export default function UserProfilePage() {
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            Settings
+                            {t.profile.settings}
                         </Link>
                     </div>
                 </div>
@@ -181,3 +161,4 @@ export default function UserProfilePage() {
         </div>
     );
 }
+

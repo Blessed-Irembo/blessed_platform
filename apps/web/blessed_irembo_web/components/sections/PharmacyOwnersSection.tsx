@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/LanguageContext';
 
 /**
  * Pharmacy Owners Section Component
@@ -8,18 +9,19 @@ import Image from 'next/image';
  * of joining the platform with a call-to-action for registration.
  */
 export default function PharmacyOwnersSection() {
+  const { t } = useLanguage();
   const benefits = [
     {
-      title: '3-Month Free Trial',
-      description: 'Get started with no upfront costs'
+      title: t.owners.b1.title,
+      description: t.owners.b1.desc
     },
     {
-      title: 'Increased Visibility',
-      description: 'Reach customers across Rwanda'
+      title: t.owners.b2.title,
+      description: t.owners.b2.desc
     },
     {
-      title: 'Direct Customer Inquiries',
-      description: 'Manage all customer questions in one place'
+      title: t.owners.b3.title,
+      description: t.owners.b3.desc
     }
   ];
 
@@ -40,12 +42,11 @@ export default function PharmacyOwnersSection() {
           {/* Right Column - Content */}
           <div className="space-y-6 order-1 md:order-2">
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
-              For Pharmacy Owners
+              {t.owners.title}
             </h2>
             
             <p className="text-lg text-gray-600 leading-relaxed">
-              Join Rwanda&apos;s leading pharmacy network and connect with customers 
-              looking for your services.
+              {t.owners.subtitle}
             </p>
 
             {/* Benefits List */}
@@ -85,7 +86,7 @@ export default function PharmacyOwnersSection() {
                 href="/register-pharmacy"
                 className="inline-flex items-center bg-teal-600 text-white px-6 py-3 rounded-md font-medium hover:bg-teal-700 transition-colors"
               >
-                Register Your Pharmacy
+                {t.owners.cta}
                 <svg 
                   className="w-5 h-5 ml-2" 
                   fill="none" 
@@ -105,3 +106,4 @@ export default function PharmacyOwnersSection() {
     </section>
   );
 }
+

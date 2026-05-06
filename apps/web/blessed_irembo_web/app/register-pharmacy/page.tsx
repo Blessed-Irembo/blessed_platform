@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
+import { useLanguage } from '@/lib/LanguageContext';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
 
 /**
  * Pharmacy Registration Page
@@ -14,6 +16,7 @@ import { useAuth } from '@/lib/AuthContext';
  * official December 2025 list. Only verified pharmacies may sign up.
  */
 export default function RegisterPharmacyPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { signUpPharmacy, verifyLicenseNumber } = useAuth();
 
@@ -61,13 +64,13 @@ export default function RegisterPharmacyPage() {
         setLocationStatus('error');
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            setLocationError('Location access denied. Please allow location access in your browser settings.');
+            setLocationError(t.pharmacies.locationDenied);
             break;
           case err.POSITION_UNAVAILABLE:
-            setLocationError('Location unavailable. Please try again.');
+            setLocationError(t.pharmacies.locationUnavailable);
             break;
           default:
-            setLocationError('Could not get your location. Please try again.');
+            setLocationError(t.pharmacies.locationUnable);
         }
       },
       { enableHighAccuracy: true, timeout: 10000 }
@@ -123,37 +126,37 @@ export default function RegisterPharmacyPage() {
   const validate = () => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.pharmacyName.trim()) newErrors.pharmacyName = 'Pharmacy name is required';
-    if (!formData.ownerName.trim()) newErrors.ownerName = 'Owner name is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email is invalid';
-    if (!formData.phone.trim()) newErrors.phone = 'Phone number is required';
-    if (!formData.address.trim()) newErrors.address = 'Physical address is required';
+    if (!formData.pharmacyName.trim()) newErrors.pharmacyName = t.registerPharmacy.errors.pharmacyNameRequired;
+    if (!formData.ownerName.trim()) newErrors.ownerName = t.registerPharmacy.errors.ownerNameRequired;
+    if (!formData.email.trim()) newErrors.email = t.registerPharmacy.errors.emailRequired;
+    else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = t.registerPharmacy.errors.emailInvalid;
+    if (!formData.phone.trim()) newErrors.phone = t.registerPharmacy.errors.phoneRequired;
+    if (!formData.address.trim()) newErrors.address = t.registerPharmacy.errors.addressRequired;
     
     if (!formData.is24Hours) {
-      if (!formData.openTime) newErrors.openTime = 'Opening time required';
-      if (!formData.closeTime) newErrors.closeTime = 'Closing time required';
+      if (!formData.openTime) newErrors.openTime = t.registerPharmacy.errors.openTimeRequired;
+      if (!formData.closeTime) newErrors.closeTime = t.registerPharmacy.errors.closeTimeRequired;
     }
 
     if (!location && locationTab !== 'description') {
       newErrors.location = locationTab === 'gps'
-        ? 'Click "Use My Location" to capture your GPS coordinates.'
-        : 'Enter valid latitude and longitude coordinates.';
+        ? t.registerPharmacy.errors.locationRequired
+        : t.registerPharmacy.errors.locationRequiredManual;
     }
 
     if (!formData.registrationNumber.trim()) {
-      newErrors.registrationNumber = 'Council registration number is required';
+      newErrors.registrationNumber = t.registerPharmacy.errors.registrationNumberRequired;
     } else if (licenseStatus === 'invalid') {
-      newErrors.registrationNumber = 'Not found in the Rwanda FDA licensed pharmacy list';
+      newErrors.registrationNumber = t.registerPharmacy.errors.registrationNumberNotFound;
     } else if (licenseStatus === 'already_taken') {
-      newErrors.registrationNumber = 'This pharmacy is already registered on Blessed Irembo';
+      newErrors.registrationNumber = t.registerPharmacy.errors.registrationNumberTaken;
     } else if (licenseStatus === 'checking') {
-      newErrors.registrationNumber = 'Still verifying — please wait a moment';
+      newErrors.registrationNumber = t.registerPharmacy.errors.registrationNumberChecking;
     }
 
-    if (!formData.password) newErrors.password = 'Password is required';
-    else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
+    if (!formData.password) newErrors.password = t.registerPharmacy.errors.passwordRequired;
+    else if (formData.password.length < 6) newErrors.password = t.registerPharmacy.errors.passwordMinLength;
+    if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = t.registerPharmacy.errors.passwordsMismatch;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -186,15 +189,15 @@ export default function RegisterPharmacyPage() {
     } catch (error: any) {
       const msg: string = error.message ?? '';
       if (msg.includes('INVALID_LICENSE')) {
-        setErrors({ registrationNumber: 'Registration number not found in the licensed pharmacy list.' });
+        setErrors({ registrationNumber: t.registerPharmacy.errors.registrationNumberNotFound });
       } else if (msg.includes('ALREADY_REGISTERED')) {
-        setErrors({ registrationNumber: 'This pharmacy is already registered on Blessed Irembo.' });
+        setErrors({ registrationNumber: t.registerPharmacy.errors.registrationNumberTaken });
       } else if (error.code === 'auth/email-already-in-use') {
-        setErrors({ email: 'An account with this email already exists.' });
+        setErrors({ email: t.signup.errors.emailInUse });
       } else if (error.code === 'auth/weak-password') {
-        setErrors({ password: 'Password is too weak. Use at least 6 characters.' });
+        setErrors({ password: t.signup.errors.weakPassword });
       } else {
-        setErrors({ general: 'Something went wrong. Please try again.' });
+        setErrors({ general: t.registerPharmacy.errors.generic });
       }
       setIsSubmitting(false);
     }
@@ -209,7 +212,7 @@ export default function RegisterPharmacyPage() {
       return (
         <p className="mt-2 text-sm text-gray-500 flex items-center gap-1">
           <span className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin inline-block" />
-          Checking…
+          {t.registerPharmacy.status.checking}
         </p>
       );
     }
@@ -219,7 +222,7 @@ export default function RegisterPharmacyPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
           </svg>
-          Verified: <span className="ml-1 font-semibold">{licensedName}</span>
+          {t.registerPharmacy.status.verified}: <span className="ml-1 font-semibold">{licensedName}</span>
         </p>
       );
     }
@@ -229,7 +232,7 @@ export default function RegisterPharmacyPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
-          Already registered — <Link href="/login" className="underline">sign in instead</Link>
+          {t.registerPharmacy.status.alreadyRegistered} — <Link href="/login" className="underline">{t.registerPharmacy.signIn}</Link>
         </p>
       );
     }
@@ -238,7 +241,7 @@ export default function RegisterPharmacyPage() {
         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
-        Not found in the Rwanda FDA licensed list
+        {t.registerPharmacy.status.notFound}
       </p>
     );
   };
@@ -249,13 +252,16 @@ export default function RegisterPharmacyPage() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <nav className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <Link href="/get-started" className="flex items-center text-gray-700 hover:text-teal-600 transition-colors">
-              <svg className="w-6 h-6 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M15 19l-7-7 7-7" />
-              </svg>
-            </Link>
-            <span className="text-lg font-semibold text-gray-900 mx-auto">Register Pharmacy</span>
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center">
+              <Link href="/get-started" className="flex items-center text-gray-700 hover:text-teal-600 transition-colors">
+                <svg className="w-6 h-6 mr-2" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                  <path d="M15 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <span className="text-lg font-semibold text-gray-900">{t.registerPharmacy.title}</span>
+            </div>
+            <LanguageSwitcher />
           </div>
         </nav>
       </header>
@@ -266,10 +272,10 @@ export default function RegisterPharmacyPage() {
           <div className="flex justify-center mb-6">
             <Image src="/logo1.png" alt="Blessed Irembo" width={80} height={80} className="object-contain" />
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-3">Register Pharmacy</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-3">{t.registerPharmacy.title}</h1>
           <p className="text-gray-600">
-            Your council registration number is verified against the{' '}
-            <span className="font-medium text-teal-700">Rwanda FDA December 2025</span> licensed list.
+            {t.registerPharmacy.subtitle}{' '}
+            <span className="font-medium text-teal-700">{t.registerPharmacy.fdaList}</span>
           </p>
         </div>
 
@@ -285,10 +291,10 @@ export default function RegisterPharmacyPage() {
             {/* ── Council Registration Number (most important — put first) ── */}
             <div>
               <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                Council Registration Number <span className="text-teal-600">*</span>
+                {t.registerPharmacy.labels.registrationNumber} <span className="text-teal-600">*</span>
               </label>
               <p className="text-xs text-gray-500 mb-2">
-                Format: <code className="bg-gray-100 px-1 rounded">NPC/A0000</code> — as issued by Rwanda FDA
+                {t.registerPharmacy.labels.registrationNumberHint}
               </p>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
@@ -302,7 +308,7 @@ export default function RegisterPharmacyPage() {
                   name="registrationNumber"
                   value={formData.registrationNumber}
                   onChange={handleChange}
-                  placeholder="NPC/A0000"
+                  placeholder={t.registerPharmacy.labels.registrationNumberPlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border uppercase font-mono ${licenseStatus === 'valid'
                       ? 'border-green-400 bg-green-50'
                       : licenseStatus === 'invalid' || licenseStatus === 'already_taken'
@@ -321,7 +327,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Pharmacy Name ── */}
             <div>
-              <label htmlFor="pharmacyName" className="block text-sm font-semibold text-gray-700 mb-2">Pharmacy Name</label>
+              <label htmlFor="pharmacyName" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.pharmacyName}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -331,7 +337,7 @@ export default function RegisterPharmacyPage() {
                 <input
                   type="text" id="pharmacyName" name="pharmacyName"
                   value={formData.pharmacyName} onChange={handleChange}
-                  placeholder="Enter pharmacy name"
+                  placeholder={t.registerPharmacy.labels.pharmacyNamePlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.pharmacyName ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -340,7 +346,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Owner Name ── */}
             <div>
-              <label htmlFor="ownerName" className="block text-sm font-semibold text-gray-700 mb-2">Owner / Responsible Person</label>
+              <label htmlFor="ownerName" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.ownerName}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -350,7 +356,7 @@ export default function RegisterPharmacyPage() {
                 <input
                   type="text" id="ownerName" name="ownerName"
                   value={formData.ownerName} onChange={handleChange}
-                  placeholder="Enter owner full name"
+                  placeholder={t.registerPharmacy.labels.ownerNamePlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.ownerName ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -359,7 +365,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Phone ── */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
+              <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.phone}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -369,7 +375,7 @@ export default function RegisterPharmacyPage() {
                 <input
                   type="tel" id="phone" name="phone"
                   value={formData.phone} onChange={handleChange}
-                  placeholder="+250 788 123 456"
+                  placeholder={t.registerPharmacy.labels.phonePlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.phone ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -378,7 +384,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Email ── */}
             <div>
-              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
+              <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.email}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -388,7 +394,7 @@ export default function RegisterPharmacyPage() {
                 <input
                   type="email" id="email" name="email"
                   value={formData.email} onChange={handleChange}
-                  placeholder="pharmacy@example.com"
+                  placeholder={t.registerPharmacy.labels.emailPlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.email ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -397,7 +403,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Address ── */}
             <div>
-              <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">Physical Address</label>
+              <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.address}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -408,7 +414,7 @@ export default function RegisterPharmacyPage() {
                 <input
                   type="text" id="address" name="address"
                   value={formData.address} onChange={handleChange}
-                  placeholder="Enter full address including district"
+                  placeholder={t.registerPharmacy.labels.addressPlaceholder}
                   className={`block w-full pl-14 pr-4 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.address ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
               </div>
@@ -417,7 +423,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Operating Hours ── */}
             <div className="border-t border-gray-100 pt-6 mt-6 mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-3">Operating Hours <span className="text-teal-600">*</span></label>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">{t.registerPharmacy.labels.operatingHours} <span className="text-teal-600">*</span></label>
               
               <div className="flex items-center mb-4">
                 <input
@@ -429,27 +435,27 @@ export default function RegisterPharmacyPage() {
                   className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded cursor-pointer"
                 />
                 <label htmlFor="is24Hours" className="ml-2 block text-sm text-gray-900 cursor-pointer">
-                  Open 24/7 (Always open)
+                  {t.registerPharmacy.labels.is24Hours}
                 </label>
               </div>
 
               {!formData.is24Hours && (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-gray-50 p-4 rounded-lg border border-gray-200">
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Days Open</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">{t.registerPharmacy.labels.daysOpen}</label>
                     <select
                       name="operatingDays"
                       value={formData.operatingDays}
                       onChange={handleChange}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500"
                     >
-                      <option value="Everyday">Everyday (Mon-Sun)</option>
-                      <option value="Monday - Friday">Monday - Friday</option>
-                      <option value="Monday - Saturday">Monday - Saturday</option>
+                      <option value="Everyday">{t.pharmacyDetail.days.monday}-{t.pharmacyDetail.days.sunday}</option>
+                      <option value="Monday - Friday">{t.pharmacyDetail.days.monday} - {t.pharmacyDetail.days.friday}</option>
+                      <option value="Monday - Saturday">{t.pharmacyDetail.days.monday} - {t.pharmacyDetail.days.saturday}</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Opening Time</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">{t.registerPharmacy.labels.openingTime}</label>
                     <input
                       type="time"
                       name="openTime"
@@ -460,7 +466,7 @@ export default function RegisterPharmacyPage() {
                     {errors.openTime && <p className="mt-1 text-xs text-red-600">{errors.openTime}</p>}
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Closing Time</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">{t.registerPharmacy.labels.closingTime}</label>
                     <input
                       type="time"
                       name="closeTime"
@@ -477,10 +483,10 @@ export default function RegisterPharmacyPage() {
             {/* ── Location (3-way picker) ── */}
             <div>
               <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Pharmacy Location on Map <span className="text-teal-600">*</span>
+                {t.registerPharmacy.labels.location} <span className="text-teal-600">*</span>
               </label>
               <p className="text-xs text-gray-500 mb-3">
-                Choose how to set your pharmacy's position on the map. At least one method is required.
+                {t.registerPharmacy.labels.locationHint}
               </p>
 
               {/* Tab switcher */}
@@ -495,9 +501,9 @@ export default function RegisterPharmacyPage() {
                         : 'bg-white text-gray-600 hover:bg-gray-50'
                       }`}
                   >
-                    {tab === 'gps' && '📍 Use My Location'}
-                    {tab === 'coordinates' && '🗺️ Enter Coordinates'}
-                    {tab === 'description' && '✏️ Description Only'}
+                    {tab === 'gps' && `📍 ${t.registerPharmacy.labels.gpsTab}`}
+                    {tab === 'coordinates' && `🗺️ ${t.registerPharmacy.labels.manualTab}`}
+                    {tab === 'description' && `✏️ ${t.registerPharmacy.labels.descriptionTab}`}
                   </button>
                 ))}
               </div>
@@ -506,7 +512,7 @@ export default function RegisterPharmacyPage() {
               {locationTab === 'gps' && (
                 <div className="space-y-3">
                   <p className="text-xs text-gray-500">
-                    Best accuracy. Open this page <strong>while physically at the pharmacy</strong> and click below.
+                    {t.registerPharmacy.labels.gpsHint}
                   </p>
                   <button
                     type="button"
@@ -520,18 +526,18 @@ export default function RegisterPharmacyPage() {
                       } disabled:opacity-60`}
                   >
                     {locationStatus === 'locating' ? (
-                      <><span className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />Getting your location…</>
+                      <><span className="w-4 h-4 border-2 border-teal-600 border-t-transparent rounded-full animate-spin" />{t.registerPharmacy.labels.gpsLocating}</>
                     ) : locationStatus === 'success' ? (
-                      <><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>Location captured — click to update</>
+                      <><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>{t.registerPharmacy.labels.gpsSuccess}</>
                     ) : (
-                      <><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>Use My Location</>
+                      <><svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>{t.registerPharmacy.labels.gpsButton}</>
                     )}
                   </button>
                   {locationStatus === 'success' && location && (
                     <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 flex items-center gap-3">
                       <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
                       <div>
-                        <p className="text-sm font-semibold text-green-800">Location captured</p>
+                        <p className="text-sm font-semibold text-green-800">{t.registerPharmacy.labels.gpsCaptured}</p>
                         <p className="text-xs text-green-600 font-mono">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</p>
                       </div>
                     </div>
@@ -546,11 +552,11 @@ export default function RegisterPharmacyPage() {
               {locationTab === 'coordinates' && (
                 <div className="space-y-3">
                   <p className="text-xs text-gray-500">
-                    Open <strong>Google Maps</strong>, right-click your pharmacy → copy the coordinates shown, and paste them below.
+                    {t.registerPharmacy.labels.manualHint}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Latitude</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{t.registerPharmacy.labels.latitude}</label>
                       <input
                         type="number"
                         step="any"
@@ -567,7 +573,7 @@ export default function RegisterPharmacyPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Longitude</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">{t.registerPharmacy.labels.longitude}</label>
                       <input
                         type="number"
                         step="any"
@@ -587,7 +593,7 @@ export default function RegisterPharmacyPage() {
                   {location && locationTab === 'coordinates' && (
                     <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 flex items-center gap-3">
                       <svg className="w-5 h-5 text-green-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      <p className="text-sm font-semibold text-green-800">Coordinates set: <span className="font-mono font-normal">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</span></p>
+                      <p className="text-sm font-semibold text-green-800">{t.registerPharmacy.labels.coordinatesSet}: <span className="font-mono font-normal">{location.lat.toFixed(6)}, {location.lng.toFixed(6)}</span></p>
                     </div>
                   )}
                   <a
@@ -597,7 +603,7 @@ export default function RegisterPharmacyPage() {
                     className="inline-flex items-center gap-1 text-xs text-teal-600 hover:underline"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
-                    Open Google Maps to find coordinates
+                    {t.registerPharmacy.labels.openMaps}
                   </a>
                 </div>
               )}
@@ -607,12 +613,9 @@ export default function RegisterPharmacyPage() {
                 <div className="space-y-3">
                   <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
                     <p className="text-sm text-amber-800">
-                      <strong>Note:</strong> Without coordinates, your pharmacy won't appear as a pin on the map. You can update your location later from the pharmacy dashboard.
+                      {t.registerPharmacy.labels.descriptionHint}
                     </p>
                   </div>
-                  <p className="text-xs text-gray-500">
-                    Your pharmacy is registered but will not be pinned on the map until you add GPS coordinates.
-                  </p>
                 </div>
               )}
 
@@ -624,7 +627,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Password ── */}
             <div>
-              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
+              <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.password}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -635,7 +638,7 @@ export default function RegisterPharmacyPage() {
                   type={showPassword ? 'text' : 'password'}
                   id="password" name="password"
                   value={formData.password} onChange={handleChange}
-                  placeholder="Create secure password (min. 6 characters)"
+                  placeholder={t.registerPharmacy.labels.passwordPlaceholder}
                   className={`block w-full pl-14 pr-14 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.password ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -652,7 +655,7 @@ export default function RegisterPharmacyPage() {
 
             {/* ── Confirm Password ── */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">Confirm Password</label>
+              <label htmlFor="confirmPassword" className="block text-sm font-semibold text-gray-700 mb-2">{t.registerPharmacy.labels.confirmPassword}</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                   <svg className="w-6 h-6 text-gray-400" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
@@ -663,7 +666,7 @@ export default function RegisterPharmacyPage() {
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword" name="confirmPassword"
                   value={formData.confirmPassword} onChange={handleChange}
-                  placeholder="Re-enter your password"
+                  placeholder={t.registerPharmacy.labels.confirmPasswordPlaceholder}
                   className={`block w-full pl-14 pr-14 py-4 text-base text-gray-900 placeholder-gray-400 border ${errors.confirmPassword ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 bg-white`}
                 />
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -685,7 +688,7 @@ export default function RegisterPharmacyPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <p className="text-sm text-teal-800">
-                  <strong>Verified by Rwanda FDA.</strong> Your council registration number is cross-checked against the official December 2025 list of 725 licensed human retail pharmacies.
+                  {t.registerPharmacy.labels.fdaNotice}
                 </p>
               </div>
             </div>
@@ -699,17 +702,17 @@ export default function RegisterPharmacyPage() {
               {isSubmitting ? (
                 <span className="flex items-center justify-center">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
-                  Registering…
+                  {t.registerPharmacy.registering}
                 </span>
               ) : (
-                'Register Pharmacy'
+                t.registerPharmacy.submitButton
               )}
             </button>
           </form>
 
           <p className="text-center mt-8 text-base text-gray-600">
-            Already have an account?{' '}
-            <Link href="/login" className="text-teal-600 hover:text-teal-700 font-semibold">Sign In</Link>
+            {t.registerPharmacy.alreadyAccount}{' '}
+            <Link href="/login" className="text-teal-600 hover:text-teal-700 font-semibold">{t.registerPharmacy.signIn}</Link>
           </p>
         </div>
       </main>

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useLanguage } from '@/lib/LanguageContext';
 
 /**
  * Call-to-Action Section Component
@@ -7,15 +8,16 @@ import Link from 'next/link';
  * Features prominent heading and search button on branded background.
  */
 export default function CTASection() {
+  const { t } = useLanguage();
   return (
     <section className="bg-teal-600 py-16 md:py-20">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-          Ready to Find Your Nearest Pharmacy?
+          {t.cta.title}
         </h2>
         
         <p className="text-lg text-teal-50 mb-8">
-          Join thousands of Rwandans using Blessed Irembo to access healthcare services
+          {t.cta.subtitle}
         </p>
 
         <Link 
@@ -33,9 +35,10 @@ export default function CTASection() {
           >
             <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          Search Pharmacies Now
+          {t.cta.button}
         </Link>
       </div>
     </section>
   );
 }
+

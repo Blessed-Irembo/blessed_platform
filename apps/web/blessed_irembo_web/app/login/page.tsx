@@ -6,8 +6,11 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { useRedirectIfAuth } from '@/lib/authHooks';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 export default function LoginPage() {
+  const { t } = useLanguage();
   const router = useRouter();
   const { signIn } = useAuth();
   // Redirect already-logged-in users straight to the app
@@ -25,11 +28,11 @@ export default function LoginPage() {
 
     // Basic client-side validation
     if (!identifier.trim()) {
-      setErrors({ identifier: 'Email Address or Phone Number is required' });
+      setErrors({ identifier: t.login.errors.identifierRequired });
       return;
     }
     if (!password || password.length < 6) {
-      setErrors({ password: 'Password must be at least 6 characters' });
+      setErrors({ password: t.login.errors.passwordMinLength });
       return;
     }
 
@@ -49,17 +52,17 @@ export default function LoginPage() {
         case 'auth/user-not-found':
         case 'auth/wrong-password':
         case 'auth/invalid-credential':
-          setErrors({ general: 'Invalid email or password. Please try again.' });
+          setErrors({ general: t.login.errors.invalidCredentials });
           break;
         case 'auth/too-many-requests':
-          setErrors({ general: 'Too many failed attempts. Please try again later or reset your password.' });
+          setErrors({ general: t.login.errors.tooManyRequests });
           break;
         case 'auth/user-disabled':
-          setErrors({ general: 'This account has been disabled. Please contact support.' });
+          setErrors({ general: t.login.errors.accountDisabled });
           break;
         default:
           console.error("Login error:", error);
-          setErrors({ general: error.message || 'Something went wrong. Please try again.' });
+          setErrors({ general: t.login.errors.generic });
       }
     } finally {
       setIsLoading(false);
@@ -86,12 +89,12 @@ export default function LoginPage() {
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
             </svg>
-            Signing in…
+            {t.login.signingIn}
           </div>
         </div>
         <div className="absolute bottom-8 left-0 right-0 text-center">
           <p className="text-xs text-gray-400 tracking-widest uppercase">
-            Powered by <span className="text-teal-700 font-bold">Orahcast</span>
+            {t.common.poweredBy} <span className="text-teal-700 font-bold">Orahcast</span>
           </p>
         </div>
       </div>
@@ -100,59 +103,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="shrink-0">
-              <Link href="/" className="flex items-center gap-2">
-                <Image
-                  src="/logo1.png"
-                  alt="Blessed Irembo"
-                  width={40}
-                  height={40}
-                  priority
-                  className="object-contain"
-                />
-                <span className="text-lg font-semibold text-gray-900">Blessed Irembo</span>
-              </Link>
-            </div>
-
-            {/* Navigation Links - Desktop */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link 
-                href="/" 
-                className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
-              >
-                Home
-              </Link>
-              <Link 
-                href="/pharmacies" 
-                className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
-              >
-                Find Pharmacies
-              </Link>
-            </div>
-
-            {/* Action Buttons - Desktop */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link 
-                href="/login" 
-                className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
-              >
-                Login
-              </Link>
-              <Link 
-                href="/get-started" 
-                className="bg-teal-600 text-white px-6 py-2 rounded-md font-medium hover:bg-teal-700 transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <div className="flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -171,10 +122,10 @@ export default function LoginPage() {
           {/* Header */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Welcome Back
+              {t.login.title}
             </h1>
             <p className="text-gray-600">
-              Sign in to your account to continue
+              {t.login.subtitle}
             </p>
           </div>
 
@@ -191,7 +142,7 @@ export default function LoginPage() {
             {/* Email or Phone Address Field */}
             <div>
               <label htmlFor="identifier" className="block text-sm font-medium text-gray-700 mb-2">
-                Email Address or Phone Number
+                {t.login.emailLabel}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -218,7 +169,7 @@ export default function LoginPage() {
                   className={`block w-full pl-10 pr-3 py-3 border ${
                     errors.identifier ? 'border-red-300' : 'border-gray-300'
                   } rounded-md leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm`}
-                  placeholder="name@example.com or +250 788..."
+                  placeholder={t.login.emailPlaceholder}
                 />
               </div>
               {errors.identifier && (
@@ -229,7 +180,7 @@ export default function LoginPage() {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
-                Password
+                {t.login.passwordLabel}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -256,7 +207,7 @@ export default function LoginPage() {
                   className={`block w-full pl-10 pr-10 py-3 border ${
                     errors.password ? 'border-red-300' : 'border-gray-300'
                   } rounded-md leading-5 bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm`}
-                  placeholder="Enter your password"
+                  placeholder={t.login.passwordPlaceholder}
                 />
                 <button
                   type="button"
@@ -288,7 +239,7 @@ export default function LoginPage() {
                   href="/forgot-password" 
                   className="font-medium text-teal-600 hover:text-teal-700 transition-colors"
                 >
-                  Forgot password?
+                  {t.login.forgotPassword}
                 </Link>
               </div>
             </div>
@@ -306,10 +257,10 @@ export default function LoginPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Signing in...
+                    {t.login.signingIn}
                   </span>
                 ) : (
-                  'Sign In'
+                  t.login.signInButton
                 )}
               </button>
             </div>
@@ -321,12 +272,12 @@ export default function LoginPage() {
         {/* Sign Up Link */}
         <div className="mt-6 text-center">
           <p className="text-sm text-gray-600">
-            Don&apos;t have an account?{' '}
+            {t.login.noAccount}{' '}
             <Link 
               href="/get-started" 
               className="font-medium text-teal-600 hover:text-teal-700 transition-colors"
             >
-              Get started
+              {t.login.getStarted}
             </Link>
           </p>
         </div>

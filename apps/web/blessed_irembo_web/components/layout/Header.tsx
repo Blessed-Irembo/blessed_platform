@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
+import { useLanguage } from '@/lib/LanguageContext';
 
 /**
  * Header Component
@@ -15,8 +16,10 @@ import { useAuth } from '@/lib/AuthContext';
  */
 export default function Header() {
   const { currentUser, signOut } = useAuth();
+  const { language, setLanguage, t } = useLanguage();
   const router = useRouter();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown when clicking outside
@@ -48,6 +51,10 @@ export default function Header() {
   // Where "Find Pharmacies" links to depends on auth state
   const pharmaciesHref = currentUser ? '/pharmacies' : '/login';
 
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'rw' : 'en');
+  };
+
   return (
     <header className="bg-white border-b border-gray-100">
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -70,18 +77,29 @@ export default function Header() {
           {/* Navigation Links */}
           <div className="hidden md:flex items-center space-x-8">
             <Link href="/" className="text-teal-600 font-medium hover:text-teal-700 transition-colors">
-              Home
+              {t.nav.home}
             </Link>
             <Link
               href={pharmaciesHref}
               className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
             >
-              Find Pharmacies
+              {t.nav.findPharmacies}
             </Link>
           </div>
 
-          {/* Right side — auth-aware */}
-          <div className="hidden md:flex items-center space-x-4">
+          {/* Right side — auth-aware + Language Switcher */}
+          <div className="hidden md:flex items-center space-x-6">
+            {/* Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-gray-200 hover:border-teal-300 hover:bg-teal-50 transition-all text-sm font-semibold text-gray-700"
+              title={language === 'en' ? 'Hindura ururimi ube mu Kinyarwanda' : 'Switch to English'}
+            >
+              <span className={language === 'en' ? 'text-teal-600' : 'text-gray-400'}>EN</span>
+              <span className="w-px h-3 bg-gray-300" />
+              <span className={language === 'rw' ? 'text-teal-600' : 'text-gray-400'}>RW</span>
+            </button>
+
             {currentUser ? (
               /* ── Logged-in: show avatar + dropdown ── */
               <div className="relative" ref={dropdownRef}>
@@ -153,7 +171,7 @@ export default function Header() {
                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                         </svg>
-                        Find Pharmacies
+                        {t.nav.findPharmacies}
                       </Link>
 
                       <Link
@@ -165,7 +183,7 @@ export default function Header() {
                         <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                        My Profile
+                        {t.nav.profile}
                       </Link>
 
                       <Link
@@ -178,7 +196,7 @@ export default function Header() {
                           <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                           <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        Settings
+                        {t.nav.settings}
                       </Link>
 
                       <div className="border-t border-gray-100 my-1" />
@@ -190,7 +208,7 @@ export default function Header() {
                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                         </svg>
-                        Log out
+                        {t.nav.logout}
                       </button>
                     </div>
                   </div>
@@ -203,32 +221,112 @@ export default function Header() {
                   href="/login"
                   className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
                 >
-                  Login
+                  {t.nav.login}
                 </Link>
                 <Link
                   href="/get-started"
                   className="bg-teal-600 text-white px-6 py-2 rounded-md font-medium hover:bg-teal-700 transition-colors"
                 >
-                  Get Started
+                  {t.nav.getStarted}
                 </Link>
               </>
             )}
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-4">
+            {/* Mobile Language Toggle */}
+            <button
+              onClick={toggleLanguage}
+              className="flex items-center gap-2 px-2 py-1 rounded-full border border-gray-200 text-xs font-bold text-gray-700"
+            >
+              {language === 'en' ? 'EN' : 'RW'}
+            </button>
             <button
               type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="text-gray-700 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-500"
               aria-label="Open menu"
             >
               <svg className="h-6 w-6" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M4 6h16M4 12h16M4 18h16" />
+                {mobileMenuOpen ? (
+                  <path d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                )}
               </svg>
             </button>
           </div>
         </div>
       </nav>
+
+      {/* Mobile Menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden border-t border-gray-100 bg-white">
+          <div className="px-4 pt-2 pb-4 space-y-1">
+            <Link 
+              href="/" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-gray-50"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t.nav.home}
+            </Link>
+            <Link 
+              href={pharmaciesHref} 
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-gray-50"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t.nav.findPharmacies}
+            </Link>
+            
+            {currentUser ? (
+              <>
+                <Link
+                  href="/profile"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t.nav.profile}
+                </Link>
+                <Link
+                  href="/settings"
+                  className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-gray-50"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t.nav.settings}
+                </Link>
+                <button
+                  onClick={() => {
+                    handleSignOut();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50"
+                >
+                  {t.nav.logout}
+                </button>
+              </>
+            ) : (
+              <div className="mt-4 flex flex-col gap-2 px-3">
+                <Link
+                  href="/login"
+                  className="block w-full text-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t.nav.login}
+                </Link>
+                <Link
+                  href="/get-started"
+                  className="block w-full text-center px-4 py-2 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-teal-600 hover:bg-teal-700 transition-colors"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t.nav.getStarted}
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
+

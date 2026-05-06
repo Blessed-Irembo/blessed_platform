@@ -1,5 +1,9 @@
+'use client';
+
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/LanguageContext';
+import Header from '@/components/layout/Header';
 
 /**
  * Get Started Page
@@ -9,61 +13,11 @@ import Image from 'next/image';
  * Displays features and benefits for each account type.
  */
 export default function GetStartedPage() {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-100">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="shrink-0">
-              <Link href="/" className="flex items-center gap-3">
-                <Image
-                  src="/logo1.png"
-                  alt="Blessed Irembo"
-                  width={80}
-                  height={80}
-                  priority
-                  className="object-contain"
-                />
-                <span className="text-xl font-bold text-gray-900">Blessed Irembo</span>
-              </Link>
-            </div>
-
-            {/* Navigation Links - Desktop */}
-            <div className="hidden md:flex items-center space-x-8">
-              <Link 
-                href="/" 
-                className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
-              >
-                Home
-              </Link>
-              <Link 
-                href="/pharmacies" 
-                className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
-              >
-                Find Pharmacies
-              </Link>
-            </div>
-
-            {/* Action Buttons - Desktop */}
-            <div className="hidden md:flex items-center space-x-4">
-              <Link 
-                href="/login" 
-                className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
-              >
-                Login
-              </Link>
-              <Link 
-                href="/get-started" 
-                className="bg-teal-600 text-white px-6 py-2 rounded-md font-medium hover:bg-teal-700 transition-colors"
-              >
-                Get Started
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
       {/* Main Content */}
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -81,10 +35,10 @@ export default function GetStartedPage() {
         {/* Header Section */}
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Get Started with Blessed Irembo
+            {t.getStarted.title}
           </h1>
           <p className="text-sm text-gray-600">
-            Choose your account type to begin connecting with Rwanda&apos;s pharmacy network
+            {t.getStarted.subtitle}
           </p>
         </div>
 
@@ -112,47 +66,25 @@ export default function GetStartedPage() {
             {/* Title and Description */}
             <div className="text-center mb-5">
               <h2 className="text-lg font-bold text-gray-900 mb-1">
-                I&apos;m a User
+                {t.getStarted.user.title}
               </h2>
               <p className="text-xs text-gray-600">
-                Find and connect with pharmacies
+                {t.getStarted.user.subtitle}
               </p>
             </div>
 
             {/* Features List */}
             <ul className="space-y-2.5 mb-6 flex-grow">
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">Search pharmacies nationwide</span>
-              </li>
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">View verified pharmacy information</span>
-              </li>
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">Send inquiries directly to pharmacies</span>
-              </li>
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">Access 24/7 pharmacy locations</span>
-              </li>
+              {t.getStarted.user.features.map((feature, i) => (
+                <li key={i} className="flex items-start">
+                  <div className="shrink-0 w-6 h-6 bg-teal-600 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-700">{feature}</span>
+                </li>
+              ))}
             </ul>
 
             {/* CTA Button */}
@@ -160,7 +92,7 @@ export default function GetStartedPage() {
               href="/signup"
               className="w-full bg-teal-600 text-white py-2.5 px-5 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors flex items-center justify-center group"
             >
-              Continue as User
+              {t.getStarted.user.cta}
               <svg 
                 className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                 fill="none" 
@@ -180,7 +112,7 @@ export default function GetStartedPage() {
             {/* Trial Badge */}
             <div className="absolute top-4 right-4">
               <span className="bg-blue-500 text-white text-xs font-semibold px-2.5 py-1 rounded-full">
-                3-Month Free Trial
+                {t.getStarted.pharmacy.trialBadge}
               </span>
             </div>
 
@@ -204,47 +136,25 @@ export default function GetStartedPage() {
             {/* Title and Description */}
             <div className="text-center mb-5">
               <h2 className="text-lg font-bold text-gray-900 mb-1">
-                I&apos;m a Pharmacy
+                {t.getStarted.pharmacy.title}
               </h2>
               <p className="text-xs text-gray-600">
-                Register your pharmacy business
+                {t.getStarted.pharmacy.subtitle}
               </p>
             </div>
 
             {/* Features List */}
             <ul className="space-y-2.5 mb-6 flex-grow">
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">3-month free trial (no credit card required)</span>
-              </li>
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">Nationwide visibility on our platform</span>
-              </li>
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">Manage customer inquiries in one dashboard</span>
-              </li>
-              <li className="flex items-start">
-                <div className="shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
-                  <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="text-gray-700">Verification badge for credibility</span>
-              </li>
+              {t.getStarted.pharmacy.features.map((feature, i) => (
+                <li key={i} className="flex items-start">
+                  <div className="shrink-0 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center mr-3 mt-0.5">
+                    <svg className="w-4 h-4 text-white" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-700">{feature}</span>
+                </li>
+              ))}
             </ul>
 
             {/* CTA Button */}
@@ -252,7 +162,7 @@ export default function GetStartedPage() {
               href="/register-pharmacy"
               className="w-full bg-blue-500 text-white py-2.5 px-5 rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors flex items-center justify-center group"
             >
-              Continue as Pharmacy
+              {t.getStarted.pharmacy.cta}
               <svg 
                 className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                 fill="none" 
@@ -271,12 +181,12 @@ export default function GetStartedPage() {
         {/* Already have account link */}
         <div className="text-center mt-8">
           <p className="text-gray-600">
-            Already have an account?{' '}
+            {t.getStarted.alreadyHaveAccount}{' '}
             <Link 
               href="/login" 
               className="text-teal-600 font-medium hover:text-teal-700 transition-colors"
             >
-              Sign in here
+              {t.getStarted.signIn}
             </Link>
           </p>
         </div>
@@ -284,3 +194,4 @@ export default function GetStartedPage() {
     </div>
   );
 }
+

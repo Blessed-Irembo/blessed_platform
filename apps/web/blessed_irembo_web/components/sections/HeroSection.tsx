@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
+import { useLanguage } from '@/lib/LanguageContext';
 
 /**
  * Hero Section Component
@@ -8,6 +9,8 @@ import Image from 'next/image';
  * and hero image. Introduces the platform's primary value proposition.
  */
 export default function HeroSection() {
+  const { t } = useLanguage();
+
   return (
     <section className="bg-gray-50 py-8 md:py-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -23,13 +26,11 @@ export default function HeroSection() {
             </div>
 
             <h1 className="text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
-              Find Trusted Pharmacies Anywhere in Rwanda
+              {t.hero.title}
             </h1>
             
             <p className="text-base text-gray-600 leading-relaxed">
-              Operating under <strong className="text-gray-800">Blessed HealthConnect Ltd</strong>, Blessed Irembo connects you with verified pharmacies nationwide. 
-              Search by location, check availability, and get the medication you need, 
-              when you need it.
+              {t.hero.subtitle}
             </p>
 
             {/* Call-to-Action Buttons */}
@@ -49,14 +50,14 @@ export default function HeroSection() {
                 >
                   <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-                Find Pharmacies
+                {t.hero.cta_find}
               </Link>
 
               <Link 
                 href="/register-pharmacy"
                 className="inline-flex items-center justify-center bg-white text-teal-600 px-5 py-2.5 rounded-md font-medium border-2 border-teal-600 hover:bg-teal-50 transition-colors"
               >
-                Register Pharmacy
+                {t.hero.cta_register}
                 <svg 
                   className="w-4 h-4 ml-2" 
                   fill="none" 

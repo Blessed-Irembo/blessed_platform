@@ -1,30 +1,19 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { usePharmacyData } from '@/lib/usePharmacyData';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import ExpiredSubscriptionWall from '@/components/ui/ExpiredSubscriptionWall';
 import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
+import { useLanguage } from '@/lib/LanguageContext';
 
 export default function PharmacyProfilePage() {
   const { loading } = useRequireAuth();
-  const { currentUser, signOut } = useAuth();
+  const { currentUser } = useAuth();
   const { pharmacy, loading: pharmacyLoading } = usePharmacyData();
-  const router = useRouter();
-
-  const handleSignOut = async () => {
-    await signOut();
-    router.replace('/');
-  };
-
-  const pharmacyName = pharmacy?.name || currentUser?.displayName || '—';
-  const email = pharmacy?.email || currentUser?.email || '—';
-  const phone = pharmacy?.phone || pharmacy?.phoneNumber || '';
-  const initials = pharmacyName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+  const { t } = useLanguage();
 
   if (loading || pharmacyLoading) {
     return <LoadingScreen text="Loading profile…" />;
@@ -35,42 +24,20 @@ export default function PharmacyProfilePage() {
     return <ExpiredSubscriptionWall statusResult={subscriptionStatus} pharmacyName={pharmacy?.name} />;
   }
 
+  const pharmacyName = pharmacy?.name || currentUser?.displayName || '—';
+  const email = pharmacy?.email || currentUser?.email || '—';
+  const phone = pharmacy?.phone || pharmacy?.phoneNumber || '';
+  const initials = pharmacyName.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-30">
-        <div className="mx-auto px-4 sm:px-6 py-3 sm:py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Image src="/logo1.png" alt="Blessed Irembo" width={40} height={40} className="shrink-0" />
-              <Link href="/pharmacy/dashboard" className="text-teal-600 font-semibold text-sm sm:text-base">
-                My Pharmacy
-              </Link>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-4">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-2 bg-teal-50 rounded-lg">
-                <svg className="w-4 h-4 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-                <span className="text-teal-600 font-medium text-sm">Pharmacy</span>
-              </div>
-              <button onClick={handleSignOut} className="text-sm px-3 py-2 text-red-600 hover:text-red-700 font-medium transition-colors">
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="max-w-2xl mx-auto px-4 py-6 sm:py-10 pb-24 md:pb-10">
+    <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
+      <main className="max-w-2xl mx-auto py-6 sm:py-10 pb-24 md:pb-10">
         {/* Back Link */}
         <Link href="/pharmacy/dashboard" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
-          Back to Dashboard
+          {t.pharmacyDashboard.profile.backToDashboard}
         </Link>
 
         {/* Profile Card */}
@@ -104,7 +71,7 @@ export default function PharmacyProfilePage() {
                 </svg>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Pharmacy Name</p>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.pharmacyDashboard.profile.labels.name}</p>
                 <p className="text-gray-900 font-medium">{pharmacyName}</p>
               </div>
             </div>
@@ -118,7 +85,7 @@ export default function PharmacyProfilePage() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Email Address</p>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.pharmacyDashboard.profile.labels.email}</p>
                 <p className="text-gray-900 font-medium break-all">{email}</p>
               </div>
             </div>
@@ -132,9 +99,9 @@ export default function PharmacyProfilePage() {
                 </svg>
               </div>
               <div>
-                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Phone Number</p>
+                <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.pharmacyDashboard.profile.labels.phone}</p>
                 <p className={`font-medium ${phone ? 'text-gray-900' : 'text-gray-400 italic'}`}>
-                  {phone || 'Not provided'}
+                  {phone || t.pharmacyDashboard.profile.notProvided}
                 </p>
               </div>
             </div>
@@ -150,7 +117,7 @@ export default function PharmacyProfilePage() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Address</p>
+                    <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">{t.pharmacyDashboard.profile.labels.address}</p>
                     <p className="text-gray-900 font-medium">{pharmacy.address}</p>
                   </div>
                 </div>
@@ -168,33 +135,11 @@ export default function PharmacyProfilePage() {
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              Settings
+              {t.pharmacyDashboard.nav.settings}
             </Link>
           </div>
         </div>
       </main>
-
-      {/* Bottom Nav — mobile only */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-30">
-        <div className="grid grid-cols-4 h-16">
-          <Link href="/pharmacy/dashboard" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" /></svg>
-            <span className="text-xs font-medium">Overview</span>
-          </Link>
-          <Link href="/pharmacy/subscription" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-            <span className="text-xs font-medium">Subscription</span>
-          </Link>
-          <Link href="/pharmacy/profile" className="flex flex-col items-center justify-center gap-1 text-teal-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
-            <span className="text-xs font-medium">Profile</span>
-          </Link>
-          <Link href="/pharmacy/settings" className="flex flex-col items-center justify-center gap-1 text-gray-500 hover:text-teal-600 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-            <span className="text-xs font-medium">Settings</span>
-          </Link>
-        </div>
-      </nav>
     </div>
   );
 }
