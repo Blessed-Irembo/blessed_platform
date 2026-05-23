@@ -52,16 +52,16 @@ struct EditLocationView: View {
                 }
             }
         }
-        .navigationTitle("Location & Address")
+        .navigationTitle(appState.t("profile.locationAddress"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: loadCurrentValues)
-        .alert("Location updated", isPresented: $showSuccess) {
+        .alert(appState.t("profile.locationUpdated"), isPresented: $showSuccess) {
             Button("OK", role: .cancel) {
                 isEditing = false
                 presentationMode.wrappedValue.dismiss()
             }
         } message: {
-            Text("Your location and address have been saved successfully.")
+            Text(appState.t("profile.locationUpdatedDesc"))
         }
     }
 
@@ -70,20 +70,20 @@ struct EditLocationView: View {
     private var currentInfoSection: some View {
         Section {
             infoRow(icon: "mappin.circle.fill", iconColor: .red,
-                    label: "Address",
+                    label: appState.t("auth.addressLabel"),
                     value: appState.currentPharmacy?.address.isEmpty == false
-                        ? appState.currentPharmacy!.address : "Not set")
+                        ? appState.currentPharmacy!.address : appState.t("common.notSet"))
 
             infoRow(icon: "building.2.fill", iconColor: Color.primaryTeal,
-                    label: "District",
+                    label: appState.t("auth.districtLabel"),
                     value: appState.currentPharmacy?.district.isEmpty == false
-                        ? appState.currentPharmacy!.district : "Not set")
+                        ? appState.currentPharmacy!.district : appState.t("common.notSet"))
 
             if let lat = appState.currentPharmacy?.latitude,
                let lon = appState.currentPharmacy?.longitude,
                lat != 0 || lon != 0 {
                 infoRow(icon: "location.fill", iconColor: .blue,
-                        label: "Coordinates",
+                        label: appState.t("profile.coordinates"),
                         value: String(format: "%.5f, %.5f", lat, lon))
             }
 
@@ -97,7 +97,7 @@ struct EditLocationView: View {
                     HStack {
                         Spacer()
                         Image(systemName: "pencil")
-                        Text("Change Address")
+                        Text(appState.t("profile.changeAddress"))
                             .fontWeight(.semibold)
                         Spacer()
                     }
@@ -105,7 +105,7 @@ struct EditLocationView: View {
                 }
             }
         } header: {
-            Text("Current Location")
+            Text(appState.t("profile.currentLocation"))
         }
     }
 
@@ -113,16 +113,16 @@ struct EditLocationView: View {
 
     private var editFieldsSection: some View {
         Section {
-            TextField("Street address", text: $address, axis: .vertical)
+            TextField(appState.t("profile.streetAddress"), text: $address, axis: .vertical)
                 .lineLimit(2...4)
                 .autocapitalization(.words)
 
-            TextField("District (e.g. Kicukiro)", text: $district)
+            TextField(appState.t("profile.districtPlaceholder"), text: $district)
                 .autocapitalization(.words)
 
             HStack {
                 Label {
-                    Text("Latitude")
+                    Text(appState.t("auth.latitude"))
                         .foregroundColor(.secondary)
                 } icon: {
                     Image(systemName: "location.north.fill")
@@ -137,7 +137,7 @@ struct EditLocationView: View {
 
             HStack {
                 Label {
-                    Text("Longitude")
+                    Text(appState.t("auth.longitude"))
                         .foregroundColor(.secondary)
                 } icon: {
                     Image(systemName: "location.east.fill")
@@ -158,15 +158,15 @@ struct EditLocationView: View {
             } label: {
                 HStack {
                     Spacer()
-                    Text("Cancel")
+                    Text(appState.t("common.cancel"))
                         .foregroundColor(.secondary)
                     Spacer()
                 }
             }
         } header: {
-            Text("Edit Location")
+            Text(appState.t("profile.editLocation"))
         } footer: {
-            Text("Find your coordinates by long-pressing your location in Google Maps.")
+            Text(appState.t("profile.findCoordsHint"))
         }
     }
 
@@ -181,7 +181,7 @@ struct EditLocationView: View {
                         ProgressView().padding(.horizontal, 8)
                     } else {
                         Image(systemName: "map.fill")
-                        Text("Auto-fill coordinates from address")
+                        Text(appState.t("profile.autoFillCoords"))
                     }
                     Spacer()
                 }
@@ -201,7 +201,7 @@ struct EditLocationView: View {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Text("Save Location")
+                        Text(appState.t("profile.saveLocation"))
                             .fontWeight(.bold)
                     }
                     Spacer()

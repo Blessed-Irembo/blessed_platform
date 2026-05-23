@@ -137,6 +137,16 @@ struct Pharmacy: Codable, Identifiable {
             : String(format: "%.1f km away", m / 1000)
     }
 
+    /// Localized human-readable distance string
+    func formattedDistance(from location: CLLocationCoordinate2D, localizedWith appState: AppState) -> String {
+        let m = distance(from: location)
+        if m < 1000 {
+            return String(format: appState.t("details.distanceMeters"), m)
+        } else {
+            return String(format: appState.t("details.distanceKm"), m / 1000)
+        }
+    }
+
     // MARK: - Open / Closed Logic (mirrors web pharmacyUtils.ts)
 
     /// Whether the pharmacy is open right now based on its operating hours.
@@ -190,6 +200,29 @@ struct Pharmacy: Codable, Identifiable {
             daysDisplay = oh.days.joined(separator: ", ")
         } else if !oh.days.isEmpty {
             daysDisplay = "\(oh.days.first!) – \(oh.days.last!)"
+        } else {
+            daysDisplay = "N/A"
+        }
+
+        let open = oh.openTime.isEmpty ? "N/A" : oh.openTime
+        let close = oh.closeTime.isEmpty ? "N/A" : oh.closeTime
+        return "\(daysDisplay) • \(open) – \(close)"
+    }
+
+    /// Localized one-line hours summary
+    func formattedHoursSummary(localizedWith appState: AppState) -> String {
+        let oh = operatingHours
+        if oh.is24Hours { return appState.t("details.open24Hours") }
+        if oh.days.isEmpty && oh.openTime.isEmpty { return appState.t("details.hoursNotSpecified") }
+
+        let daysDisplay: String
+        if oh.days.count == 7 {
+            daysDisplay = appState.t("details.everyday")
+        } else if oh.days.count <= 3 {
+            let localizedDays = oh.days.map { appState.t("day.\($0)") }
+            daysDisplay = localizedDays.joined(separator: ", ")
+        } else if !oh.days.isEmpty {
+            daysDisplay = "\(appState.t("day.\(oh.days.first!)")) – \(appState.t("day.\(oh.days.last!)"))"
         } else {
             daysDisplay = "N/A"
         }

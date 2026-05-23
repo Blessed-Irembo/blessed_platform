@@ -22,6 +22,24 @@ struct SubscriptionPlan: Identifiable {
         SubscriptionPlan(id: "3_months",  name: "3 Months",  amount: 3000,  months: 3,  label: "3,000 RWF / 3 months", isPopular: true),
         SubscriptionPlan(id: "12_months", name: "12 Months", amount: 10000, months: 12, label: "10,000 RWF / year",    isPopular: false),
     ]
+
+    func displayName(localizedWith appState: AppState) -> String {
+        switch id {
+        case "1_month": return appState.t("plan.1_month.name")
+        case "3_months": return appState.t("plan.3_months.name")
+        case "12_months": return appState.t("plan.12_months.name")
+        default: return name
+        }
+    }
+
+    func displayLabel(localizedWith appState: AppState) -> String {
+        switch id {
+        case "1_month": return appState.t("plan.1_month.label")
+        case "3_months": return appState.t("plan.3_months.label")
+        case "12_months": return appState.t("plan.12_months.label")
+        default: return label
+        }
+    }
 }
 
 // MARK: - Subscription Status
@@ -56,6 +74,40 @@ enum SubscriptionStatus: Equatable {
         }
     }
 
+    /// Localized display title
+    func displayTitle(localizedWith appState: AppState) -> String {
+        switch self {
+        case .freeTrial(let days):
+            return days > 0 
+                ? appState.t("subscription.freeTrialTitle") 
+                : appState.t("subscription.freeTrialEndingTitle")
+        case .premium:
+            return appState.t("subscription.premiumTitle")
+        case .expired:
+            return appState.t("subscription.expiredTitle")
+        case .unknown:
+            return appState.t("common.loading")
+        }
+    }
+
+    /// Localized display subtitle
+    func displaySubtitle(localizedWith appState: AppState) -> String {
+        switch self {
+        case .freeTrial(let days):
+            let format = appState.t(days > 1 ? "subscription.freeTrialSubtitleMany" : "subscription.freeTrialSubtitleOne")
+            return String(format: format, days)
+        case .premium(let date):
+            let formatter = DateFormatter()
+            formatter.dateStyle = .medium
+            let formattedDate = formatter.string(from: date)
+            return String(format: appState.t("subscription.premiumSubtitle"), formattedDate)
+        case .expired:
+            return appState.t("subscription.expiredSubtitle")
+        case .unknown:
+            return ""
+        }
+    }
+
     var isActive: Bool {
         switch self {
         case .freeTrial, .premium: return true
@@ -79,6 +131,13 @@ struct SubscriptionRequest: Identifiable {
     /// Human-readable plan name derived from planId
     var planDisplayName: String {
         SubscriptionPlan.all.first(where: { $0.id == planId })?.name ?? planId
+    }
+
+    func planDisplayName(localizedWith appState: AppState) -> String {
+        if let plan = SubscriptionPlan.all.first(where: { $0.id == planId }) {
+            return plan.displayName(localizedWith: appState)
+        }
+        return planId
     }
 
     init(id: String, data: [String: Any]) {

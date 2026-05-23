@@ -37,177 +37,188 @@ struct SignInView: View {
     }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // ── Header ──────────────────────────────────────────────
-                VStack(spacing: 10) {
-                    Logo(size: 72)
-                        .padding(.top, 40)
-                    Text("Welcome Back")
-                        .font(.system(size: 26, weight: .bold))
-                        .foregroundColor(.textPrimary)
-                    Text("Sign in to continue")
-                        .font(.subheadline)
-                        .foregroundColor(.textSecondary)
-                }
-                .padding(.bottom, 28)
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header spacer for switcher
+                    Spacer()
+                        .frame(height: 36)
 
-                // ── Form card ────────────────────────────────────────────
-                VStack(spacing: 20) {
-
-                    // Error banner
-                    if let error = viewModel.errorMessage {
-                        HStack(spacing: 10) {
-                            Image(systemName: "exclamationmark.circle.fill")
-                                .foregroundColor(.red)
-                            Text(error)
-                                .font(.subheadline)
-                                .foregroundColor(.red)
-                        }
-                        .padding(14)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.red.opacity(0.08))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.25)))
-                        .cornerRadius(12)
-                    }
-
-                    // ── Sign-in method picker ──
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Sign in with")
-                            .font(.subheadline).fontWeight(.semibold)
+                    // ── Header ──────────────────────────────────────────────
+                    VStack(spacing: 10) {
+                        Logo(size: 72)
+                            .padding(.top, 40)
+                        Text(appState.t("auth.signInTitle"))
+                            .font(.system(size: 26, weight: .bold))
                             .foregroundColor(.textPrimary)
+                        Text(appState.t("auth.signInSubtitle"))
+                            .font(.subheadline)
+                            .foregroundColor(.textSecondary)
+                    }
+                    .padding(.bottom, 28)
 
-                        Picker("Sign in method", selection: $signInMethod) {
-                            ForEach(SignInMethod.allCases, id: \.self) { method in
-                                Label {
-                                    Text(method.rawValue)
-                                } icon: {
-                                    Image(systemName: method == .phone ? "phone" : "envelope")
+                    // ── Form card ────────────────────────────────────────────
+                    VStack(spacing: 20) {
+
+                        // Error banner
+                        if let error = viewModel.errorMessage {
+                            HStack(spacing: 10) {
+                                Image(systemName: "exclamationmark.circle.fill")
+                                    .foregroundColor(.red)
+                                Text(error)
+                                    .font(.subheadline)
+                                    .foregroundColor(.red)
+                            }
+                            .padding(14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color.red.opacity(0.08))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.red.opacity(0.25)))
+                            .cornerRadius(12)
+                        }
+
+                        // ── Segmented Picker ──
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(appState.t("auth.signInWith"))
+                                .font(.subheadline).fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+
+                            Picker("Sign in method", selection: $signInMethod) {
+                                ForEach(SignInMethod.allCases, id: \.self) { method in
+                                    Label {
+                                        Text(appState.t(method == .phone ? "auth.phoneLabel" : "auth.emailLabel"))
+                                    } icon: {
+                                        Image(systemName: method == .phone ? "phone" : "envelope")
+                                    }
+                                    .tag(method)
                                 }
-                                .tag(method)
+                            }
+                            .pickerStyle(.segmented)
+                            .onChange(of: signInMethod) { _ in
+                                // Clear field when switching method to avoid confusion
+                                identifier = ""
+                                viewModel.errorMessage = nil
                             }
                         }
-                        .pickerStyle(.segmented)
-                        .onChange(of: signInMethod) { _ in
-                            // Clear field when switching method to avoid confusion
-                            identifier = ""
-                            viewModel.errorMessage = nil
+
+                        // ── Identifier field ──
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label(appState.t(signInMethod == .phone ? "auth.phoneLabel" : "auth.emailLabel"), systemImage: identifierIcon)
+                                .font(.subheadline).fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
+
+                            if signInMethod == .phone {
+                                Text(appState.t("auth.phoneModeSub"))
+                                    .font(.caption)
+                                    .foregroundColor(.textSecondary)
+                            }
+
+                            TextField(identifierPlaceholder, text: $identifier)
+                                .keyboardType(identifierKeyboard)
+                                .autocapitalization(.none)
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
                         }
-                    }
 
-                    // ── Identifier field ──
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label(signInMethod.rawValue, systemImage: identifierIcon)
-                            .font(.subheadline).fontWeight(.semibold)
-                            .foregroundColor(.textPrimary)
+                        // ── Password ──
+                        VStack(alignment: .leading, spacing: 6) {
+                            Label(appState.t("auth.passwordLabel"), systemImage: "lock")
+                                .font(.subheadline).fontWeight(.semibold)
+                                .foregroundColor(.textPrimary)
 
-                        if signInMethod == .phone {
-                            Text("Enter the phone number you registered with")
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
-                        }
-
-                        TextField(identifierPlaceholder, text: $identifier)
-                            .keyboardType(identifierKeyboard)
-                            .autocapitalization(.none)
+                            HStack {
+                                Group {
+                                    if showPassword {
+                                        TextField(appState.t("auth.passwordPlaceholder"), text: $password)
+                                            .autocapitalization(.none)
+                                    } else {
+                                        SecureField(appState.t("auth.passwordPlaceholder"), text: $password)
+                                    }
+                                }
+                                Button { showPassword.toggle() } label: {
+                                    Image(systemName: showPassword ? "eye.slash" : "eye")
+                                        .foregroundColor(.textSecondary)
+                                }
+                            }
                             .padding()
                             .background(Color(.systemGray6))
                             .cornerRadius(12)
-                    }
+                        }
 
-                    // ── Password ──
-                    VStack(alignment: .leading, spacing: 6) {
-                        Label("Password", systemImage: "lock")
-                            .font(.subheadline).fontWeight(.semibold)
-                            .foregroundColor(.textPrimary)
-
+                        // ── Remember me + Forgot password ──
                         HStack {
-                            Group {
-                                if showPassword {
-                                    TextField("Enter your password", text: $password)
-                                        .autocapitalization(.none)
-                                } else {
-                                    SecureField("Enter your password", text: $password)
-                                }
+                            Toggle(appState.t("auth.rememberMe"), isOn: $rememberMe)
+                                .font(.subheadline)
+                                .foregroundColor(.textSecondary)
+                                .tint(.primaryTeal)
+                            Spacer()
+                            Button(appState.t("auth.forgotPassword")) {
+                                // Pre-fill with email if user typed one in email mode
+                                resetEmailInput = signInMethod == .email ? identifier : ""
+                                showResetAlert = true
                             }
-                            Button { showPassword.toggle() } label: {
-                                Image(systemName: showPassword ? "eye.slash" : "eye")
+                            .font(.subheadline)
+                            .foregroundColor(.primaryTeal)
+                        }
+
+                        // ── Sign In button ──
+                        PrimaryButton(title: appState.t("auth.signIn"), isLoading: viewModel.isLoading) {
+                            signIn()
+                        }
+
+                        // ── Phone note ── (only shown in phone mode)
+                        if signInMethod == .phone {
+                            HStack(spacing: 8) {
+                                Image(systemName: "info.circle")
+                                    .foregroundColor(.primaryTeal)
+                                    .font(.caption)
+                                Text(appState.t("auth.phoneModeNote"))
+                                    .font(.caption)
                                     .foregroundColor(.textSecondary)
                             }
+                            .padding(12)
+                            .background(Color.primaryTeal.opacity(0.06))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primaryTeal.opacity(0.2)))
+                            .cornerRadius(10)
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
+
+                        Spacer(minLength: 8)
                     }
-
-                    // ── Remember me + Forgot password ──
-                    HStack {
-                        Toggle("Remember me", isOn: $rememberMe)
-                            .font(.subheadline)
-                            .foregroundColor(.textSecondary)
-                            .tint(.primaryTeal)
-                        Spacer()
-                        Button("Forgot password?") {
-                            // Pre-fill with email if user typed one in email mode
-                            resetEmailInput = signInMethod == .email ? identifier : ""
-                            showResetAlert = true
-                        }
-                        .font(.subheadline)
-                        .foregroundColor(.primaryTeal)
-                    }
-
-                    // ── Sign In button ──
-                    PrimaryButton(title: "Sign In", isLoading: viewModel.isLoading) {
-                        signIn()
-                    }
-
-
-                    // ── Phone note ── (only shown in phone mode)
-                    if signInMethod == .phone {
-                        HStack(spacing: 8) {
-                            Image(systemName: "info.circle")
-                                .foregroundColor(.primaryTeal)
-                                .font(.caption)
-                            Text("We look up your account using your registered phone number. Your password stays the same.")
-                                .font(.caption)
-                                .foregroundColor(.textSecondary)
-                        }
-                        .padding(12)
-                        .background(Color.primaryTeal.opacity(0.06))
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primaryTeal.opacity(0.2)))
-                        .cornerRadius(10)
-                    }
-
-                    Spacer(minLength: 8)
+                    .padding(20)
+                    .background(Color(.systemBackground))
+                    .cornerRadius(20)
+                    .shadow(color: .black.opacity(0.05), radius: 10)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 40)
                 }
-                .padding(20)
-                .background(Color(.systemBackground))
-                .cornerRadius(20)
-                .shadow(color: .black.opacity(0.05), radius: 10)
-                .padding(.horizontal, 16)
-                .padding(.bottom, 40)
+            }
+            
+            // Floating language switcher overlay at the top
+            VStack {
+                FloatingLanguageSwitcher()
+                Spacer()
             }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Sign In")
+        .navigationTitle(appState.t("auth.signIn"))
         .navigationBarTitleDisplayMode(.inline)
 
         // ── Reset password alert ──
-        .alert("Reset Password", isPresented: $showResetAlert) {
-            TextField("Enter your email", text: $resetEmailInput)
+        .alert(appState.t("auth.resetPassword"), isPresented: $showResetAlert) {
+            TextField(appState.t("auth.emailLabel"), text: $resetEmailInput)
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
-            Button("Send Reset Email") {
+            Button(appState.t("auth.sendResetEmail")) {
                 viewModel.resetPassword(email: resetEmailInput)
             }
-            Button("Cancel", role: .cancel) {}
+            Button(appState.t("common.cancel"), role: .cancel) {}
         } message: {
-            Text("We'll send a password reset link to your email.")
+            Text(appState.t("auth.resetPasswordPrompt"))
         }
-        .alert("Email Sent", isPresented: $viewModel.resetEmailSent) {
+        .alert(appState.t("auth.emailSent"), isPresented: $viewModel.resetEmailSent) {
             Button("OK", role: .cancel) {}
         } message: {
-            Text("Check your inbox for a password reset link.")
+            Text(appState.t("auth.checkInbox"))
         }
     }
 

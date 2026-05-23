@@ -32,7 +32,7 @@ struct ExpiredSubscriptionView: View {
                 .padding(.bottom, 24)
 
                 // ── Title ─────────────────────────────────────────────
-                Text("Subscription Expired")
+                Text(appState.t("subscription.expiredTitle"))
                     .font(.title2.weight(.bold))
                     .foregroundColor(.primary)
                     .padding(.bottom, 6)
@@ -54,7 +54,7 @@ struct ExpiredSubscriptionView: View {
                         .padding(.bottom, 12)
                 }
 
-                Text("Your pharmacy listing has been paused. Renew your subscription to restore full access and visibility on the platform.")
+                Text(appState.t("subscription.expiredListingPaused"))
                     .font(.footnote)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -63,9 +63,9 @@ struct ExpiredSubscriptionView: View {
 
                 // ── Benefits ─────────────────────────────────────────
                 VStack(alignment: .leading, spacing: 10) {
-                    benefitRow("Restore your pharmacy on the public map")
-                    benefitRow("Allow users to find and contact you")
-                    benefitRow("Regain access to dashboard & analytics")
+                    benefitRow(appState.t("subscription.benefit1"))
+                    benefitRow(appState.t("subscription.benefit2"))
+                    benefitRow(appState.t("subscription.benefit3"))
                 }
                 .padding(16)
                 .background(Color(.secondarySystemBackground))
@@ -77,7 +77,7 @@ struct ExpiredSubscriptionView: View {
                 Button(action: { selectedTab = subscriptionTabIndex }) {
                     HStack {
                         Image(systemName: "arrow.clockwise.circle.fill")
-                        Text("Renew Subscription")
+                        Text(appState.t("subscription.renew"))
                             .fontWeight(.semibold)
                     }
                     .frame(maxWidth: .infinity)
@@ -95,7 +95,7 @@ struct ExpiredSubscriptionView: View {
                         UIApplication.shared.open(url)
                     }
                 }) {
-                    Text("Need help? Call +250 799 538 220")
+                    Text(appState.t("subscription.needHelpCall"))
                         .font(.footnote)
                         .foregroundColor(Color.primaryTeal)
                 }
@@ -115,7 +115,7 @@ struct ExpiredSubscriptionView: View {
             if let pharmacy = appState.currentPharmacy,
                let endDate = pharmacy.subscriptionEndDate {
                 let formatted = endDate.formatted(date: .long, time: .omitted)
-                return "Your subscription expired on \(formatted)."
+                return String(format: appState.t("subscription.expiredOnDate"), formatted)
             } else {
                 return ""
             }

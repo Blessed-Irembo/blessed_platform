@@ -16,6 +16,7 @@ struct UserMapView: View {
     @State private var cancellables = Set<AnyCancellable>()
     @State private var isSheetExpanded: Bool = false
     @State private var hasInitialLocationSet: Bool = false
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -36,6 +37,8 @@ struct UserMapView: View {
                     .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
                 
                 HStack {
+                    FloatingLanguageSwitcher()
+                        .padding(.leading, 12)
                     Spacer()
                     locationButton
                 }
@@ -91,7 +94,7 @@ struct UserMapView: View {
             }
             .ignoresSafeArea(edges: .bottom)
         }
-        .navigationTitle("Find Pharmacies")
+        .navigationTitle(appState.t("nav.findPharmacies"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             setupLocationTracking()
@@ -123,7 +126,7 @@ struct UserMapView: View {
     
     private var pharmacyHeader: some View {
         HStack {
-            Text("\(viewModel.filteredPharmacies.count) pharmacies nearby")
+            Text(String(format: appState.t("map.nearbyFormat"), viewModel.filteredPharmacies.count))
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.textPrimary)
             
@@ -133,7 +136,7 @@ struct UserMapView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "line.3.horizontal.decrease.circle")
                         .font(.system(size: 18))
-                    Text("Sort")
+                    Text(appState.t("map.sort"))
                         .font(.subheadline)
                 }
                 .foregroundColor(.primaryTeal)
@@ -226,6 +229,7 @@ struct PharmacyListCard: View {
     let pharmacy: Pharmacy
     let userLocation: CLLocationCoordinate2D
     let isSelected: Bool
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         HStack(spacing: 16) {
@@ -282,7 +286,7 @@ struct PharmacyListCard: View {
                     Circle()
                         .fill(pharmacy.isCurrentlyOpen ? Color.green : Color.red)
                         .frame(width: 6, height: 6)
-                    Text(pharmacy.isCurrentlyOpen ? "Open now" : "Closed")
+                    Text(appState.t(pharmacy.isCurrentlyOpen ? "map.open" : "map.closed"))
                         .font(.caption)
                         .foregroundColor(pharmacy.isCurrentlyOpen ? .green : .red)
                         .fontWeight(.medium)
@@ -311,6 +315,7 @@ struct PharmacyListCard: View {
 
 struct SearchBar: View {
     @Binding var text: String
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         HStack(spacing: 12) {
@@ -318,7 +323,7 @@ struct SearchBar: View {
                 .foregroundColor(.textSecondary)
                 .font(.system(size: 18))
             
-            TextField("Search pharmacies...", text: $text)
+            TextField(appState.t("map.searchPlaceholder"), text: $text)
                 .font(.body)
                 .foregroundColor(.textPrimary)
             
@@ -338,4 +343,5 @@ struct SearchBar: View {
 
 #Preview {
     UserMapView()
+        .environmentObject(AppState())
 }

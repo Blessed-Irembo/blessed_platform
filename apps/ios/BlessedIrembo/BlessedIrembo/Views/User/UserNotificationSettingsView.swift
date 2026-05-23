@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct UserNotificationSettingsView: View {
+    @EnvironmentObject var appState: AppState
     @State private var pushEnabled = true
     @State private var emailEnabled = true
     @State private var smsEnabled = false
@@ -8,21 +9,21 @@ struct UserNotificationSettingsView: View {
 
     var body: some View {
         Form {
-            Section(header: Text("App Notifications"), footer: Text("Enable these to stay up-to-date with your orders and pharmacy interactions.")) {
-                Toggle("Push Notifications", isOn: $pushEnabled)
+            Section(header: Text(appState.t("settings.appNotifications")), footer: Text(appState.t("settings.appNotificationsFooter"))) {
+                Toggle(appState.t("profile.notifications"), isOn: $pushEnabled)
                     .tint(.primaryTeal)
-                Toggle("Email Alerts", isOn: $emailEnabled)
+                Toggle(appState.t("settings.emailAlerts"), isOn: $emailEnabled)
                     .tint(.primaryTeal)
-                Toggle("SMS Notifications", isOn: $smsEnabled)
+                Toggle(appState.t("settings.smsAlerts"), isOn: $smsEnabled)
                     .tint(.primaryTeal)
             }
             
-            Section(header: Text("Marketing")) {
-                Toggle("Promotional Offers", isOn: $promoEnabled)
+            Section(header: Text(appState.t("settings.marketing"))) {
+                Toggle(appState.t("settings.promotionalOffers"), isOn: $promoEnabled)
                     .tint(.primaryTeal)
             }
         }
-        .navigationTitle("Notifications")
+        .navigationTitle(appState.t("profile.notifications"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

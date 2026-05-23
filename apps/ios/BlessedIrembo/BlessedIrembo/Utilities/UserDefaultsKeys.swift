@@ -11,4 +11,5 @@ enum UserDefaultsKeys {
     static let userToken = "userToken"
     static let userType = "userType" // "user" or "pharmacy"
     static let rememberedEmail = "rememberedEmail"
+    static let selectedLanguage = "selectedLanguage"
 }

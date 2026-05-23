@@ -17,6 +17,7 @@ struct PharmacyDetailsView: View {
     let userLocation: CLLocationCoordinate2D
 
     @Environment(\.dismiss) var dismiss
+    @EnvironmentObject var appState: AppState
     @State private var hoursExpanded = false
 
     var body: some View {
@@ -78,7 +79,7 @@ struct PharmacyDetailsView: View {
                         }
                     }
 
-                    Text(pharmacy.formattedDistance(from: userLocation))
+                    Text(pharmacy.formattedDistance(from: userLocation, localizedWith: appState))
                         .font(.subheadline)
                         .foregroundColor(.textSecondary)
                 }
@@ -90,13 +91,13 @@ struct PharmacyDetailsView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         if pharmacy.isVerified {
-                            BadgeView(label: "Verified", color: .primaryTeal, icon: "checkmark.shield.fill")
+                            BadgeView(label: appState.t("details.verified"), color: .primaryTeal, icon: "checkmark.shield.fill")
                         }
                         if pharmacy.is24_7 {
-                            BadgeView(label: "24/7 Available", color: Color.blue, icon: "clock.fill")
+                            BadgeView(label: appState.t("details.alwaysOpen"), color: Color.blue, icon: "clock.fill")
                         }
                         if pharmacy.isPremium {
-                            BadgeView(label: "Premium Member", color: Color(hex: "4F46E5"), icon: "star.fill")
+                            BadgeView(label: appState.t("details.premiumMember"), color: Color(hex: "4F46E5"), icon: "star.fill")
                         }
                     }
                 }
@@ -119,7 +120,7 @@ struct PharmacyDetailsView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "phone.fill")
                             .font(.system(size: 16))
-                        Text("Call Pharmacy")
+                        Text(appState.t("details.call"))
                             .font(.system(size: 15, weight: .semibold))
                     }
                     .foregroundColor(Color(hex: "0F766E"))
@@ -138,7 +139,7 @@ struct PharmacyDetailsView: View {
                     HStack(spacing: 8) {
                         Image(systemName: "message.fill")   // SF Symbol fallback for WhatsApp
                             .font(.system(size: 16))
-                        Text("WhatsApp")
+                        Text(appState.t("details.whatsapp"))
                             .font(.system(size: 15, weight: .semibold))
                     }
                     .foregroundColor(.white)
@@ -157,7 +158,7 @@ struct PharmacyDetailsView: View {
 
     private var contactAndHoursCard: some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Contact & Hours")
+            Text(appState.t("details.contactHoursTitle"))
                 .font(.system(size: 17, weight: .bold))
                 .foregroundColor(.textPrimary)
                 .padding(.horizontal, 20)
@@ -165,17 +166,17 @@ struct PharmacyDetailsView: View {
                 .padding(.bottom, 16)
 
             // Address
-            ContactRow(icon: "mappin.circle.fill", iconColor: Color(hex: "0D9488"), label: "Address", value: pharmacy.address.isEmpty ? "N/A" : pharmacy.address)
+            ContactRow(icon: "mappin.circle.fill", iconColor: Color(hex: "0D9488"), label: appState.t("auth.addressLabel"), value: pharmacy.address.isEmpty ? "N/A" : pharmacy.address)
 
             Divider().padding(.leading, 56)
 
             // Phone
-            ContactRow(icon: "phone.fill", iconColor: Color(hex: "2563EB"), label: "Phone", value: pharmacy.phoneNumber.isEmpty ? "N/A" : pharmacy.phoneNumber)
+            ContactRow(icon: "phone.fill", iconColor: Color(hex: "2563EB"), label: appState.t("auth.phoneLabel"), value: pharmacy.phoneNumber.isEmpty ? "N/A" : pharmacy.phoneNumber)
 
             Divider().padding(.leading, 56)
 
             // Email
-            ContactRow(icon: "envelope.fill", iconColor: Color(hex: "7C3AED"), label: "Email", value: pharmacy.email.isEmpty ? "N/A" : pharmacy.email)
+            ContactRow(icon: "envelope.fill", iconColor: Color(hex: "7C3AED"), label: appState.t("auth.emailLabel"), value: pharmacy.email.isEmpty ? "N/A" : pharmacy.email)
 
             Divider().padding(.leading, 56)
 
@@ -206,7 +207,7 @@ struct PharmacyDetailsView: View {
 
                     // Open/Closed + summary
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Hours")
+                        Text(appState.t("details.hours"))
                             .font(.caption)
                             .foregroundColor(.textSecondary)
 
@@ -215,14 +216,14 @@ struct PharmacyDetailsView: View {
                                 .fill(pharmacy.isCurrentlyOpen ? Color.green : Color.red)
                                 .frame(width: 8, height: 8)
 
-                            Text(pharmacy.isCurrentlyOpen ? "Open now" : "Closed now")
+                            Text(appState.t(pharmacy.isCurrentlyOpen ? "details.openNow" : "details.closedNow"))
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(pharmacy.isCurrentlyOpen ? .green : .red)
 
                             Text("·")
                                 .foregroundColor(.textSecondary)
 
-                            Text(pharmacy.formattedHoursSummary)
+                            Text(pharmacy.formattedHoursSummary(localizedWith: appState))
                                 .font(.system(size: 14))
                                 .foregroundColor(.textSecondary)
                                 .lineLimit(1)
@@ -261,14 +262,14 @@ struct PharmacyDetailsView: View {
                 let isOpen = oh.is24Hours || oh.days.contains(day)
 
                 HStack {
-                    Text(day)
+                    Text(appState.t("day.\(day)"))
                         .font(.system(size: 14, weight: isToday ? .semibold : .regular))
                         .foregroundColor(isToday ? Color(hex: "0F766E") : .textPrimary)
 
                     Spacer()
 
                     if oh.is24Hours {
-                        Text("Open 24 hours")
+                        Text(appState.t("details.open24Hours"))
                             .font(.system(size: 14))
                             .foregroundColor(isToday ? Color(hex: "0D9488") : .textSecondary)
                     } else if isOpen {
@@ -276,7 +277,7 @@ struct PharmacyDetailsView: View {
                             .font(.system(size: 14, weight: isToday ? .semibold : .regular))
                             .foregroundColor(isToday ? Color(hex: "0D9488") : .textSecondary)
                     } else {
-                        Text("Closed")
+                        Text(appState.t("map.closed"))
                             .font(.system(size: 14))
                             .foregroundColor(isToday ? .red : Color.gray.opacity(0.6))
                     }
@@ -304,7 +305,7 @@ struct PharmacyDetailsView: View {
     private var locationCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Location")
+                Text(appState.t("details.location"))
                     .font(.system(size: 17, weight: .bold))
                     .foregroundColor(.textPrimary)
 
@@ -320,7 +321,7 @@ struct PharmacyDetailsView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "arrow.triangle.turn.up.right.circle.fill")
                         .font(.system(size: 18))
-                    Text("Get Directions")
+                    Text(appState.t("details.getDirections"))
                         .font(.system(size: 16, weight: .semibold))
                 }
                 .foregroundColor(.white)

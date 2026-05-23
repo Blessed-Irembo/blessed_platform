@@ -6,6 +6,7 @@
 import SwiftUI
 
 struct PharmacyInquiriesView: View {
+    @EnvironmentObject var appState: AppState
     // ViewModel kept in signature for backward compatibility with any existing
     // Xcode project file reference, but is no longer used in the UI.
     var viewModel: PharmacyDashboardViewModel? = nil
@@ -18,12 +19,12 @@ struct PharmacyInquiriesView: View {
                 .font(.system(size: 48))
                 .foregroundColor(.primaryTeal.opacity(0.4))
 
-            Text("Inquiries Removed")
+            Text(appState.t("inquiries.removedTitle"))
                 .font(.title3)
                 .fontWeight(.semibold)
                 .foregroundColor(.textPrimary)
 
-            Text("Users contact pharmacies directly via WhatsApp. This screen is no longer active.")
+            Text(appState.t("inquiries.removedDesc"))
                 .font(.body)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
@@ -31,7 +32,7 @@ struct PharmacyInquiriesView: View {
 
             Spacer()
         }
-        .navigationTitle("Inquiries")
+        .navigationTitle(appState.t("nav.inquiries"))
     }
 }
 

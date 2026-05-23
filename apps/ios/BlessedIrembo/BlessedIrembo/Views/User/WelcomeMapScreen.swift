@@ -10,7 +10,13 @@ struct WelcomeMapScreen: View {
     @State private var animateContent = false
     
     var body: some View {
-        welcomeContent
+        ZStack(alignment: .topTrailing) {
+            welcomeContent
+            
+            FloatingLanguageSwitcher()
+                .padding(.trailing, 20)
+                .padding(.top, 16)
+        }
     }
     
     private var welcomeContent: some View {
@@ -50,13 +56,13 @@ struct WelcomeMapScreen: View {
                     
                     // Text content
                     VStack(spacing: 16) {
-                        Text("Find pharmacies near you")
+                        Text(appState.t("welcome.findPharmacies"))
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.textPrimary)
                             .multilineTextAlignment(.center)
                             .opacity(animateContent ? 1.0 : 0.0)
                         
-                        Text("Operating under **Blessed HealthConnect Ltd**, Blessed Irembo connects you with verified pharmacies nationwide. Search by location, check availability, and get the medication you need, when you need it.")
+                        Text(appState.t("welcome.subtitle"))
                             .font(.body)
                             .foregroundColor(.textSecondary)
                             .multilineTextAlignment(.center)
@@ -71,7 +77,7 @@ struct WelcomeMapScreen: View {
                             Image(systemName: "map.circle.fill")
                                 .font(.system(size: 24))
                             
-                            Text("Open Map")
+                            Text(appState.t("welcome.openMap"))
                                 .font(.system(size: 18, weight: .semibold))
                         }
                         .foregroundColor(.white)
@@ -111,11 +117,11 @@ struct WelcomeMapScreen: View {
     private var bottomNavBar: some View {
         HStack(spacing: 0) {
             // Home
-            NavBarItem(icon: "house.fill", label: "Home", isSelected: true)
+            NavBarItem(icon: "house.fill", label: appState.t("welcome.home"), isSelected: true)
             
             // Profile
             NavigationLink(destination: ProfileView().environmentObject(appState)) {
-                NavBarItem(icon: "person.fill", label: "Profile", isSelected: false)
+                NavBarItem(icon: "person.fill", label: appState.t("welcome.profile"), isSelected: false)
             }
         }
         .padding(.vertical, 12)

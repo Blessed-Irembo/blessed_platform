@@ -62,14 +62,22 @@ struct SignUpPharmacyView: View {
 
     // MARK: – Body
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                headerSection
-                formSection
+        ZStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    Spacer().frame(height: 36)
+                    headerSection
+                    formSection
+                }
+            }
+            
+            VStack {
+                FloatingLanguageSwitcher()
+                Spacer()
             }
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Register Pharmacy")
+        .navigationTitle(appState.t("auth.registerPharmacy"))
         .navigationBarTitleDisplayMode(.inline)
     }
 
@@ -78,10 +86,10 @@ struct SignUpPharmacyView: View {
         VStack(spacing: 10) {
             Logo(size: 64)
                 .padding(.top, 28)
-            Text("Register Your Pharmacy")
+            Text(appState.t("auth.registerPharmacy"))
                 .font(.system(size: 26, weight: .bold))
                 .foregroundColor(.textPrimary)
-            Text("Your council number is verified against the\nRwanda FDA December 2025 licensed list.")
+            Text(appState.t("auth.registerPharmacySubtitle"))
                 .font(.subheadline)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
@@ -103,33 +111,33 @@ struct SignUpPharmacyView: View {
             licenseSection
 
             // ── 2. Pharmacy Name ──
-            FormField(label: "Pharmacy Name", systemImage: "building.2") {
-                TextField("Enter pharmacy name", text: $pharmacyName)
+            FormField(label: appState.t("auth.pharmacyNameLabel"), systemImage: "building.2") {
+                TextField(appState.t("auth.pharmacyNamePlaceholder"), text: $pharmacyName)
                     .autocapitalization(.words)
             }
 
             // ── 3. Owner / Responsible Person ──
-            FormField(label: "Owner / Responsible Person", systemImage: "person") {
-                TextField("Enter owner full name", text: $ownerName)
+            FormField(label: appState.t("auth.ownerNameLabel"), systemImage: "person") {
+                TextField(appState.t("auth.ownerNamePlaceholder"), text: $ownerName)
                     .autocapitalization(.words)
             }
 
             // ── 4. Phone Number (primary) ──
-            FormField(label: "Phone Number", systemImage: "phone", note: "Primary contact — used for WhatsApp & sign-in") {
-                TextField("+250 788 123 456", text: $phoneNumber)
+            FormField(label: appState.t("auth.phoneLabel"), systemImage: "phone", note: appState.t("auth.phoneModePrimaryHint")) {
+                TextField(appState.t("auth.phonePlaceholder"), text: $phoneNumber)
                     .keyboardType(.phonePad)
             }
 
             // ── 5. Email ──
-            FormField(label: "Email Address", systemImage: "envelope") {
-                TextField("pharmacy@example.com", text: $email)
+            FormField(label: appState.t("auth.emailLabel"), systemImage: "envelope") {
+                TextField(appState.t("auth.emailPlaceholder"), text: $email)
                     .keyboardType(.emailAddress)
                     .autocapitalization(.none)
             }
 
             // ── 6. Physical Address ──
-            FormField(label: "Physical Address", systemImage: "mappin.circle") {
-                TextField("Enter full address including district", text: $address)
+            FormField(label: appState.t("auth.addressLabel"), systemImage: "mappin.circle") {
+                TextField(appState.t("auth.addressPlaceholder"), text: $address)
                     .autocapitalization(.words)
             }
 
@@ -140,13 +148,13 @@ struct SignUpPharmacyView: View {
             operatingHoursSection
 
             // ── 9. Password ──
-            FormField(label: "Password", systemImage: "lock") {
+            FormField(label: appState.t("auth.passwordLabel"), systemImage: "lock") {
                 Group {
                     if showPassword {
-                        TextField("Min. 6 characters", text: $password)
+                        TextField(appState.t("auth.passwordHint"), text: $password)
                             .autocapitalization(.none)
                     } else {
-                        SecureField("Min. 6 characters", text: $password)
+                        SecureField(appState.t("auth.passwordHint"), text: $password)
                     }
                 }
                 .overlay(alignment: .trailing) {
@@ -159,13 +167,13 @@ struct SignUpPharmacyView: View {
             }
 
             // ── 10. Confirm Password ──
-            FormField(label: "Confirm Password", systemImage: "lock") {
+            FormField(label: appState.t("auth.confirmPasswordLabel"), systemImage: "lock") {
                 Group {
                     if showConfirmPassword {
-                        TextField("Re-enter your password", text: $confirmPassword)
+                        TextField(appState.t("auth.confirmPasswordPlaceholder"), text: $confirmPassword)
                             .autocapitalization(.none)
                     } else {
-                        SecureField("Re-enter your password", text: $confirmPassword)
+                        SecureField(appState.t("auth.confirmPasswordPlaceholder"), text: $confirmPassword)
                     }
                 }
                 .overlay(alignment: .trailing) {
@@ -182,7 +190,7 @@ struct SignUpPharmacyView: View {
 
             // ── Submit ──
             PrimaryButton(
-                title: "Register Pharmacy",
+                title: appState.t("auth.registerPharmacy"),
                 isLoading: viewModel.isLoading
             ) {
                 submit()
@@ -201,9 +209,9 @@ struct SignUpPharmacyView: View {
             // Sign in link
             Button { dismiss() } label: {
                 HStack(spacing: 4) {
-                    Text("Already have an account?")
+                    Text(appState.t("role.alreadyAccount"))
                         .foregroundColor(.textSecondary)
-                    Text("Sign In")
+                    Text(appState.t("role.signIn"))
                         .foregroundColor(.primaryTeal)
                         .fontWeight(.semibold)
                 }
@@ -224,7 +232,7 @@ struct SignUpPharmacyView: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Label {
-                    Text("Council Registration Number")
+                    Text(appState.t("auth.licenseLabel"))
                         .font(.subheadline).fontWeight(.semibold)
                 } icon: {
                     Image(systemName: "doc.text")
@@ -235,12 +243,12 @@ struct SignUpPharmacyView: View {
                     .fontWeight(.bold)
             }
 
-            Text("Format: NPC/A0000 — as issued by Rwanda FDA")
+            Text(appState.t("auth.licenseHint"))
                 .font(.caption)
                 .foregroundColor(.textSecondary)
 
             HStack {
-                TextField("NPC/A0000", text: $licenseNumber)
+                TextField(appState.t("auth.licensePlaceholder"), text: $licenseNumber)
                     .autocapitalization(.allCharacters)
                     .font(.system(.body, design: .monospaced))
                     .onChange(of: licenseNumber) { newValue in
@@ -291,21 +299,21 @@ struct SignUpPharmacyView: View {
         switch viewModel.licenseStatus {
         case .valid:
             Label(
-                "Verified: \(viewModel.licensedPharmacyName)",
+                String(format: appState.t("auth.licenseVerified"), viewModel.licensedPharmacyName),
                 systemImage: "checkmark.shield.fill"
             )
             .font(.caption).fontWeight(.medium)
             .foregroundColor(.green)
         case .alreadyTaken:
             Label(
-                "Already registered — sign in instead",
+                appState.t("auth.licenseTaken"),
                 systemImage: "exclamationmark.triangle.fill"
             )
             .font(.caption).fontWeight(.medium)
             .foregroundColor(.orange)
         case .invalid:
             Label(
-                "Not found in the Rwanda FDA licensed list",
+                appState.t("auth.licenseNotFound"),
                 systemImage: "xmark.circle.fill"
             )
             .font(.caption).fontWeight(.medium)
@@ -320,7 +328,7 @@ struct SignUpPharmacyView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Label {
-                    Text("Pharmacy Location")
+                    Text(appState.t("auth.pharmacyLocation"))
                         .font(.subheadline).fontWeight(.semibold)
                 } icon: {
                     Image(systemName: "location.circle")
@@ -331,15 +339,15 @@ struct SignUpPharmacyView: View {
                     .fontWeight(.bold)
             }
 
-            Text("Set your pharmacy's position on the map.")
+            Text(appState.t("auth.pharmacyLocationSubtitle"))
                 .font(.caption)
                 .foregroundColor(.textSecondary)
 
             // Tab switcher
-            Picker("Location method", selection: $locationTab) {
-                Label("Use My Location", systemImage: "location.fill")
+            Picker(appState.t("auth.locationMethod"), selection: $locationTab) {
+                Label(appState.t("auth.useMyLocation"), systemImage: "location.fill")
                     .tag(LocationTab.gps)
-                Label("Enter Coordinates", systemImage: "map")
+                Label(appState.t("auth.enterCoordinates"), systemImage: "map")
                     .tag(LocationTab.coordinates)
             }
             .pickerStyle(.segmented)
@@ -359,7 +367,7 @@ struct SignUpPharmacyView: View {
 
     private var gpsPanel: some View {
         VStack(spacing: 10) {
-            Text("Open this screen while physically at the pharmacy for best accuracy.")
+            Text(appState.t("auth.gpsHint"))
                 .font(.caption)
                 .foregroundColor(.textSecondary)
 
@@ -370,16 +378,16 @@ struct SignUpPharmacyView: View {
                     switch gpsStatus {
                     case .locating:
                         ProgressView().scaleEffect(0.8)
-                        Text("Getting your location…")
+                        Text(appState.t("auth.gettingLocation"))
                     case .success:
                         Image(systemName: "checkmark.circle.fill")
-                        Text("Location captured — tap to update")
+                        Text(appState.t("auth.gpsSuccess"))
                     case .error:
                         Image(systemName: "exclamationmark.circle")
-                        Text("Could not get location — tap to retry")
+                        Text(appState.t("auth.gpsError"))
                     case .idle:
                         Image(systemName: "location.fill")
-                        Text("Use My Location")
+                        Text(appState.t("auth.useMyLocation"))
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -424,13 +432,13 @@ struct SignUpPharmacyView: View {
 
     private var coordinatesPanel: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Open Google Maps, long-press your pharmacy → copy the coordinates shown.")
+            Text(appState.t("auth.coordsHint"))
                 .font(.caption)
                 .foregroundColor(.textSecondary)
 
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Latitude").font(.caption).foregroundColor(.textSecondary)
+                    Text(appState.t("auth.latitude")).font(.caption).foregroundColor(.textSecondary)
                     TextField("-1.944216", text: $manualLat)
                         .keyboardType(.decimalPad)
                         .font(.system(.body, design: .monospaced))
@@ -439,7 +447,7 @@ struct SignUpPharmacyView: View {
                         .cornerRadius(10)
                 }
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Longitude").font(.caption).foregroundColor(.textSecondary)
+                    Text(appState.t("auth.longitude")).font(.caption).foregroundColor(.textSecondary)
                     TextField("30.061883", text: $manualLng)
                         .keyboardType(.decimalPad)
                         .font(.system(.body, design: .monospaced))
@@ -454,7 +462,7 @@ struct SignUpPharmacyView: View {
             }
 
             Link(destination: URL(string: "https://maps.google.com")!) {
-                Label("Open Google Maps to find coordinates", systemImage: "arrow.up.right.square")
+                Label(appState.t("auth.openMapsHint"), systemImage: "arrow.up.right.square")
                     .font(.caption)
                     .foregroundColor(.primaryTeal)
             }
@@ -466,7 +474,7 @@ struct SignUpPharmacyView: View {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
             VStack(alignment: .leading, spacing: 2) {
-                Text("Location set")
+                Text(appState.t("auth.locationSet"))
                     .font(.caption).fontWeight(.semibold).foregroundColor(.green)
                 Text(String(format: "%.6f, %.6f", lat, lng))
                     .font(.caption2)
@@ -482,16 +490,16 @@ struct SignUpPharmacyView: View {
 
     // MARK: – Operating Hours Section
     private var operatingHoursSection: some View {
-        FormField(label: "Operating Hours", systemImage: "clock") {
+        FormField(label: appState.t("auth.operatingHours"), systemImage: "clock") {
             VStack(alignment: .leading, spacing: 12) {
-                Toggle("Open 24/7", isOn: $is24Hours)
+                Toggle(appState.t("auth.is24_7"), isOn: $is24Hours)
                     .font(.subheadline)
                     .tint(.primaryTeal)
 
                 if !is24Hours {
                     Divider()
 
-                    Text("Open Days")
+                    Text(appState.t("auth.openDays"))
                         .font(.caption)
                         .foregroundColor(.textSecondary)
 
@@ -518,14 +526,14 @@ struct SignUpPharmacyView: View {
 
                     HStack {
                         VStack(alignment: .leading) {
-                            Text("Opens at").font(.caption).foregroundColor(.textSecondary)
+                            Text(appState.t("auth.opensAt")).font(.caption).foregroundColor(.textSecondary)
                             DatePicker("", selection: $openTime, displayedComponents: .hourAndMinute)
                                 .labelsHidden()
                                 .tint(.primaryTeal)
                         }
                         Spacer()
                         VStack(alignment: .leading) {
-                            Text("Closes at").font(.caption).foregroundColor(.textSecondary)
+                            Text(appState.t("auth.closesAt")).font(.caption).foregroundColor(.textSecondary)
                             DatePicker("", selection: $closeTime, displayedComponents: .hourAndMinute)
                                 .labelsHidden()
                                 .tint(.primaryTeal)
@@ -541,7 +549,7 @@ struct SignUpPharmacyView: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "checkmark.shield.fill")
                 .foregroundColor(.primaryTeal)
-            Text("**Verified by Rwanda FDA.** Your council registration number is cross-checked against the official December 2025 list of 725 licensed human retail pharmacies.")
+            Text(appState.t("auth.fdaNotice"))
                 .font(.caption)
                 .foregroundColor(Color.primaryTeal.opacity(0.9))
         }

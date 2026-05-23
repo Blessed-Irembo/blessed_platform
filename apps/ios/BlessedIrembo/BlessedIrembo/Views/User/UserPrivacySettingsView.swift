@@ -1,26 +1,27 @@
 import SwiftUI
 
 struct UserPrivacySettingsView: View {
+    @EnvironmentObject var appState: AppState
     @State private var shareData = true
     @State private var analyticsEnabled = true
 
     var body: some View {
         Form {
-            Section(header: Text("Data Sharing"), footer: Text("Help us improve the Blessed Irembo map accuracy and services by sharing anonymous usage data.")) {
-                Toggle("Share Usage Data", isOn: $shareData)
+            Section(header: Text(appState.t("settings.dataSharing")), footer: Text(appState.t("settings.dataSharingFooter"))) {
+                Toggle(appState.t("settings.shareUsageData"), isOn: $shareData)
                     .tint(.primaryTeal)
-                Toggle("Allow Analytics", isOn: $analyticsEnabled)
+                Toggle(appState.t("settings.allowAnalytics"), isOn: $analyticsEnabled)
                     .tint(.primaryTeal)
             }
             
-            Section(header: Text("Legal Information")) {
-                Link("Privacy Policy", destination: URL(string: "https://blessedirembo.com/privacy-policy")!)
+            Section(header: Text(appState.t("settings.legalInfo"))) {
+                Link(appState.t("profile.privacyPolicy"), destination: URL(string: "https://blessedirembo.com/privacy-policy")!)
                     .foregroundColor(.textPrimary)
-                Link("Terms and Conditions", destination: URL(string: "https://blessedirembo.com/terms-and-conditions")!)
+                Link(appState.t("profile.terms"), destination: URL(string: "https://blessedirembo.com/terms-and-conditions")!)
                     .foregroundColor(.textPrimary)
             }
         }
-        .navigationTitle("Privacy & Security")
+        .navigationTitle(appState.t("profile.privacy"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

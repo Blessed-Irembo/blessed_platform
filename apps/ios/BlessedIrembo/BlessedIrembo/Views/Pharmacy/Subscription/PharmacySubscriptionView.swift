@@ -43,7 +43,7 @@ struct PharmacySubscriptionView: View {
             .padding(.top, 16)
         }
         .background(Color(.systemGroupedBackground))
-        .navigationTitle("Subscription")
+        .navigationTitle(appState.t("nav.subscription"))
         .navigationBarTitleDisplayMode(.large)
         .onAppear(perform: onAppear)
         .onDisappear { viewModel.stopListener() }
@@ -51,7 +51,7 @@ struct PharmacySubscriptionView: View {
         .onChange(of: selectedPhoto) { newItem in
             Task { await loadSelectedPhoto(from: newItem) }
         }
-        .alert("Error", isPresented: Binding(
+        .alert(appState.t("common.error"), isPresented: Binding(
             get: { viewModel.errorMessage != nil },
             set: { if !$0 { viewModel.clearMessages() } }
         )) {
@@ -59,7 +59,7 @@ struct PharmacySubscriptionView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .alert("Success", isPresented: Binding(
+        .alert(appState.t("common.success"), isPresented: Binding(
             get: { viewModel.successMessage != nil },
             set: { if !$0 { viewModel.clearMessages() } }
         )) {
@@ -68,16 +68,16 @@ struct PharmacySubscriptionView: View {
             Text(viewModel.successMessage ?? "")
         }
         .confirmationDialog(
-            "Cancel Payment Request",
+            appState.t("subscription.cancelPaymentRequestDialog"),
             isPresented: $showCancelConfirm,
             titleVisibility: .visible
         ) {
-            Button("Cancel Request", role: .destructive) {
+            Button(appState.t("subscription.cancelPending"), role: .destructive) {
                 Task { await viewModel.cancelRequest() }
             }
-            Button("Keep Request", role: .cancel) {}
+            Button(appState.t("subscription.keepPending"), role: .cancel) {}
         } message: {
-            Text("Are you sure you want to cancel your pending payment request? You will need to submit a new intent to pay again.")
+            Text(appState.t("subscription.cancelPendingConfirmDesc"))
         }
     }
 
@@ -97,10 +97,10 @@ struct PharmacySubscriptionView: View {
             }
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(status.displayTitle)
+                Text(status.displayTitle(localizedWith: appState))
                     .font(.headline)
                     .foregroundColor(.primary)
-                Text(status.displaySubtitle)
+                Text(status.displaySubtitle(localizedWith: appState))
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -119,7 +119,7 @@ struct PharmacySubscriptionView: View {
 
     private var planSelectionSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Choose a Plan")
+            Text(appState.t("subscription.choosePlan"))
                 .font(.title3.weight(.bold))
                 .padding(.top, 8)
 
@@ -137,7 +137,7 @@ struct PharmacySubscriptionView: View {
 
             // ── Popular badge ─────────────────────────────────────
             if plan.isPopular {
-                Text("MOST POPULAR")
+                Text(appState.t("subscription.mostPopular"))
                     .font(.caption.weight(.bold))
                     .foregroundColor(.white)
                     .frame(maxWidth: .infinity)
@@ -154,10 +154,10 @@ struct PharmacySubscriptionView: View {
             }) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(plan.name)
+                        Text(plan.displayName(localizedWith: appState))
                             .font(.headline)
                             .foregroundColor(.primary)
-                        Text(plan.label)
+                        Text(plan.displayLabel(localizedWith: appState))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
@@ -180,11 +180,11 @@ struct PharmacySubscriptionView: View {
 
                     // Step 1: Payment instructions
                     VStack(alignment: .leading, spacing: 12) {
-                        Label("Step 1: Make Payment via MoMo", systemImage: "1.circle.fill")
+                        Label(appState.t("subscription.step1Title"), systemImage: "1.circle.fill")
                             .font(.subheadline.weight(.semibold))
                             .foregroundColor(Color.primaryTeal)
 
-                        Text("Dial the code below on your phone to pay \(plan.amount.formatted()) RWF via MTN Mobile Money:")
+                        Text(String(format: appState.t("subscription.dialCodeFormat"), plan.amount.formatted()))
                             .font(.footnote)
                             .foregroundColor(.secondary)
 
@@ -210,7 +210,7 @@ struct PharmacySubscriptionView: View {
                                 )
 
                             Button(action: { copyUSSD(amount: plan.amount) }) {
-                                Label("Copy Code", systemImage: "doc.on.doc")
+                                Label(appState.t("subscription.copyCode"), systemImage: "doc.on.doc")
                                     .font(.caption.weight(.medium))
                                     .foregroundColor(Color.primaryTeal)
                             }
@@ -220,7 +220,7 @@ struct PharmacySubscriptionView: View {
                                 Image(systemName: "info.circle.fill")
                                     .font(.caption)
                                     .foregroundColor(.orange)
-                                Text("You will be prompted to confirm a payment to **Blessed HealthConnect LTD** for **\(plan.amount.formatted()) RWF**.")
+                                Text(String(format: appState.t("subscription.promptConfirmFormat"), plan.amount.formatted()))
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .fixedSize(horizontal: false, vertical: true)
@@ -231,15 +231,15 @@ struct PharmacySubscriptionView: View {
                         }
 
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("📌 Important:")
+                            Text(appState.t("subscription.importantHeader"))
                                 .font(.caption.weight(.semibold))
                                 .foregroundColor(.secondary)
-                            Text("After dialing, follow the prompts on your phone to confirm the MoMo payment. Once paid, tap the button below.")
+                            Text(appState.t("subscription.importantPromptBody"))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         .padding(10)
-                        .background(Color(.secondarySystemBackground))
+                        .background(Color.orange.opacity(0.07))
                         .cornerRadius(8)
                     }
 
@@ -254,7 +254,7 @@ struct PharmacySubscriptionView: View {
                                     .tint(.white)
                                     .padding(.trailing, 4)
                             }
-                            Text(viewModel.isLoading ? "Submitting..." : "I Have Paid — Intend to Pay")
+                            Text(viewModel.isLoading ? appState.t("subscription.submitting") : appState.t("subscription.intendToPay"))
                                 .fontWeight(.semibold)
                         }
                         .frame(maxWidth: .infinity)
@@ -285,9 +285,9 @@ struct PharmacySubscriptionView: View {
                     .foregroundColor(.orange)
                     .font(.title3)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Payment Pending Review")
+                    Text(appState.t("subscription.pendingTitle"))
                         .font(.headline)
-                    Text("Our team is reviewing your \(request.planDisplayName) plan request.")
+                    Text(String(format: appState.t("subscription.pendingSubtitleFormat"), request.planDisplayName(localizedWith: appState)))
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -303,18 +303,18 @@ struct PharmacySubscriptionView: View {
 
             // Plan summary
             VStack(alignment: .leading, spacing: 8) {
-                infoRow(label: "Plan", value: request.planDisplayName)
-                infoRow(label: "Amount", value: "\(request.amount.formatted()) RWF")
-                infoRow(label: "Submitted", value: request.createdAt.formatted(date: .abbreviated, time: .shortened))
+                infoRow(label: appState.t("subscription.planLabel"), value: request.planDisplayName(localizedWith: appState))
+                infoRow(label: appState.t("subscription.amountLabel"), value: "\(request.amount.formatted()) RWF")
+                infoRow(label: appState.t("subscription.submittedLabel"), value: request.createdAt.formatted(date: .abbreviated, time: .shortened))
                 if let receiptUrl = request.receiptUrl, !receiptUrl.isEmpty {
                     HStack {
-                        Text("Receipt")
+                        Text(appState.t("subscription.receiptLabel"))
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                             .frame(width: 80, alignment: .leading)
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
-                        Text("Uploaded")
+                        Text(appState.t("subscription.uploadedLabel"))
                             .font(.subheadline.weight(.medium))
                             .foregroundColor(.green)
                     }
@@ -326,11 +326,11 @@ struct PharmacySubscriptionView: View {
 
             // Step 2: Receipt Upload
             VStack(alignment: .leading, spacing: 12) {
-                Label("Step 2: Upload Payment Receipt (Optional)", systemImage: "2.circle.fill")
+                Label(appState.t("subscription.step2Title"), systemImage: "2.circle.fill")
                     .font(.subheadline.weight(.semibold))
                     .foregroundColor(Color.primaryTeal)
 
-                Text("To speed up approval, upload a screenshot of your MoMo payment confirmation.")
+                Text(appState.t("subscription.step2Body"))
                     .font(.footnote)
                     .foregroundColor(.secondary)
 
@@ -355,7 +355,7 @@ struct PharmacySubscriptionView: View {
                                         .tint(.white)
                                         .frame(width: 60)
                                 }
-                                Text(viewModel.isUploading ? "Uploading..." : "Upload Receipt")
+                                Text(viewModel.isUploading ? appState.t("subscription.uploading") : appState.t("subscription.uploadReceipt"))
                                     .fontWeight(.semibold)
                             }
                             .frame(maxWidth: .infinity)
@@ -374,7 +374,7 @@ struct PharmacySubscriptionView: View {
                     ) {
                         HStack {
                             Image(systemName: "photo.badge.plus")
-                            Text("Select Screenshot from Photos")
+                            Text(appState.t("subscription.selectScreenshot"))
                                 .fontWeight(.medium)
                         }
                         .frame(maxWidth: .infinity)
@@ -395,7 +395,7 @@ struct PharmacySubscriptionView: View {
 
             // Cancel request
             Button(role: .destructive, action: { showCancelConfirm = true }) {
-                Label("Cancel Pending Request", systemImage: "xmark.circle")
+                Label(appState.t("subscription.cancelPending"), systemImage: "xmark.circle")
                     .frame(maxWidth: .infinity)
                     .padding(12)
                     .background(Color.red.opacity(0.07))

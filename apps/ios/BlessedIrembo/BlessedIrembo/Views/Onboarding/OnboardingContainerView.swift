@@ -14,11 +14,15 @@ struct OnboardingContainerView: View {
             Color.white.ignoresSafeArea()
             
             VStack(spacing: 0) {
+                // Header spacer for overlay switcher
+                Spacer()
+                    .frame(height: 44)
+                
                 // Skip button
                 HStack {
                     Spacer()
                     if !viewModel.isLastPage {
-                        Button("Skip") {
+                        Button(appState.t("onboarding.skip")) {
                             viewModel.skip()
                         }
                         .foregroundColor(.textSecondary)
@@ -43,7 +47,7 @@ struct OnboardingContainerView: View {
                 .padding(.bottom, 24)
                 
                 // Navigation button
-                PrimaryButton(title: viewModel.buttonTitle) {
+                PrimaryButton(title: appState.t(viewModel.isLastPage ? "onboarding.getStarted" : "onboarding.next")) {
                     if viewModel.isLastPage {
                         appState.completeOnboarding()
                     } else {
@@ -52,6 +56,12 @@ struct OnboardingContainerView: View {
                 }
                 .padding(.horizontal, 32)
                 .padding(.bottom, 40)
+            }
+            
+            // Floating language switcher overlay at the top
+            VStack {
+                FloatingLanguageSwitcher()
+                Spacer()
             }
         }
     }

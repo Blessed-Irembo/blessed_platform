@@ -35,18 +35,18 @@ enum Constants {
     enum Onboarding {
         static let pages = [
             OnboardingPage(
-                title: "Welcome to Blessed Irembo",
-                description: "Find trusted pharmacies anywhere in Rwanda. Access medication and healthcare services with ease.",
+                titleKey: "onboarding.page1.title",
+                descriptionKey: "onboarding.page1.desc",
                 systemImage: "map.fill"
             ),
             OnboardingPage(
-                title: "Discover Nearby Pharmacies",
-                description: "Search by location, check availability, and find the nearest pharmacy to you in seconds.",
+                titleKey: "onboarding.page2.title",
+                descriptionKey: "onboarding.page2.desc",
                 systemImage: "location.fill"
             ),
             OnboardingPage(
-                title: "Connect Instantly",
-                description: "Get in touch with pharmacies directly. Share your needs and receive prompt responses.",
+                titleKey: "onboarding.page3.title",
+                descriptionKey: "onboarding.page3.desc",
                 systemImage: "phone.fill"
             )
         ]
@@ -61,7 +61,7 @@ enum Constants {
 
 /// Onboarding page data model
 struct OnboardingPage {
-    let title: String
-    let description: String
+    let titleKey: String
+    let descriptionKey: String
     let systemImage: String
 }

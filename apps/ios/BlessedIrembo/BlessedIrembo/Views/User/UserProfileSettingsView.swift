@@ -16,17 +16,17 @@ struct UserProfileSettingsView: View {
     
     var body: some View {
         Form {
-            Section("Personal Details") {
-                TextField("Full Name", text: $fullName)
-                TextField("Email Address", text: $email)
+            Section(appState.t("profile.personalDetailsTitle")) {
+                TextField(appState.t("auth.fullNameLabel"), text: $fullName)
+                TextField(appState.t("auth.emailLabel"), text: $email)
                     .keyboardType(.emailAddress)
                     .autocapitalization(.none)
-                TextField("Phone Number", text: $phone)
+                TextField(appState.t("auth.phoneLabel"), text: $phone)
                     .keyboardType(.phonePad)
             }
             
-            Section("Security (Optional)") {
-                SecureField("New Password", text: $password)
+            Section(appState.t("profile.securityOptional")) {
+                SecureField(appState.t("profile.newPassword"), text: $password)
             }
             
             Section {
@@ -37,7 +37,7 @@ struct UserProfileSettingsView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle())
                         } else {
-                            Text("Save Changes")
+                            Text(appState.t("profile.saveChanges"))
                                 .fontWeight(.bold)
                         }
                         Spacer()
@@ -46,7 +46,7 @@ struct UserProfileSettingsView: View {
                 .disabled(isSaving)
             }
         }
-        .navigationTitle("Edit Profile")
+        .navigationTitle(appState.t("profile.editProfile"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear {
             if let user = appState.currentUser {
@@ -55,12 +55,12 @@ struct UserProfileSettingsView: View {
                 phone = user.phoneNumber
             }
         }
-        .alert("Success", isPresented: $showSuccessAlert) {
+        .alert(appState.t("common.success"), isPresented: $showSuccessAlert) {
             Button("OK") {
                 presentationMode.wrappedValue.dismiss()
             }
         } message: {
-            Text("Your profile has been updated.")
+            Text(appState.t("profile.profileUpdatedUser"))
         }
     }
     

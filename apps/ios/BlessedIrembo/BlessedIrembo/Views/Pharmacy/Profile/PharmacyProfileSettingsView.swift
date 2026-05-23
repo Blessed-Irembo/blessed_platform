@@ -52,16 +52,16 @@ struct PharmacyProfileSettingsView: View {
                 }
             }
         }
-        .navigationTitle("Edit Profile")
+        .navigationTitle(appState.t("profile.editProfile"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: loadCurrentValues)
-        .alert("Profile updated", isPresented: $showSuccess) {
+        .alert(appState.t("profile.profileUpdated"), isPresented: $showSuccess) {
             Button("OK", role: .cancel) {
                 isEditing = false
                 presentationMode.wrappedValue.dismiss()
             }
         } message: {
-            Text("Your profile has been updated successfully.")
+            Text(appState.t("profile.profileUpdatedDesc"))
         }
     }
 
@@ -70,19 +70,19 @@ struct PharmacyProfileSettingsView: View {
     private var currentInfoSection: some View {
         Section {
             infoRow(icon: "cross.case.fill", iconColor: Color.primaryTeal,
-                    label: "Pharmacy Name",
+                    label: appState.t("auth.pharmacyNameLabel"),
                     value: appState.currentPharmacy?.name.isEmpty == false
-                        ? appState.currentPharmacy!.name : "Not set")
+                        ? appState.currentPharmacy!.name : appState.t("common.notSet"))
 
             infoRow(icon: "envelope.fill", iconColor: .blue,
-                    label: "Email",
+                    label: appState.t("auth.emailLabel"),
                     value: appState.currentPharmacy?.email.isEmpty == false
-                        ? appState.currentPharmacy!.email : "Not set")
+                        ? appState.currentPharmacy!.email : appState.t("common.notSet"))
 
             infoRow(icon: "phone.fill", iconColor: .green,
-                    label: "Phone Number",
+                    label: appState.t("auth.phoneLabel"),
                     value: appState.currentPharmacy?.phoneNumber.isEmpty == false
-                        ? appState.currentPharmacy!.phoneNumber : "Not set")
+                        ? appState.currentPharmacy!.phoneNumber : appState.t("common.notSet"))
 
             // Edit button — only when not already editing
             if !isEditing {
@@ -94,7 +94,7 @@ struct PharmacyProfileSettingsView: View {
                     HStack {
                         Spacer()
                         Image(systemName: "pencil")
-                        Text("Edit Profile")
+                        Text(appState.t("profile.editProfile"))
                             .fontWeight(.semibold)
                         Spacer()
                     }
@@ -102,7 +102,7 @@ struct PharmacyProfileSettingsView: View {
                 }
             }
         } header: {
-            Text("Current Information")
+            Text(appState.t("profile.currentInfo"))
         }
     }
 
@@ -110,15 +110,15 @@ struct PharmacyProfileSettingsView: View {
 
     private var editFieldsSection: some View {
         Section {
-            TextField("Pharmacy Name", text: $name)
+            TextField(appState.t("auth.pharmacyNameLabel"), text: $name)
                 .autocapitalization(.words)
 
-            TextField("Email Address", text: $email)
+            TextField(appState.t("auth.emailLabel"), text: $email)
                 .keyboardType(.emailAddress)
                 .autocapitalization(.none)
                 .textInputAutocapitalization(.never)
 
-            TextField("Phone Number", text: $phone)
+            TextField(appState.t("auth.phoneLabel"), text: $phone)
                 .keyboardType(.phonePad)
 
             // Cancel
@@ -130,13 +130,13 @@ struct PharmacyProfileSettingsView: View {
             } label: {
                 HStack {
                     Spacer()
-                    Text("Cancel")
+                    Text(appState.t("common.cancel"))
                         .foregroundColor(.secondary)
                     Spacer()
                 }
             }
         } header: {
-            Text("Edit Details")
+            Text(appState.t("profile.editDetails"))
         }
     }
 
@@ -146,11 +146,11 @@ struct PharmacyProfileSettingsView: View {
         Section {
             HStack {
                 if showPassword {
-                    TextField("New password (optional)", text: $password)
+                    TextField(appState.t("profile.newPasswordOptional"), text: $password)
                         .autocapitalization(.none)
                         .textInputAutocapitalization(.never)
                 } else {
-                    SecureField("New password (optional)", text: $password)
+                    SecureField(appState.t("profile.newPasswordOptional"), text: $password)
                 }
                 Button {
                     showPassword.toggle()
@@ -160,9 +160,9 @@ struct PharmacyProfileSettingsView: View {
                 }
             }
         } header: {
-            Text("Security (Optional)")
+            Text(appState.t("profile.securityOptional"))
         } footer: {
-            Text("Leave blank to keep your current password.")
+            Text(appState.t("profile.leaveBlankPassword"))
         }
     }
 
@@ -176,7 +176,7 @@ struct PharmacyProfileSettingsView: View {
                     if isSaving {
                         ProgressView()
                     } else {
-                        Text("Save Changes")
+                        Text(appState.t("profile.saveChanges"))
                             .fontWeight(.bold)
                     }
                     Spacer()

@@ -19,15 +19,15 @@ struct RoleSelectionView: View {
                 VStack(spacing: 16) {
                     Logo(size: 100)
                     
-                    Text("Welcome Back!")
+                    Text(appState.t("role.welcome"))
                         .font(.system(size: 32, weight: .bold))
                         .foregroundColor(.textPrimary)
                     
-                    Text("How would you like to continue?")
+                    Text(appState.t("role.subtitle"))
                         .font(.body)
                         .foregroundColor(.textSecondary)
                 }
-                .padding(.top, 60)
+                .padding(.top, 80)
                 
                 Spacer()
                 
@@ -35,8 +35,8 @@ struct RoleSelectionView: View {
                 VStack(spacing: 20) {
                     RoleCard(
                         icon: "person.fill",
-                        title: "I'm looking for a pharmacy",
-                        description: "Find and connect with pharmacies",
+                        title: appState.t("role.userTitle"),
+                        description: appState.t("role.userDesc"),
                         color:.primaryTeal
                     ) {
                         navigateToUserSignUp = true
@@ -44,8 +44,8 @@ struct RoleSelectionView: View {
                     
                     RoleCard(
                         icon: "cross.case.fill",
-                        title: "I own a pharmacy",
-                        description: "Register your pharmacy",
+                        title: appState.t("role.pharmacyTitle"),
+                        description: appState.t("role.pharmacyDesc"),
                         color: .primaryTeal.opacity(0.8)
                     ) {
                         navigateToPharmacySignUp = true
@@ -58,15 +58,21 @@ struct RoleSelectionView: View {
                 // Sign in link
                 Button(action: { navigateToSignIn = true }) {
                     HStack(spacing: 4) {
-                        Text("Already have an account?")
+                        Text(appState.t("role.alreadyAccount"))
                             .foregroundColor(.textSecondary)
-                        Text("Sign In")
+                        Text(appState.t("role.signIn"))
                             .foregroundColor(.primaryTeal)
                             .fontWeight(.semibold)
                     }
                     .font(.body)
                 }
                 .padding(.bottom, 40)
+            }
+            
+            // Floating language switcher overlay at the top
+            VStack {
+                FloatingLanguageSwitcher()
+                Spacer()
             }
         }
         .navigationDestination(isPresented: $navigateToUserSignUp) {

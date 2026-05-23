@@ -31,8 +31,8 @@ struct PharmacyDashboardView: View {
     // MARK: - Header
 
     private var headerSection: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
                     Logo(size: 32)
                     Text("Blessed Irembo")
@@ -44,6 +44,9 @@ struct PharmacyDashboardView: View {
                     .font(.system(size: 14, weight: .bold, design: .monospaced))
                     .tracking(2.0)
                     .foregroundColor(Color.textSecondary)
+                
+                FloatingLanguageSwitcher()
+                    .padding(.top, 4)
             }
             Spacer()
 
@@ -52,6 +55,7 @@ struct PharmacyDashboardView: View {
                 .background(Color.white)
                 .clipShape(Circle())
                 .shadow(color: Color.black.opacity(0.05), radius: 5, x: 0, y: 2)
+                .padding(.top, 4)
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
@@ -63,7 +67,7 @@ struct PharmacyDashboardView: View {
         VStack(spacing: 12) {
             ProgressView()
                 .tint(Color.primaryTeal)
-            Text("Loading live metrics…")
+            Text(appState.t("dashboard.loading"))
                 .font(.caption)
                 .foregroundColor(Color.textSecondary)
         }
@@ -76,7 +80,7 @@ struct PharmacyDashboardView: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
             // WhatsApp Clicks
             DashboardStatCard(
-                title: "WhatsApp Clicks",
+                title: appState.t("dashboard.whatsappClicks"),
                 value: "\(viewModel.whatsappClicks)",
                 trend: "",
                 icon: "message.fill",
@@ -85,7 +89,7 @@ struct PharmacyDashboardView: View {
 
             // Subscription Status
             DashboardStatCard(
-                title: "Subscription",
+                title: appState.t("dashboard.subscription"),
                 value: viewModel.subscriptionPlan,
                 trend: "",
                 icon: viewModel.isPremium ? "star.fill" : "person.fill",
@@ -94,7 +98,7 @@ struct PharmacyDashboardView: View {
 
             // Profile Views
             DashboardStatCard(
-                title: "Profile Views",
+                title: appState.t("dashboard.profileViews"),
                 value: "\(viewModel.profileViews)",
                 trend: "",
                 icon: "eye.fill",
@@ -103,8 +107,8 @@ struct PharmacyDashboardView: View {
 
             // Open / Closed status
             DashboardStatCard(
-                title: "Status",
-                value: appState.currentPharmacy?.isCurrentlyOpen == true ? "Open" : "Closed",
+                title: appState.t("dashboard.status"),
+                value: appState.t(appState.currentPharmacy?.isCurrentlyOpen == true ? "map.open" : "map.closed"),
                 trend: "",
                 icon: "clock.fill",
                 color: appState.currentPharmacy?.isCurrentlyOpen == true ? Color.green : Color.red

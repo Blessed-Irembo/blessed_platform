@@ -34,40 +34,40 @@ struct PharmacyMainView: View {
                     PharmacyDashboardView(viewModel: dashboardViewModel)
                 }
             }
-            .tabItem { Label("Home", systemImage: "house.fill") }
+            .tabItem { Label(appState.t("nav.home"), systemImage: "house.fill") }
             .tag(0)
 
             // Analytics — gated when expired
             NavigationStack {
                 if isExpired {
                     ExpiredSubscriptionView(selectedTab: $selectedTab, subscriptionTabIndex: 3)
-                        .navigationTitle("Analytics")
+                        .navigationTitle(appState.t("nav.analytics"))
                         .navigationBarTitleDisplayMode(.large)
                 } else {
                     PharmacyAnalyticsView(viewModel: dashboardViewModel)
                 }
             }
-            .tabItem { Label("Analytics", systemImage: "chart.bar.fill") }
+            .tabItem { Label(appState.t("nav.analytics"), systemImage: "chart.bar.fill") }
             .tag(1)
 
             // Profile — gated when expired
             NavigationStack {
                 if isExpired {
                     ExpiredSubscriptionView(selectedTab: $selectedTab, subscriptionTabIndex: 3)
-                        .navigationTitle("Profile")
+                        .navigationTitle(appState.t("nav.profile"))
                         .navigationBarTitleDisplayMode(.large)
                 } else {
                     PharmacyProfileView()
                 }
             }
-            .tabItem { Label("Profile", systemImage: "person.crop.circle.fill") }
+            .tabItem { Label(appState.t("nav.profile"), systemImage: "person.crop.circle.fill") }
             .tag(2)
 
             // Subscription — ALWAYS accessible, never gated
             NavigationStack {
                 PharmacySubscriptionView()
             }
-            .tabItem { Label("Subscription", systemImage: "creditcard.fill") }
+            .tabItem { Label(appState.t("nav.subscription"), systemImage: "creditcard.fill") }
             .tag(3)
         }
         .tint(Color.primaryTeal)

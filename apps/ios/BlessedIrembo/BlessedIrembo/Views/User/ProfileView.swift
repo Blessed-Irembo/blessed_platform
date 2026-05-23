@@ -38,15 +38,15 @@ struct ProfileView: View {
             .padding(.top, 20)
         }
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
-        .navigationTitle("Profile")
+        .navigationTitle(appState.t("profile.title"))
         .navigationBarTitleDisplayMode(.inline)
-        .alert("Logout", isPresented: $showLogoutConfirmation) {
-            Button("Cancel", role: .cancel) { }
-            Button("Logout", role: .destructive) {
+        .alert(appState.t("profile.logout"), isPresented: $showLogoutConfirmation) {
+            Button(appState.t("common.cancel"), role: .cancel) { }
+            Button(appState.t("profile.logout"), role: .destructive) {
                 logout()
             }
         } message: {
-            Text("Are you sure you want to logout?")
+            Text(appState.t("profile.logoutPrompt"))
         }
     }
     
@@ -94,12 +94,12 @@ struct ProfileView: View {
     private var userInfoSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Personal Information")
+                Text(appState.t("profile.personalInfo"))
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.textPrimary)
                 Spacer()
                 NavigationLink(destination: UserProfileSettingsView().environmentObject(appState)) {
-                    Text("Edit")
+                    Text(appState.t("profile.edit"))
                         .font(.subheadline)
                         .foregroundColor(.primaryTeal)
                 }
@@ -107,9 +107,9 @@ struct ProfileView: View {
             .padding(.horizontal, 4)
             
             VStack(spacing: 12) {
-                ProfileInfoRow(icon: "person.fill", label: "Full Name", value: (appState.currentUser ?? demoUser).fullName)
-                ProfileInfoRow(icon: "envelope.fill", label: "Email", value: (appState.currentUser ?? demoUser).email)
-                ProfileInfoRow(icon: "phone.fill", label: "Phone", value: (appState.currentUser ?? demoUser).phoneNumber)
+                ProfileInfoRow(icon: "person.fill", label: appState.t("profile.fullName"), value: (appState.currentUser ?? demoUser).fullName)
+                ProfileInfoRow(icon: "envelope.fill", label: appState.t("profile.email"), value: (appState.currentUser ?? demoUser).email)
+                ProfileInfoRow(icon: "phone.fill", label: appState.t("profile.phone"), value: (appState.currentUser ?? demoUser).phoneNumber)
             }
             .padding(16)
             .background(Color.white)
@@ -122,35 +122,35 @@ struct ProfileView: View {
     
     private var settingsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Settings")
+            Text(appState.t("profile.settings"))
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.textPrimary)
                 .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
                 NavigationLink(destination: UserNotificationSettingsView()) {
-                    SettingsRow(icon: "bell.fill", title: "Notifications", hasChevron: true)
+                    SettingsRow(icon: "bell.fill", title: appState.t("profile.notifications"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
                 NavigationLink(destination: UserPrivacySettingsView()) {
-                    SettingsRow(icon: "lock.fill", title: "Privacy & Security", hasChevron: true)
+                    SettingsRow(icon: "lock.fill", title: appState.t("profile.privacy"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
                 NavigationLink(destination: UserLocationSettingsView()) {
-                    SettingsRow(icon: "map.fill", title: "Location Services", hasChevron: true)
+                    SettingsRow(icon: "map.fill", title: appState.t("profile.location"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
                 NavigationLink(destination: UserAppearanceSettingsView()) {
-                    SettingsRow(icon: "paintbrush.fill", title: "Appearance", hasChevron: true)
+                    SettingsRow(icon: "paintbrush.fill", title: appState.t("profile.appearance"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
             }
@@ -164,28 +164,28 @@ struct ProfileView: View {
     
     private var aboutSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("About")
+            Text(appState.t("profile.about"))
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.textPrimary)
                 .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
                 Link(destination: URL(string: "https://blessedirembo.com/help")!) {
-                    SettingsRow(icon: "info.circle.fill", title: "Help & Support", hasChevron: true)
+                    SettingsRow(icon: "info.circle.fill", title: appState.t("profile.help"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
                 Link(destination: URL(string: "https://blessedirembo.com/terms")!) {
-                    SettingsRow(icon: "doc.text.fill", title: "Terms & Conditions", hasChevron: true)
+                    SettingsRow(icon: "doc.text.fill", title: appState.t("profile.terms"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
                 Link(destination: URL(string: "https://blessedirembo.com/privacy-policy")!) {
-                    SettingsRow(icon: "shield.fill", title: "Privacy Policy", hasChevron: true)
+                    SettingsRow(icon: "shield.fill", title: appState.t("profile.privacyPolicy"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
             }
@@ -205,7 +205,7 @@ struct ProfileView: View {
                 Image(systemName: "arrow.right.square.fill")
                     .font(.system(size: 20))
                 
-                Text("Logout")
+                Text(appState.t("profile.logout"))
                     .font(.system(size: 17, weight: .semibold))
             }
             .foregroundColor(.white)

@@ -2,6 +2,8 @@ import SwiftUI
 import UIKit
 
 struct UserLocationSettingsView: View {
+    @EnvironmentObject var appState: AppState
+    
     var body: some View {
         VStack(spacing: 24) {
             Image(systemName: "location.circle.fill")
@@ -9,11 +11,11 @@ struct UserLocationSettingsView: View {
                 .foregroundColor(.primaryTeal)
                 .padding(.top, 40)
             
-            Text("Location Services")
+            Text(appState.t("profile.location"))
                 .font(.system(size: 22, weight: .bold))
                 .foregroundColor(.textPrimary)
             
-            Text("Blessed Irembo uses your location to show you nearby verified pharmacies on the map and calculate distances accurately.")
+            Text(appState.t("settings.locationUsageDesc"))
                 .font(.body)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
@@ -25,7 +27,7 @@ struct UserLocationSettingsView: View {
             Button(action: openSystemSettings) {
                 HStack {
                     Image(systemName: "gearshape.fill")
-                    Text("Manage iOS Settings")
+                    Text(appState.t("settings.manageSettings"))
                         .font(.headline)
                 }
                 .foregroundColor(.white)
@@ -37,7 +39,7 @@ struct UserLocationSettingsView: View {
             .padding(.horizontal, 24)
             .padding(.bottom, 40)
         }
-        .navigationTitle("Location Services")
+        .navigationTitle(appState.t("profile.location"))
         .navigationBarTitleDisplayMode(.inline)
         .background(Color.gray.opacity(0.05).ignoresSafeArea())
     }

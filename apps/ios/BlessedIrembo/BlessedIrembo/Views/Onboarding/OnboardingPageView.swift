@@ -7,6 +7,7 @@ import SwiftUI
 
 struct OnboardingPageView: View {
     let page: OnboardingPage
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         VStack(spacing: 32) {
@@ -19,14 +20,14 @@ struct OnboardingPageView: View {
                 .padding(.bottom, 20)
             
             // Title
-            Text(page.title)
+            Text(appState.t(page.titleKey))
                 .font(.system(size: 28, weight: .bold))
                 .foregroundColor(.textPrimary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
             
             // Description
-            Text(page.description)
+            Text(appState.t(page.descriptionKey))
                 .font(.body)
                 .foregroundColor(.textSecondary)
                 .multilineTextAlignment(.center)
@@ -41,9 +42,10 @@ struct OnboardingPageView: View {
 #Preview {
     OnboardingPageView(
         page: OnboardingPage(
-            title: "Welcome to Blessed Irembo",
-            description: "Find trusted pharmacies anywhere in Rwanda",
+            titleKey: "onboarding.page1.title",
+            descriptionKey: "onboarding.page1.desc",
             systemImage: "map.fill"
         )
     )
+    .environmentObject(AppState())
 }

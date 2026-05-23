@@ -37,7 +37,7 @@ struct PharmacyProfileView: View {
                                 Image(systemName: "checkmark.seal.fill")
                                     .foregroundColor(.green)
                                     .font(.caption)
-                                Text("Verified Partner")
+                                Text(appState.t("profile.verifiedPartner"))
                                     .font(.caption)
                                     .foregroundColor(.green)
                             }
@@ -54,11 +54,11 @@ struct PharmacyProfileView: View {
             }
         
             // Business Info
-            Section("Business Information") {
+            Section(appState.t("profile.businessInfo")) {
                 NavigationLink(destination: PharmacyProfileSettingsView()
                     .environmentObject(appState)) {
                     Label {
-                        Text("Edit Profile")
+                        Text(appState.t("profile.editProfile"))
                     } icon: {
                         Image(systemName: "pencil.circle.fill")
                             .foregroundColor(.blue)
@@ -68,7 +68,7 @@ struct PharmacyProfileView: View {
                 NavigationLink(destination: EditOperatingHoursView()
                     .environmentObject(appState)) {
                     Label {
-                        Text("Operating Hours")
+                        Text(appState.t("profile.operatingHours"))
                     } icon: {
                         Image(systemName: "clock.fill")
                             .foregroundColor(.orange)
@@ -78,7 +78,7 @@ struct PharmacyProfileView: View {
                 NavigationLink(destination: EditLocationView()
                     .environmentObject(appState)) {
                     Label {
-                        Text("Location & Address")
+                        Text(appState.t("profile.locationAddress"))
                     } icon: {
                         Image(systemName: "mappin.circle.fill")
                             .foregroundColor(.red)
@@ -87,10 +87,10 @@ struct PharmacyProfileView: View {
             }
         
             // Management
-            Section("Management") {
+            Section(appState.t("profile.management")) {
                 NavigationLink(destination: PharmacySubscriptionView()) {
                     Label {
-                        Text("Subscription Plan")
+                        Text(appState.t("profile.subscriptionPlan"))
                     } icon: {
                         Image(systemName: "creditcard.fill")
                             .foregroundColor(.purple)
@@ -99,20 +99,20 @@ struct PharmacyProfileView: View {
             }
         
             // App Settings
-            Section("App Settings") {
+            Section(appState.t("profile.appSettings")) {
                 NavigationLink(destination: PharmacyNotificationSettingsView()) {
-                    Label("Notifications", systemImage: "bell.fill")
+                    Label(appState.t("profile.notifications"), systemImage: "bell.fill")
                 }
                 Link(destination: URL(string: "https://blessedirembo.com/privacy-policy")!) {
-                    Label("Privacy Policy", systemImage: "shield.fill")
+                    Label(appState.t("profile.privacyPolicy"), systemImage: "shield.fill")
                         .foregroundColor(.primary)
                 }
                 Link(destination: URL(string: "https://blessedirembo.com/terms")!) {
-                    Label("Terms & Conditions", systemImage: "doc.text.fill")
+                    Label(appState.t("profile.terms"), systemImage: "doc.text.fill")
                         .foregroundColor(.primary)
                 }
                 Link(destination: URL(string: "https://blessedirembo.com/help")!) {
-                    Label("Help & Support", systemImage: "questionmark.circle.fill")
+                    Label(appState.t("profile.help"), systemImage: "questionmark.circle.fill")
                         .foregroundColor(.primary)
                 }
             }
@@ -124,7 +124,7 @@ struct PharmacyProfileView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Text("Sign Out")
+                        Text(appState.t("profile.pharmacy.logout"))
                             .fontWeight(.semibold)
                         Spacer()
                     }
@@ -132,14 +132,14 @@ struct PharmacyProfileView: View {
             }
         }
         .listStyle(.insetGrouped)
-        .navigationTitle("Profile")
-        .alert("Sign Out", isPresented: $showSignOutConfirmation) {
-            Button("Cancel", role: .cancel) { }
-            Button("Sign Out", role: .destructive) {
+        .navigationTitle(appState.t("nav.profile"))
+        .alert(appState.t("profile.pharmacy.logout"), isPresented: $showSignOutConfirmation) {
+            Button(appState.t("common.cancel"), role: .cancel) { }
+            Button(appState.t("profile.pharmacy.logout"), role: .destructive) {
                 appState.signOut()
             }
         } message: {
-            Text("Are you sure you want to sign out?")
+            Text(appState.t("profile.pharmacy.logoutPrompt"))
         }
     }
 }

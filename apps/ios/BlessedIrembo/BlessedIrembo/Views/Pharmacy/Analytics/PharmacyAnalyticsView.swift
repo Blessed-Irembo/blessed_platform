@@ -26,7 +26,7 @@ struct PharmacyAnalyticsView: View {
             .padding()
         }
         .background(Color.gray.opacity(0.05))
-        .navigationTitle("Analytics")
+        .navigationTitle(appState.t("nav.analytics"))
     }
 
     // MARK: - Page Header
@@ -34,14 +34,14 @@ struct PharmacyAnalyticsView: View {
     private var pageHeader: some View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
-                Text("Analytics")
+                Text(appState.t("nav.analytics"))
                     .font(.system(size: 28, weight: .bold))
                     .foregroundColor(Color.textPrimary)
                 HStack(spacing: 5) {
                     Circle()
                         .fill(Color.green)
                         .frame(width: 7, height: 7)
-                    Text("Live data")
+                    Text(appState.t("analytics.liveData"))
                         .font(.caption)
                         .foregroundColor(Color.textSecondary)
                 }
@@ -55,26 +55,26 @@ struct PharmacyAnalyticsView: View {
     private var summaryCards: some View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
             AnalyticsCard(
-                title: "WhatsApp Clicks",
+                title: appState.t("dashboard.whatsappClicks"),
                 value: "\(viewModel.whatsappClicks)",
                 icon: "message.fill",
                 color: Color(red: 0.145, green: 0.827, blue: 0.4)
             )
             AnalyticsCard(
-                title: "Profile Views",
+                title: appState.t("dashboard.profileViews"),
                 value: "\(viewModel.profileViews)",
                 icon: "eye.fill",
                 color: Color.blue
             )
             AnalyticsCard(
-                title: "Subscription",
+                title: appState.t("dashboard.subscription"),
                 value: viewModel.subscriptionPlan,
                 icon: viewModel.isPremium ? "star.fill" : "person.fill",
                 color: viewModel.isPremium ? Color(hex: "4F46E5") : Color.primaryTeal
             )
             AnalyticsCard(
-                title: "Status",
-                value: appState.currentPharmacy?.isCurrentlyOpen == true ? "Open" : "Closed",
+                title: appState.t("dashboard.status"),
+                value: appState.t(appState.currentPharmacy?.isCurrentlyOpen == true ? "map.open" : "map.closed"),
                 icon: "clock.fill",
                 color: appState.currentPharmacy?.isCurrentlyOpen == true ? Color.green : Color.red
             )
@@ -85,7 +85,7 @@ struct PharmacyAnalyticsView: View {
 
     private var whatsappSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("WhatsApp Engagement")
+            Text(appState.t("analytics.whatsappEngagement"))
                 .font(.headline)
                 .foregroundColor(Color.textPrimary)
 
@@ -104,7 +104,7 @@ struct PharmacyAnalyticsView: View {
                         Text("\(viewModel.whatsappClicks)")
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(Color.textPrimary)
-                        Text("Total WhatsApp contacts")
+                        Text(appState.t("analytics.totalWhatsappContacts"))
                             .font(.subheadline)
                             .foregroundColor(Color.textSecondary)
                     }
@@ -114,7 +114,7 @@ struct PharmacyAnalyticsView: View {
 
                 Divider()
 
-                Text("Every tap on \"Chat on WhatsApp\" from your pharmacy details by the user on this platform is counted here in real time.")
+                Text(appState.t("analytics.whatsappDescription"))
                     .font(.caption)
                     .foregroundColor(Color.textSecondary)
                     .multilineTextAlignment(.leading)
@@ -130,7 +130,7 @@ struct PharmacyAnalyticsView: View {
 
     private var profileViewsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Profile Views")
+            Text(appState.t("dashboard.profileViews"))
                 .font(.headline)
                 .foregroundColor(Color.textPrimary)
 
@@ -151,7 +151,7 @@ struct PharmacyAnalyticsView: View {
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(Color.textPrimary)
                             .animation(.easeOut(duration: 0.4), value: viewModel.profileViews)
-                        Text("Users who opened your pharmacy profile")
+                        Text(appState.t("analytics.usersOpenedProfile"))
                             .font(.subheadline)
                             .foregroundColor(Color.textSecondary)
                     }
@@ -161,7 +161,7 @@ struct PharmacyAnalyticsView: View {
 
                 Divider()
 
-                Text("A view is counted each time any user taps into the full details screen of your pharmacy — both from the map and from search results.")
+                Text(appState.t("analytics.profileViewsDescription"))
                     .font(.caption)
                     .foregroundColor(Color.textSecondary)
                     .multilineTextAlignment(.leading)

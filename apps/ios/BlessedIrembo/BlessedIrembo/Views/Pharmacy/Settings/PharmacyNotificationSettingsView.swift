@@ -5,26 +5,27 @@
 import SwiftUI
 
 struct PharmacyNotificationSettingsView: View {
+    @EnvironmentObject var appState: AppState
     @State private var emailNotifications = true
     @State private var pushNotifications = true
     @State private var marketingEmails = false
     
     var body: some View {
         List {
-            Section("General") {
-                Toggle("Push Notifications", isOn: $pushNotifications)
+            Section(appState.t("settings.general")) {
+                Toggle(appState.t("settings.appNotifications"), isOn: $pushNotifications)
                     .tint(.primaryTeal)
-                Toggle("Email Notifications", isOn: $emailNotifications)
+                Toggle(appState.t("settings.emailAlerts"), isOn: $emailNotifications)
                     .tint(.primaryTeal)
             }
             
 
             
-            Section("Updates") {
-                Toggle("Marketing & Tips", isOn: $marketingEmails)
+            Section(appState.t("settings.updates")) {
+                Toggle(appState.t("settings.marketingTips"), isOn: $marketingEmails)
                     .tint(.primaryTeal)
             }
         }
-        .navigationTitle("Notifications")
+        .navigationTitle(appState.t("profile.notifications"))
     }
 }

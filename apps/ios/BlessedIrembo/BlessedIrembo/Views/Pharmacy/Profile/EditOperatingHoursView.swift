@@ -32,9 +32,9 @@ struct EditOperatingHoursView: View {
                 Toggle(isOn: $is24Hours) {
                     Label {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Open 24/7")
+                            Text(appState.t("map.open24"))
                                 .font(.body)
-                            Text("Always open, all days")
+                            Text(appState.t("auth.alwaysOpenAllDays"))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -48,11 +48,11 @@ struct EditOperatingHoursView: View {
 
             // Day selection
             if !is24Hours {
-                Section("Open Days") {
+                Section(appState.t("auth.openDays")) {
                     ForEach(allDays, id: \.self) { day in
                         Button(action: { toggleDay(day) }) {
                             HStack {
-                                Text(day)
+                                Text(appState.t("day.\(day)"))
                                     .foregroundColor(.primary)
                                 Spacer()
                                 if selectedDays.contains(day) {
@@ -69,10 +69,10 @@ struct EditOperatingHoursView: View {
                 }
 
                 // Time pickers
-                Section("Opening Hours") {
-                    DatePicker("Opens at", selection: $openTime, displayedComponents: .hourAndMinute)
+                Section(appState.t("auth.operatingHours")) {
+                    DatePicker(appState.t("auth.opensAt"), selection: $openTime, displayedComponents: .hourAndMinute)
                         .tint(Color.primaryTeal)
-                    DatePicker("Closes at", selection: $closeTime, displayedComponents: .hourAndMinute)
+                    DatePicker(appState.t("auth.closesAt"), selection: $closeTime, displayedComponents: .hourAndMinute)
                         .tint(Color.primaryTeal)
                 }
             }
@@ -85,7 +85,7 @@ struct EditOperatingHoursView: View {
                         if isSaving {
                             ProgressView()
                         } else {
-                            Text("Save Hours")
+                            Text(appState.t("profile.saveHours"))
                                 .fontWeight(.bold)
                         }
                         Spacer()
@@ -103,15 +103,15 @@ struct EditOperatingHoursView: View {
                 }
             }
         }
-        .navigationTitle("Operating Hours")
+        .navigationTitle(appState.t("auth.operatingHours"))
         .navigationBarTitleDisplayMode(.inline)
         .onAppear(perform: loadCurrentValues)
-        .alert("Hours updated", isPresented: $showSuccess) {
+        .alert(appState.t("profile.hoursUpdated"), isPresented: $showSuccess) {
             Button("OK", role: .cancel) {
                 presentationMode.wrappedValue.dismiss()
             }
         } message: {
-            Text("Your operating hours have been saved successfully.")
+            Text(appState.t("profile.hoursUpdatedDesc"))
         }
     }
 

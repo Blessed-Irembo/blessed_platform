@@ -1,10 +1,10 @@
 import SwiftUI
 import CoreLocation
-
 struct QuickDetailsSheet: View {
     let pharmacy: Pharmacy
     let userLocation: CLLocationCoordinate2D
     let onClose: () -> Void
+    @EnvironmentObject var appState: AppState
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -53,7 +53,7 @@ struct QuickDetailsSheet: View {
                     Circle()
                         .fill(pharmacy.isCurrentlyOpen ? Color.green : Color.red)
                         .frame(width: 6, height: 6)
-                    Text(pharmacy.isCurrentlyOpen ? "Open Now" : "Closed")
+                    Text(appState.t(pharmacy.isCurrentlyOpen ? "details.openNow" : "map.closed"))
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(pharmacy.isCurrentlyOpen ? Color(red: 22/255, green: 101/255, blue: 52/255) : Color(red: 153/255, green: 27/255, blue: 27/255))
                 }
@@ -68,7 +68,7 @@ struct QuickDetailsSheet: View {
                     Image(systemName: "location.fill")
                         .font(.system(size: 11))
                         .foregroundColor(.textSecondary)
-                    Text(pharmacy.formattedDistance(from: userLocation))
+                    Text(pharmacy.formattedDistance(from: userLocation, localizedWith: appState))
                         .font(.caption)
                         .foregroundColor(.textSecondary)
                 }
@@ -90,7 +90,7 @@ struct QuickDetailsSheet: View {
             // Actions
             HStack(spacing: 12) {
                 NavigationLink(destination: PharmacyDetailsView(pharmacy: pharmacy, userLocation: userLocation)) {
-                    Text("View Details")
+                    Text(appState.t("map.viewDetails"))
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)

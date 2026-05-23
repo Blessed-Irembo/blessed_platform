@@ -19,6 +19,7 @@ class AppState: ObservableObject {
     @Published var currentUser: User?
     @Published var currentPharmacy: Pharmacy?
     @Published var navigationPath = NavigationPath()
+    @Published var selectedLanguage: Language = .english
 
     /// Computed subscription status based on the live currentPharmacy.
     /// Used by PharmacyMainView to gate tab content without needing a ViewModel.
@@ -52,6 +53,12 @@ class AppState: ObservableObject {
             forKey: UserDefaultsKeys.hasCompletedOnboarding
         )
 
+        // Load language preference
+        if let savedCode = UserDefaults.standard.string(forKey: UserDefaultsKeys.selectedLanguage),
+           let lang = Language(rawValue: savedCode) {
+            selectedLanguage = lang
+        }
+
         // Splash: show for at least 2 seconds while Firebase resolves auth
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             self?.isLoading = false
@@ -66,6 +73,19 @@ class AppState: ObservableObject {
             Auth.auth().removeStateDidChangeListener(handle)
         }
         stopPharmacyListener()
+    }
+
+    // MARK: - Localization
+
+    /// Dynamically retrieve translation value for a given key in the active language.
+    func t(_ key: String) -> String {
+        Translations.catalog[selectedLanguage.code]?[key] ?? key
+    }
+
+    /// Toggle between English and Kinyarwanda, saving preference to UserDefaults.
+    func toggleLanguage() {
+        selectedLanguage = (selectedLanguage == .english) ? .kinyarwanda : .english
+        UserDefaults.standard.set(selectedLanguage.code, forKey: UserDefaultsKeys.selectedLanguage)
     }
 
     // MARK: - Firebase Auth Listener
