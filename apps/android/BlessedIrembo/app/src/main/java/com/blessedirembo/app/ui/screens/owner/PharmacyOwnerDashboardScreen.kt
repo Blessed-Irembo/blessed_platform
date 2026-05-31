@@ -2,6 +2,7 @@ package com.blessedirembo.app.ui.screens.owner
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.blessedirembo.app.ui.components.CustomTextField
+import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.StatCard
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
@@ -89,8 +92,9 @@ fun PharmacyOwnerDashboardScreen(
         )
     }
 
+    Box(modifier = modifier.fillMaxSize()) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Gray100)
             .verticalScroll(scrollState)
@@ -208,5 +212,13 @@ fun PharmacyOwnerDashboardScreen(
         }
         
         Spacer(modifier = Modifier.height(80.dp)) // Bottom nav spacing
-    }
+    } // end Column
+
+    // Floating language switcher overlay
+    FloatingLanguageSwitcher(
+        modifier = Modifier
+            .align(Alignment.TopEnd)
+            .padding(top = 16.dp, end = 16.dp)
+    )
+    } // end Box
 }

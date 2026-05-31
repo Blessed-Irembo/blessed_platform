@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import com.blessedirembo.app.analytics.AnalyticsManager
+import com.blessedirembo.app.util.LanguageManager
 
 /**
  * Main Activity for Blessed Irembo
@@ -17,6 +18,8 @@ class MainActivity : ComponentActivity() {
 
         // Initialize analytics (must happen before any screen loads)
         AnalyticsManager.init(this)
+        // Initialize language preference (mirrors iOS AppState loading selectedLanguage from UserDefaults)
+        LanguageManager.init(this)
 
         // Enable edge-to-edge display
         enableEdgeToEdge()

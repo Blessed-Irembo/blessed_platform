@@ -51,7 +51,8 @@ private enum class ProfileSubScreen {
     NONE,
     EDIT_PROFILE,
     OPERATING_HOURS,
-    NOTIFICATIONS
+    NOTIFICATIONS,
+    EDIT_LOCATION
 }
 
 /**
@@ -145,6 +146,11 @@ fun PharmacyOwnerMainScreen(
                     onBackClick = { profileSubScreen = ProfileSubScreen.NONE }
                 )
 
+            profileSubScreen == ProfileSubScreen.EDIT_LOCATION ->
+                EditLocationScreen(
+                    onBackClick = { profileSubScreen = ProfileSubScreen.NONE }
+                )
+
             // ── Main tab destinations ────────────────────────────────────────
             else -> when (selectedTab) {
                 0 -> if (hasValidSubscription) {
@@ -161,10 +167,11 @@ fun PharmacyOwnerMainScreen(
                 }
                 2 -> if (hasValidSubscription) {
                     PharmacyOwnerProfileScreen(
-                        onEditProfileClick   = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
+                        onEditProfileClick    = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
                         onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
-                        onNotificationsClick = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
-                        onSignOutClick       = onSignOut,
+                        onLocationClick       = { profileSubScreen = ProfileSubScreen.EDIT_LOCATION },
+                        onNotificationsClick  = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
+                        onSignOutClick        = onSignOut,
                         modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
                     )
                 } else {

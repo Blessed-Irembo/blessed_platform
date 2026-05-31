@@ -61,6 +61,7 @@ import com.blessedirembo.app.R
 import com.blessedirembo.app.auth.AuthState
 import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.ui.components.CustomTextField
+import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
@@ -190,13 +191,17 @@ fun SignInScreen(
         containerColor = Gray100,
         modifier = modifier
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             // ── Header ──────────────────────────────────────────────────────
             Column(
                 modifier = Modifier.padding(top = 32.dp, bottom = 24.dp),
@@ -450,6 +455,14 @@ fun SignInScreen(
                 modifier = Modifier.clickable(onClick = onNavigateToSignUp)
             )
             Spacer(modifier = Modifier.height(40.dp))
-        }
+        } // end Column
+
+        // Floating language switcher overlay (top-end)
+        FloatingLanguageSwitcher(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        )
+        } // end Box
     }
 }

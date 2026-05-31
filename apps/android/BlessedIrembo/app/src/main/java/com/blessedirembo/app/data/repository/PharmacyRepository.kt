@@ -227,6 +227,33 @@ class PharmacyRepository {
     }
 
     /**
+     * Update pharmacy location (address, district, lat/lng).
+     * Mirrors iOS EditLocationView.save() — writes address, district, coordinates + updatedAt.
+     */
+    suspend fun updatePharmacyLocation(
+        pharmacyId: String,
+        address: String,
+        district: String,
+        latitude: Double,
+        longitude: Double
+    ): Result<Unit> {
+        return try {
+            pharmaciesCollection.document(pharmacyId).update(
+                mapOf(
+                    "address" to address,
+                    "district" to district,
+                    "latitude" to latitude,
+                    "longitude" to longitude,
+                    "updatedAt" to FieldValue.serverTimestamp()
+                )
+            ).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
      * Increment the WhatsApp clicks counter for a pharmacy.
      */
     suspend fun incrementWhatsAppClicks(pharmacyId: String): Result<Unit> {

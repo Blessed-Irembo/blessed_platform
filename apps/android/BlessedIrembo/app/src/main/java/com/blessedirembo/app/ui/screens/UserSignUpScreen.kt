@@ -3,6 +3,7 @@ package com.blessedirembo.app.ui.screens
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -45,6 +46,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.blessedirembo.app.R
 import com.blessedirembo.app.ui.components.CustomTextField
+import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
@@ -120,10 +122,14 @@ fun UserSignUpScreen(
         containerColor = White
     ) { paddingValues ->
 
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -281,6 +287,14 @@ fun UserSignUpScreen(
             )
 
             Spacer(modifier = Modifier.height(32.dp))
-        }
+        } // end Column
+
+        // Floating language switcher overlay (top-end)
+        FloatingLanguageSwitcher(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        )
+        } // end Box
     }
 }

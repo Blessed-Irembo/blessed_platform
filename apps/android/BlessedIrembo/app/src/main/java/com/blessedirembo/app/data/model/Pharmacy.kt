@@ -24,6 +24,7 @@ data class Pharmacy(
     val phone: String = "",
     val phoneNumber: String = "",
     val whatsAppNumber: String = "",
+    val district: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
     val isOpen: Boolean = false,

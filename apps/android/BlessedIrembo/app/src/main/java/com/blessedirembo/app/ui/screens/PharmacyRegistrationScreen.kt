@@ -77,6 +77,7 @@ import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.data.model.AllDays
 import com.blessedirembo.app.data.repository.PharmacyRepository
 import com.blessedirembo.app.ui.components.CustomTextField
+import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
@@ -217,10 +218,14 @@ fun PharmacyRegistrationScreen(
         },
         containerColor = Gray100
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
@@ -657,7 +662,15 @@ fun PharmacyRegistrationScreen(
             }
 
             Spacer(modifier = Modifier.height(40.dp))
-        }
+        } // end Column
+
+        // Floating language switcher overlay (top-end)
+        FloatingLanguageSwitcher(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+        )
+        } // end Box
     }
 }
 

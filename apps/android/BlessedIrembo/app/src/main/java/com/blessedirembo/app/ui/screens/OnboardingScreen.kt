@@ -35,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray200
 import com.blessedirembo.app.ui.theme.Gray500
@@ -83,13 +84,18 @@ fun OnboardingScreen(
             .background(MaterialTheme.colorScheme.background)
             .padding(vertical = 40.dp)
     ) {
-        // Skip Button
-        Box(
+        // Top row: Skip (right) + Language switcher (left)
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp),
-            contentAlignment = Alignment.CenterEnd
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Language switcher on the left
+            FloatingLanguageSwitcher()
+
+            // Skip button on the right
             if (!isLastPage) {
                 TextButton(onClick = {
                     scope.launch {

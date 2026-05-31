@@ -49,12 +49,6 @@ object AnalyticsManager {
         }
     }
 
-    /** Log when a user sends an inquiry to a pharmacy */
-    fun logInquirySent(pharmacyId: String) {
-        analytics.logEvent("inquiry_sent") {
-            param("pharmacy_id", pharmacyId)
-        }
-    }
 
     /** Log pharmacy detail page view */
     fun logPharmacyView(pharmacyId: String, pharmacyName: String) {

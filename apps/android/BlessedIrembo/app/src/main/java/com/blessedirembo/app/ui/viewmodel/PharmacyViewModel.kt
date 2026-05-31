@@ -87,6 +87,30 @@ class PharmacyViewModel(
         }
     }
 
+    private val _updateLocationResult = MutableStateFlow<Result<Unit>?>(null)
+    val updateLocationResult: StateFlow<Result<Unit>?> = _updateLocationResult.asStateFlow()
+
+    fun updateLocation(
+        pharmacyId: String,
+        address: String,
+        district: String,
+        latitude: Double,
+        longitude: Double
+    ) {
+        viewModelScope.launch {
+            val result = repository.updatePharmacyLocation(pharmacyId, address, district, latitude, longitude)
+            _updateLocationResult.value = result
+            // Refresh owner pharmacy so the profile screen shows updated data
+            if (result.isSuccess) {
+                loadPharmacyByOwnerId(pharmacyId)
+            }
+        }
+    }
+
+    fun clearUpdateLocationResult() {
+        _updateLocationResult.value = null
+    }
+
     fun incrementWhatsAppClicks(pharmacyId: String) {
         viewModelScope.launch {
             repository.incrementWhatsAppClicks(pharmacyId)

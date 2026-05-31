@@ -45,6 +45,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.blessedirembo.app.R
+import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.theme.Gray400
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
@@ -113,10 +114,14 @@ fun HomeScreen(
         },
         containerColor = White
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+        ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -206,6 +211,14 @@ fun HomeScreen(
                     )
                 }
             }
-        }
+        } // end Column
+
+        // Floating language switcher overlay (top-end)
+        FloatingLanguageSwitcher(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 12.dp, end = 16.dp)
+        )
+        } // end Box
     }
 }
