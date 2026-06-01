@@ -16,7 +16,7 @@ struct BlessedIremboApp: App {
         FirebaseApp.configure()
         
         // Configure Google Maps
-        GMSServices.provideAPIKey("AIzaSyA-0elDxTyX8mwO5oOsNClv9G-JZPu8BdI")
+        GMSServices.provideAPIKey("AIzaSyA86lpmNQ37J9gnZGvwSJl2tw9fYsnnYss")
     }
     
     var body: some Scene {
