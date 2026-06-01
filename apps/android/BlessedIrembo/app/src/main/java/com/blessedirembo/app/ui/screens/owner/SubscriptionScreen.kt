@@ -82,6 +82,7 @@ import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 import com.blessedirembo.app.ui.viewmodel.SubscriptionViewModel
+import com.blessedirembo.app.util.t
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -142,7 +143,7 @@ fun SubscriptionScreen(
             confirmButton = {
                 TextButton(onClick = { subscriptionViewModel.clearMessages() }) { Text("OK") }
             },
-            title = { Text("Error") },
+            title = { Text(t("common.error")) },
             text = { Text(errorMessage ?: "") }
         )
     }
@@ -152,25 +153,25 @@ fun SubscriptionScreen(
             confirmButton = {
                 TextButton(onClick = { subscriptionViewModel.clearMessages() }) { Text("OK") }
             },
-            title = { Text("Success") },
+            title = { Text(t("common.success")) },
             text = { Text(successMessage ?: "") }
         )
     }
     if (showCancelDialog) {
         AlertDialog(
             onDismissRequest = { showCancelDialog = false },
-            title = { Text("Cancel Payment Request") },
-            text = { Text("Are you sure you want to cancel your pending payment request? You will need to submit a new intent to pay again.") },
+            title = { Text(t("subscription.cancelDialogTitle")) },
+            text = { Text(t("subscription.cancelDialogBody")) },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showCancelDialog = false
                         subscriptionViewModel.cancelRequest()
                     }
-                ) { Text("Cancel Request", color = Color.Red) }
+                ) { Text(t("subscription.cancelRequestBtn"), color = Color.Red) }
             },
             dismissButton = {
-                TextButton(onClick = { showCancelDialog = false }) { Text("Keep Request") }
+                TextButton(onClick = { showCancelDialog = false }) { Text(t("subscription.keepRequestBtn")) }
             }
         )
     }
@@ -252,13 +253,13 @@ private fun StatusBanner(status: SubscriptionStatus) {
         }
         Column {
             Text(
-                text = status.displayTitle,
+                text = status.displayTitleLoc(),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900
             )
             Text(
-                text = status.displaySubtitle,
+                text = status.displaySubtitleLoc(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Gray500
             )
@@ -277,7 +278,7 @@ private fun PlanSelectionSection(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            text = "Choose a Plan",
+            text = t("subscription.choosePlan"),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = Gray900
@@ -326,7 +327,7 @@ private fun PlanCard(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "MOST POPULAR",
+                    text = t("subscription.mostPopular"),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = White,
@@ -345,13 +346,13 @@ private fun PlanCard(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = plan.name,
+                    text = t("plan.${plan.id}.name"),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Gray900
                 )
                 Text(
-                    text = plan.label,
+                    text = t("plan.${plan.id}.label"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Gray500
                 )
@@ -419,7 +420,7 @@ private fun ExpandedPlanContent(
                     Text("1", style = MaterialTheme.typography.labelSmall, color = White, fontWeight = FontWeight.Bold)
                 }
                 Text(
-                    text = "Step 1: Make Payment via MoMo",
+                    text = t("subscription.step1"),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Teal500
@@ -427,7 +428,7 @@ private fun ExpandedPlanContent(
             }
 
             Text(
-                text = "Dial the code below on your phone to pay ${plan.amount.formatRwf()} RWF via MTN Mobile Money:",
+                text = t("subscription.step1Desc").format(plan.amount.formatRwf()),
                 style = MaterialTheme.typography.bodySmall,
                 color = Gray500
             )
@@ -451,16 +452,17 @@ private fun ExpandedPlanContent(
                         .border(1.dp, Teal500.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
                         .padding(14.dp)
                 )
+                val codeCopiedMsg = t("subscription.codeCopied")
                 TextButton(
                     onClick = {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("USSD Code", plan.ussdCode))
-                        Toast.makeText(context, "Code copied!", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, codeCopiedMsg, Toast.LENGTH_SHORT).show()
                     }
                 ) {
                     Icon(Icons.Filled.ContentCopy, contentDescription = null, tint = Teal500, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
-                    Text("Copy Code", color = Teal500, style = MaterialTheme.typography.labelMedium)
+                    Text(t("subscription.copyCode"), color = Teal500, style = MaterialTheme.typography.labelMedium)
                 }
 
                 // Orange confirmation hint
@@ -473,7 +475,7 @@ private fun ExpandedPlanContent(
                 ) {
                     Icon(Icons.Filled.Info, contentDescription = null, tint = Color(0xFFFF9800), modifier = Modifier.size(16.dp))
                     Text(
-                        text = "You will be prompted to confirm a payment to Blessed HealthConnect LTD for ${plan.amount.formatRwf()} RWF.",
+                        text = t("subscription.paymentPrompt").format(plan.amount.formatRwf()),
                         style = MaterialTheme.typography.labelSmall,
                         color = Gray500
                     )
@@ -489,13 +491,13 @@ private fun ExpandedPlanContent(
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = "📌 Important:",
+                    text = t("subscription.important"),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = Gray500
                 )
                 Text(
-                    text = "After dialing, follow the prompts on your phone to confirm the MoMo payment. Once paid, tap the button below.",
+                    text = t("subscription.step1Note"),
                     style = MaterialTheme.typography.labelSmall,
                     color = Gray500
                 )
@@ -515,9 +517,9 @@ private fun ExpandedPlanContent(
             if (isLoading) {
                 CircularProgressIndicator(color = White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                 Spacer(Modifier.width(8.dp))
-                Text("Submitting...", fontWeight = FontWeight.SemiBold)
+                Text(t("common.submitting"), fontWeight = FontWeight.SemiBold)
             } else {
-                Text("I Have Paid — Intend to Pay", fontWeight = FontWeight.SemiBold)
+                Text(t("subscription.havePaid"), fontWeight = FontWeight.SemiBold)
             }
         }
     }
@@ -552,13 +554,13 @@ private fun PendingView(
             )
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
-                    text = "Payment Pending Review",
+                    text = t("subscription.pendingTitle"),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
                     color = Gray900
                 )
                 Text(
-                    text = "Our team is reviewing your ${request.planDisplayName} plan request.",
+                    text = t("subscription.pendingDesc").format(t("plan.${request.planId}.name")),
                     style = MaterialTheme.typography.bodySmall,
                     color = Gray500
                 )
@@ -573,15 +575,15 @@ private fun PendingView(
                 .padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            PendingInfoRow("Plan", request.planDisplayName)
-            PendingInfoRow("Amount", "${request.amount.formatRwf()} RWF")
+            PendingInfoRow(t("subscription.planLabel"), t("plan.${request.planId}.name"))
+            PendingInfoRow(t("subscription.amountLabel"), "${request.amount.formatRwf()} RWF")
             val dateStr = SimpleDateFormat("d MMM yyyy, HH:mm", Locale.getDefault()).format(request.createdAt)
-            PendingInfoRow("Submitted", dateStr)
+            PendingInfoRow(t("subscription.submittedLabel"), dateStr)
             if (request.receiptUrl.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text("Receipt", style = MaterialTheme.typography.bodyMedium, color = Gray500, modifier = Modifier.width(80.dp))
+                    Text(t("subscription.receiptLabel"), style = MaterialTheme.typography.bodyMedium, color = Gray500, modifier = Modifier.width(80.dp))
                     Icon(Icons.Filled.CheckCircle, contentDescription = null, tint = Color(0xFF22C55E), modifier = Modifier.size(16.dp))
-                    Text("Uploaded", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF22C55E))
+                    Text(t("subscription.uploadedLabel"), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, color = Color(0xFF22C55E))
                 }
             }
         }
@@ -605,14 +607,14 @@ private fun PendingView(
                     Text("2", style = MaterialTheme.typography.labelSmall, color = White, fontWeight = FontWeight.Bold)
                 }
                 Text(
-                    text = "Step 2: Upload Payment Receipt (Optional)",
+                    text = t("subscription.step2"),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.SemiBold,
                     color = Teal500
                 )
             }
             Text(
-                text = "To speed up approval, upload a screenshot of your MoMo payment confirmation.",
+                text = t("subscription.step2Desc"),
                 style = MaterialTheme.typography.bodySmall,
                 color = Gray500
             )
@@ -624,7 +626,7 @@ private fun PendingView(
                         modifier = Modifier.fillMaxWidth(),
                         color = Teal500
                     )
-                    Text("Uploading... ${(uploadProgress * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = Gray500)
+                    Text(t("common.uploading") + " ${(uploadProgress * 100).toInt()}%", style = MaterialTheme.typography.labelSmall, color = Gray500)
                 }
             } else {
                 OutlinedButton(
@@ -636,7 +638,7 @@ private fun PendingView(
                 ) {
                     Icon(Icons.Filled.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Select Screenshot from Photos", fontWeight = FontWeight.Medium)
+                    Text(t("subscription.selectScreenshot"), fontWeight = FontWeight.Medium)
                 }
             }
         }
@@ -652,7 +654,7 @@ private fun PendingView(
         ) {
             Icon(Icons.Filled.Cancel, contentDescription = null, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Cancel Pending Request")
+            Text(t("subscription.cancelPendingBtn"))
         }
     }
 }
@@ -670,4 +672,27 @@ private fun PendingInfoRow(label: String, value: String) {
 
 private fun Int.formatRwf(): String {
     return String.format("%,d", this).replace(',', ',')
+}
+
+@Composable
+private fun SubscriptionStatus.displayTitleLoc(): String {
+    return when (this) {
+        is SubscriptionStatus.FreeTrial -> if (daysRemaining > 0) t("subscription.status.freeTrial") else t("subscription.status.freeTrialEnding")
+        is SubscriptionStatus.Premium -> t("subscription.status.premium")
+        is SubscriptionStatus.Expired -> t("subscription.status.expired")
+        is SubscriptionStatus.Unknown -> t("subscription.status.loading")
+    }
+}
+
+@Composable
+private fun SubscriptionStatus.displaySubtitleLoc(): String {
+    return when (this) {
+        is SubscriptionStatus.FreeTrial -> if (daysRemaining > 1) t("subscription.status.daysRemaining").format(daysRemaining) else t("subscription.status.dayRemaining")
+        is SubscriptionStatus.Premium -> {
+            val fmt = java.text.SimpleDateFormat("d MMM yyyy", java.util.Locale.getDefault())
+            t("subscription.status.activeUntil").format(fmt.format(expiresOn))
+        }
+        is SubscriptionStatus.Expired -> t("subscription.status.pleaseRenew")
+        is SubscriptionStatus.Unknown -> ""
+    }
 }

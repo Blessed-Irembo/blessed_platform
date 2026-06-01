@@ -52,6 +52,7 @@ import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal50
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 /**
  * Home Screen – mirrors iOS OpeningScreenView / UserMainView
@@ -80,7 +81,7 @@ fun HomeScreen(
                             contentDescription = "Home"
                         )
                     },
-                    label = { Text("Home") },
+                    label = { Text(t("welcome.home")) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Teal500,
                         selectedTextColor = Teal500,
@@ -101,7 +102,7 @@ fun HomeScreen(
                             contentDescription = "Profile"
                         )
                     },
-                    label = { Text("Profile") },
+                    label = { Text(t("welcome.profile")) },
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = Teal500,
                         selectedTextColor = Teal500,
@@ -146,7 +147,7 @@ fun HomeScreen(
 
             // ── Title ────────────────────────────────────────────────────────
             Text(
-                text = "Find pharmacies near you",
+                text = t("welcome.findPharmacies"),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -157,13 +158,7 @@ fun HomeScreen(
 
             // ── Description (matching iOS copy exactly) ──────────────────────
             Text(
-                text = buildAnnotatedString {
-                    append("Operating under ")
-                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
-                        append("Blessed HealthConnect Ltd")
-                    }
-                    append(", Blessed Irembo connects you with verified pharmacies nationwide. Search by location, check availability, and get the medication you need, when you need it.")
-                },
+                text = t("welcome.subtitle"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Gray500,
                 textAlign = TextAlign.Center,
@@ -204,7 +199,7 @@ fun HomeScreen(
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Text(
-                        text = "Open Map",
+                        text = t("welcome.openMap"),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 16.sp

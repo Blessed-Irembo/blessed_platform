@@ -55,6 +55,7 @@ import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 // Custom colors for icons
 val EditBlue = Color(0xFF3B82F6)
@@ -148,7 +149,7 @@ fun PharmacyOwnerProfileScreen(
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
-                        text = "Verified Partner",
+                        text = t("details.verified") + " Partner",
                         style = MaterialTheme.typography.labelSmall,
                         color = SuccessGreen
                     )
@@ -159,7 +160,7 @@ fun PharmacyOwnerProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         // Business Information Section
-        SectionHeader(title = "Business Information")
+        SectionHeader(title = t("owner.businessInfo"))
         
         Card(
             modifier = Modifier
@@ -172,19 +173,19 @@ fun PharmacyOwnerProfileScreen(
             Column {
                 SettingsListItem(
                     icon = Icons.Filled.Edit,
-                    title = "Edit Profile",
+                    title = t("owner.editProfile"),
                     onClick = onEditProfileClick,
                     iconTint = EditBlue
                 )
                 SettingsListItem(
                     icon = Icons.Filled.AccessTime,
-                    title = "Operating Hours",
+                    title = t("owner.operatingHours"),
                     onClick = onOperatingHoursClick,
                     iconTint = TimeOrange
                 )
                 SettingsListItem(
                     icon = Icons.Filled.LocationOn,
-                    title = "Location & Address",
+                    title = t("owner.locationAddress"),
                     onClick = onLocationClick,
                     iconTint = LocationRed
                 )
@@ -194,7 +195,7 @@ fun PharmacyOwnerProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         // Management Section
-        SectionHeader(title = "Management")
+        SectionHeader(title = t("owner.management"))
         
         Card(
             modifier = Modifier
@@ -207,7 +208,7 @@ fun PharmacyOwnerProfileScreen(
             Column {
                 SettingsListItem(
                     icon = Icons.Filled.CreditCard,
-                    title = "Subscription Plan",
+                    title = t("owner.subscriptionPlan"),
                     onClick = onSubscriptionClick,
                     iconTint = PlanPurple
                 )
@@ -217,7 +218,7 @@ fun PharmacyOwnerProfileScreen(
         Spacer(modifier = Modifier.height(16.dp))
         
         // App Settings Section
-        SectionHeader(title = "App Settings")
+        SectionHeader(title = t("nav.settings"))
         
         Card(
             modifier = Modifier
@@ -230,13 +231,13 @@ fun PharmacyOwnerProfileScreen(
             Column {
                 SettingsListItem(
                     icon = Icons.Filled.Notifications,
-                    title = "Notifications",
+                    title = t("profile.notifications"),
                     onClick = onNotificationsClick,
                     iconTint = Teal500
                 )
                 SettingsListItem(
                     icon = Icons.Filled.Shield,
-                    title = "Privacy Policy",
+                    title = t("profile.privacyPolicy"),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
                         context.startActivity(intent)
@@ -245,7 +246,7 @@ fun PharmacyOwnerProfileScreen(
                 )
                 SettingsListItem(
                     icon = Icons.Filled.Description,
-                    title = "Terms & Conditions",
+                    title = t("profile.terms"),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms"))
                         context.startActivity(intent)
@@ -254,7 +255,7 @@ fun PharmacyOwnerProfileScreen(
                 )
                 SettingsListItem(
                     icon = Icons.AutoMirrored.Filled.Help,
-                    title = "Help & Support",
+                    title = t("profile.help"),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/help"))
                         context.startActivity(intent)
@@ -274,7 +275,7 @@ fun PharmacyOwnerProfileScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Text(
-                text = "Sign Out",
+                text = t("profile.logout"),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Color(0xFFEF4444),
                 fontWeight = FontWeight.SemiBold

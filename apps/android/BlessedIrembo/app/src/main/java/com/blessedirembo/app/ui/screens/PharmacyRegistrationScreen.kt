@@ -79,6 +79,7 @@ import com.blessedirembo.app.data.repository.PharmacyRepository
 import com.blessedirembo.app.ui.components.CustomTextField
 import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.PrimaryButton
+import com.blessedirembo.app.util.t
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
@@ -151,7 +152,7 @@ fun PharmacyRegistrationScreen(
         val state = rememberTimePickerState(initialHour = openHour, initialMinute = openMinute, is24Hour = true)
         AlertDialog(
             onDismissRequest = { showOpenTimePicker = false },
-            title = { Text("Opens at") },
+            title = { Text(t("auth.opensAt")) },
             text = {
                 TimePicker(
                     state = state,
@@ -163,10 +164,10 @@ fun PharmacyRegistrationScreen(
                     openHour = state.hour
                     openMinute = state.minute
                     showOpenTimePicker = false
-                }) { Text("OK", color = Teal500) }
+                }) { Text(t("common.confirm"), color = Teal500) }
             },
             dismissButton = {
-                TextButton(onClick = { showOpenTimePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showOpenTimePicker = false }) { Text(t("common.cancel")) }
             }
         )
     }
@@ -175,7 +176,7 @@ fun PharmacyRegistrationScreen(
         val state = rememberTimePickerState(initialHour = closeHour, initialMinute = closeMinute, is24Hour = true)
         AlertDialog(
             onDismissRequest = { showCloseTimePicker = false },
-            title = { Text("Closes at") },
+            title = { Text(t("auth.closesAt")) },
             text = {
                 TimePicker(
                     state = state,
@@ -187,10 +188,10 @@ fun PharmacyRegistrationScreen(
                     closeHour = state.hour
                     closeMinute = state.minute
                     showCloseTimePicker = false
-                }) { Text("OK", color = Teal500) }
+                }) { Text(t("common.confirm"), color = Teal500) }
             },
             dismissButton = {
-                TextButton(onClick = { showCloseTimePicker = false }) { Text("Cancel") }
+                TextButton(onClick = { showCloseTimePicker = false }) { Text(t("common.cancel")) }
             }
         )
     }
@@ -200,14 +201,14 @@ fun PharmacyRegistrationScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Register Pharmacy",
+                        text = t("auth.registerPharmacy"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = t("common.cancel"))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = White)
@@ -241,12 +242,12 @@ fun PharmacyRegistrationScreen(
                     modifier = Modifier.size(64.dp)
                 )
                 Text(
-                    text = "Register Your Pharmacy",
+                    text = t("auth.registerPharmacy"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Your council number is verified against the\nRwanda FDA December 2025 licensed list.",
+                    text = t("auth.registerPharmacySubtitle"),
                     style = MaterialTheme.typography.bodySmall,
                     color = Gray500,
                     textAlign = TextAlign.Center
@@ -271,11 +272,11 @@ fun PharmacyRegistrationScreen(
                     ) {
                         Icon(Icons.Outlined.Description, contentDescription = null,
                             tint = Gray500, modifier = Modifier.size(16.dp))
-                        Text("Council Registration Number *",
+                        Text(t("auth.licenseLabel") + " *",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold)
                     }
-                    Text("Format: NPC/A0000 — as issued by Rwanda FDA",
+                    Text(t("auth.licenseHint"),
                         style = MaterialTheme.typography.labelSmall, color = Gray500)
                     // Field with trailing state icon
                     Box {
@@ -298,7 +299,7 @@ fun PharmacyRegistrationScreen(
                                             licenseError = null
                                         } else {
                                             licenseVerified = false
-                                            licenseError = "Not found in the Rwanda FDA licensed list"
+                                            licenseError = com.blessedirembo.app.util.LanguageManager.t("auth.licenseNotFound")
                                         }
                                     }
                                 } else {
@@ -364,14 +365,14 @@ fun PharmacyRegistrationScreen(
                     ) {
                         Icon(Icons.Outlined.Business, contentDescription = null,
                             tint = Gray500, modifier = Modifier.size(16.dp))
-                        Text("Pharmacy Name",
+                        Text(t("auth.pharmacyNameLabel"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold)
                     }
                     CustomTextField(
                         value = pharmacyName,
                         onValueChange = { pharmacyName = it },
-                        placeholder = "Enter pharmacy name",
+                        placeholder = t("auth.pharmacyNamePlaceholder"),
                         leadingIcon = Icons.Outlined.Business
                     )
                 }
@@ -384,14 +385,14 @@ fun PharmacyRegistrationScreen(
                     ) {
                         Icon(Icons.Outlined.Person, contentDescription = null,
                             tint = Gray500, modifier = Modifier.size(16.dp))
-                        Text("Owner / Responsible Person",
+                        Text(t("auth.ownerNameLabel"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold)
                     }
                     CustomTextField(
                         value = ownerName,
                         onValueChange = { ownerName = it },
-                        placeholder = "Enter owner full name",
+                        placeholder = t("auth.ownerNamePlaceholder"),
                         leadingIcon = Icons.Outlined.Person
                     )
                 }
@@ -404,19 +405,19 @@ fun PharmacyRegistrationScreen(
                     ) {
                         Icon(Icons.Outlined.Phone, contentDescription = null,
                             tint = Gray500, modifier = Modifier.size(16.dp))
-                        Text("Phone Number",
+                        Text(t("auth.phoneLabel"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold)
                     }
                     Text(
-                        "Primary contact — used for WhatsApp & sign-in",
+                        t("auth.phoneModePrimaryHint"),
                         style = MaterialTheme.typography.labelSmall,
                         color = Gray500
                     )
                     CustomTextField(
                         value = phoneNumber,
                         onValueChange = { phoneNumber = it },
-                        placeholder = "+250 7XX XXX XXX",
+                        placeholder = t("auth.phonePlaceholder"),
                         leadingIcon = Icons.Outlined.Phone,
                         keyboardType = KeyboardType.Phone
                     )
@@ -430,14 +431,14 @@ fun PharmacyRegistrationScreen(
                     ) {
                         Icon(Icons.Outlined.Email, contentDescription = null,
                             tint = Gray500, modifier = Modifier.size(16.dp))
-                        Text("Email Address",
+                        Text(t("auth.emailLabel"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold)
                     }
                     CustomTextField(
                         value = email,
                         onValueChange = { email = it },
-                        placeholder = "pharmacy@example.com",
+                        placeholder = t("auth.emailPlaceholder"),
                         leadingIcon = Icons.Outlined.Email,
                         keyboardType = KeyboardType.Email
                     )
@@ -447,7 +448,7 @@ fun PharmacyRegistrationScreen(
                 CustomTextField(
                     value = physicalAddress,
                     onValueChange = { physicalAddress = it },
-                    placeholder = "Enter full address including district",
+                    placeholder = t("auth.addressPlaceholder"),
                     leadingIcon = Icons.Outlined.LocationOn
                 )
 
@@ -457,7 +458,7 @@ fun PharmacyRegistrationScreen(
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("🕐", style = MaterialTheme.typography.bodyMedium)
-                        Text("Operating Hours",
+                        Text(t("auth.operatingHours"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold)
                     }
@@ -468,7 +469,7 @@ fun PharmacyRegistrationScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Open 24/7", style = MaterialTheme.typography.bodyMedium)
+                        Text(t("auth.is24_7"), style = MaterialTheme.typography.bodyMedium)
                         Switch(
                             checked = is24Hours,
                             onCheckedChange = { is24Hours = it },
@@ -478,7 +479,7 @@ fun PharmacyRegistrationScreen(
 
                     if (!is24Hours) {
                         // Day selection chips
-                        Text("Open Days",
+                        Text(t("auth.openDays"),
                             style = MaterialTheme.typography.labelSmall, color = Gray500)
                         Row(
                             modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -508,7 +509,7 @@ fun PharmacyRegistrationScreen(
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Text(
-                                        text = day.take(3),
+                                        text = t("day.$day").take(3),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.SemiBold,
                                         color = if (isSelected) White else MaterialTheme.colorScheme.onBackground
@@ -523,7 +524,7 @@ fun PharmacyRegistrationScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Column(horizontalAlignment = Alignment.Start) {
-                                Text("Opens at",
+                                Text(t("auth.opensAt"),
                                     style = MaterialTheme.typography.labelSmall, color = Gray500)
                                 Spacer(Modifier.height(4.dp))
                                 Box(
@@ -541,7 +542,7 @@ fun PharmacyRegistrationScreen(
                                 }
                             }
                             Column(horizontalAlignment = Alignment.Start) {
-                                Text("Closes at",
+                                Text(t("auth.closesAt"),
                                     style = MaterialTheme.typography.labelSmall, color = Gray500)
                                 Spacer(Modifier.height(4.dp))
                                 Box(
@@ -568,7 +569,7 @@ fun PharmacyRegistrationScreen(
                 CustomTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = "Min. 6 characters",
+                    placeholder = t("auth.passwordHint"),
                     leadingIcon = Icons.Outlined.Lock,
                     isPassword = true
                 )
@@ -577,7 +578,7 @@ fun PharmacyRegistrationScreen(
                 CustomTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    placeholder = "Re-enter your password",
+                    placeholder = t("auth.confirmPasswordPlaceholder"),
                     leadingIcon = Icons.Outlined.Lock,
                     isPassword = true
                 )
@@ -594,7 +595,7 @@ fun PharmacyRegistrationScreen(
                     ) {
                         Icon(Icons.Outlined.Warning, contentDescription = null,
                             tint = Color.Red, modifier = Modifier.size(16.dp))
-                        Text("Passwords do not match",
+                        Text(t("auth.passwordMismatch"),
                             style = MaterialTheme.typography.labelSmall, color = Color.Red)
                     }
                 }
@@ -612,8 +613,7 @@ fun PharmacyRegistrationScreen(
                     Icon(Icons.Outlined.CheckCircle, contentDescription = null,
                         tint = Teal500, modifier = Modifier.size(18.dp))
                     Text(
-                        "Verified by Rwanda FDA. Your council registration number is cross-checked " +
-                        "against the official December 2025 list of licensed human retail pharmacies.",
+                        t("auth.fdaNotice"),
                         style = MaterialTheme.typography.labelSmall,
                         color = Teal500
                     )
@@ -621,7 +621,7 @@ fun PharmacyRegistrationScreen(
 
                 // ── Register Button ──
                 PrimaryButton(
-                    text = "Register Pharmacy",
+                    text = t("auth.registerPharmacy"),
                     onClick = {
                         if (password == confirmPassword && password.length >= 6) {
                             val openTime = "%02d:%02d".format(openHour, openMinute)
@@ -653,7 +653,7 @@ fun PharmacyRegistrationScreen(
                 // ── Sign in link ──
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                     Text(
-                        text = "Already have an account? Sign In",
+                        text = t("role.alreadyAccount") + " " + t("role.signIn"),
                         style = MaterialTheme.typography.bodySmall,
                         color = Teal500,
                         modifier = Modifier.clickable(onClick = onSignInClick)

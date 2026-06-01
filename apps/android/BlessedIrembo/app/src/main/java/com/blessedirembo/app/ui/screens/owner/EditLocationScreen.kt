@@ -73,6 +73,7 @@ import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.blessedirembo.app.util.t
 
 /**
  * EditLocationScreen
@@ -202,8 +203,8 @@ fun EditLocationScreen(
                 isEditing = false
                 onBackClick()
             },
-            title = { Text("Location updated") },
-            text = { Text("Your location and address have been saved successfully.") },
+            title = { Text(t("profile.locationUpdated")) },
+            text = { Text(t("profile.locationUpdatedDesc")) },
             confirmButton = {
                 TextButton(onClick = {
                     showSuccess = false
@@ -219,7 +220,7 @@ fun EditLocationScreen(
     if (errorMessage != null) {
         AlertDialog(
             onDismissRequest = { errorMessage = null },
-            title = { Text("Error") },
+            title = { Text(t("common.error")) },
             text = { Text(errorMessage ?: "") },
             confirmButton = {
                 TextButton(onClick = { errorMessage = null }) {
@@ -260,18 +261,18 @@ fun EditLocationScreen(
         ) {
 
             // ── Section 1: Current Info (always visible, read-only) ─────────
-            SectionCard(title = "Current Location") {
+            SectionCard(title = t("profile.currentLocation")) {
                 LocationInfoRow(
                     icon = Icons.Filled.LocationOn,
                     iconTint = Color(0xFFEF4444),
-                    label = "Address",
-                    value = pharmacy?.address?.ifBlank { null } ?: "Not set"
+                    label = t("auth.addressLabel"),
+                    value = pharmacy?.address?.ifBlank { null } ?: t("common.notSet")
                 )
                 LocationInfoRow(
                     icon = Icons.Filled.Place,
                     iconTint = Teal500,
-                    label = "District",
-                    value = pharmacy?.district?.ifBlank { null } ?: "Not set"
+                    label = t("auth.districtLabel"),
+                    value = pharmacy?.district?.ifBlank { null } ?: t("common.notSet")
                 )
                 val lat = pharmacy?.latitude ?: 0.0
                 val lon = pharmacy?.longitude ?: 0.0
@@ -279,12 +280,11 @@ fun EditLocationScreen(
                     LocationInfoRow(
                         icon = Icons.Filled.MyLocation,
                         iconTint = Color(0xFF3B82F6),
-                        label = "Coordinates",
+                        label = t("profile.coordinates"),
                         value = String.format("%.5f, %.5f", lat, lon)
                     )
                 }
 
-                // "Change Address" button — only when not editing
                 if (!isEditing) {
                     Spacer(modifier = Modifier.height(8.dp))
                     TextButton(
@@ -294,7 +294,7 @@ fun EditLocationScreen(
                         Icon(Icons.Filled.Edit, contentDescription = null, tint = Teal500, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(
-                            "Change Address",
+                            t("profile.changeAddress"),
                             fontWeight = FontWeight.SemiBold,
                             color = Teal500
                         )
@@ -311,14 +311,13 @@ fun EditLocationScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
 
                     SectionCard(
-                        title = "Edit Location",
-                        footer = "Find your coordinates by long-pressing your location in Google Maps."
+                        title = t("profile.editLocation"),
+                        footer = t("profile.findCoordsHint")
                     ) {
-                        // Address (multiline)
                         OutlinedTextField(
                             value = address,
                             onValueChange = { address = it },
-                            label = { Text("Street address") },
+                            label = { Text(t("profile.streetAddress")) },
                             minLines = 2,
                             maxLines = 4,
                             modifier = Modifier.fillMaxWidth(),
@@ -327,12 +326,10 @@ fun EditLocationScreen(
                                 focusedLabelColor = Teal500
                             )
                         )
-
-                        // District
                         OutlinedTextField(
                             value = district,
                             onValueChange = { district = it },
-                            label = { Text("District (e.g. Kicukiro)") },
+                            label = { Text(t("profile.districtPlaceholder")) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -340,12 +337,10 @@ fun EditLocationScreen(
                                 focusedLabelColor = Teal500
                             )
                         )
-
-                        // Latitude
                         OutlinedTextField(
                             value = latitudeText,
                             onValueChange = { latitudeText = it },
-                            label = { Text("Latitude") },
+                            label = { Text(t("auth.latitude")) },
                             placeholder = { Text("–1.9536") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -355,12 +350,10 @@ fun EditLocationScreen(
                                 focusedLabelColor = Teal500
                             )
                         )
-
-                        // Longitude
                         OutlinedTextField(
                             value = longitudeText,
                             onValueChange = { longitudeText = it },
-                            label = { Text("Longitude") },
+                            label = { Text(t("auth.longitude")) },
                             placeholder = { Text("30.0606") },
                             singleLine = true,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
@@ -370,8 +363,6 @@ fun EditLocationScreen(
                                 focusedLabelColor = Teal500
                             )
                         )
-
-                        // Cancel button
                         TextButton(
                             onClick = {
                                 isEditing = false
@@ -380,7 +371,7 @@ fun EditLocationScreen(
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Cancel", color = Gray500)
+                            Text(t("common.cancel"), color = Gray500)
                         }
                     }
 
@@ -402,15 +393,14 @@ fun EditLocationScreen(
                         if (isGeocoding) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp, color = Teal500)
                             Spacer(Modifier.width(8.dp))
-                            Text("Finding coordinates...")
+                            Text(t("auth.gettingLocation"))
                         } else {
                             Icon(Icons.Filled.Map, contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text("Auto-fill coordinates from address", fontWeight = FontWeight.Medium)
+                            Text(t("profile.autoFillCoords"), fontWeight = FontWeight.Medium)
                         }
                     }
 
-                    // ── Save Location Button ──────────────────────────────────
                     Button(
                         onClick = { save() },
                         enabled = address.isNotBlank() && !isSaving,
@@ -423,9 +413,9 @@ fun EditLocationScreen(
                         if (isSaving) {
                             CircularProgressIndicator(color = White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             Spacer(Modifier.width(8.dp))
-                            Text("Saving...", fontWeight = FontWeight.SemiBold, color = White)
+                            Text(t("common.saving"), fontWeight = FontWeight.SemiBold, color = White)
                         } else {
-                            Text("Save Location", fontWeight = FontWeight.SemiBold, color = White)
+                            Text(t("profile.saveLocation"), fontWeight = FontWeight.SemiBold, color = White)
                         }
                     }
                 }

@@ -69,6 +69,7 @@ import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 import kotlinx.coroutines.launch
+import com.blessedirembo.app.util.t
 
 /**
  * Edit Operating Hours Screen
@@ -128,7 +129,7 @@ fun EditOperatingHoursScreen(
         val state = rememberTimePickerState(initialHour = openHour, initialMinute = openMinute, is24Hour = true)
         AlertDialog(
             onDismissRequest = { showOpenPicker = false },
-            title = { Text("Opens at") },
+            title = { Text(t("auth.opensAt")) },
             text = {
                 TimePicker(state = state,
                     colors = TimePickerDefaults.colors(clockDialColor = Teal500.copy(alpha = 0.1f)))
@@ -138,7 +139,7 @@ fun EditOperatingHoursScreen(
                     Text("OK", color = Teal500)
                 }
             },
-            dismissButton = { TextButton(onClick = { showOpenPicker = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showOpenPicker = false }) { Text(t("common.cancel")) } }
         )
     }
 
@@ -146,7 +147,7 @@ fun EditOperatingHoursScreen(
         val state = rememberTimePickerState(initialHour = closeHour, initialMinute = closeMinute, is24Hour = true)
         AlertDialog(
             onDismissRequest = { showClosePicker = false },
-            title = { Text("Closes at") },
+            title = { Text(t("auth.closesAt")) },
             text = {
                 TimePicker(state = state,
                     colors = TimePickerDefaults.colors(clockDialColor = Teal500.copy(alpha = 0.1f)))
@@ -156,14 +157,14 @@ fun EditOperatingHoursScreen(
                     Text("OK", color = Teal500)
                 }
             },
-            dismissButton = { TextButton(onClick = { showClosePicker = false }) { Text("Cancel") } }
+            dismissButton = { TextButton(onClick = { showClosePicker = false }) { Text(t("common.cancel")) } }
         )
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Operating Hours", fontWeight = FontWeight.SemiBold) },
+                title = { Text(t("owner.operatingHours"), fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -212,8 +213,8 @@ fun EditOperatingHoursScreen(
                                 tint = TimeOrange, modifier = Modifier.size(20.dp))
                         }
                         Column {
-                            Text("Open 24/7", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                            Text("Always open, all days", style = MaterialTheme.typography.bodySmall, color = Gray500)
+                            Text(t("auth.is24_7"), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
+                            Text(t("auth.alwaysOpenAllDays"), style = MaterialTheme.typography.bodySmall, color = Gray500)
                         }
                     }
                     Switch(
@@ -237,7 +238,7 @@ fun EditOperatingHoursScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Open Days",
+                        Text(t("auth.openDays"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Gray500)
@@ -254,7 +255,7 @@ fun EditOperatingHoursScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text(day, style = MaterialTheme.typography.bodyMedium)
+                                Text(t("day.$day"), style = MaterialTheme.typography.bodyMedium)
                                 Box(
                                     modifier = Modifier
                                         .size(24.dp)
@@ -283,7 +284,7 @@ fun EditOperatingHoursScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Opening Hours",
+                        Text(t("auth.operatingHours"),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Gray500)
@@ -294,12 +295,12 @@ fun EditOperatingHoursScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             TimePickerRow(
-                                label = "Opens at",
+                                label = t("auth.opensAt"),
                                 time = "%02d:%02d".format(openHour, openMinute),
                                 onClick = { showOpenPicker = true }
                             )
                             TimePickerRow(
-                                label = "Closes at",
+                                label = t("auth.closesAt"),
                                 time = "%02d:%02d".format(closeHour, closeMinute),
                                 onClick = { showClosePicker = true }
                             )
@@ -309,8 +310,10 @@ fun EditOperatingHoursScreen(
             }
 
             // ── Save Button ──
+            val successMsg = t("owner.hoursUpdated")
+            val errorMsg = t("common.error")
             PrimaryButton(
-                text = if (isSaving) "Saving…" else "Save Hours",
+                text = if (isSaving) t("common.saving") else t("profile.saveHours"),
                 onClick = {
                     val pharmId = pharmacy?.id
                     if (pharmId.isNullOrBlank()) return@PrimaryButton
@@ -327,10 +330,10 @@ fun EditOperatingHoursScreen(
                         )
                         isSaving = false
                         if (result.isSuccess) {
-                            snackbarHostState.showSnackbar("Hours updated successfully ✓")
+                            snackbarHostState.showSnackbar(successMsg)
                             pharmacyViewModel.loadPharmacyByOwnerId(authViewModel.currentUser?.uid ?: "")
                         } else {
-                            snackbarHostState.showSnackbar("Failed to save: ${result.exceptionOrNull()?.message}")
+                            snackbarHostState.showSnackbar("$errorMsg: ${result.exceptionOrNull()?.message}")
                         }
                     }
                 },

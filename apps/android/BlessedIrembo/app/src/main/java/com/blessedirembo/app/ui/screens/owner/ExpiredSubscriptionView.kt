@@ -23,6 +23,7 @@ import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
+import com.blessedirembo.app.util.t
 
 @Composable
 fun ExpiredSubscriptionView(
@@ -44,7 +45,7 @@ fun ExpiredSubscriptionView(
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = "Access Restricted",
+            text = t("expired.title"),
             style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
             color = Gray900,
@@ -52,7 +53,7 @@ fun ExpiredSubscriptionView(
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Your pharmacy account is either inactive or your subscription has expired. Please go to the Subscription tab to renew your access or contact the administrator.",
+            text = t("expired.body"),
             style = MaterialTheme.typography.bodyLarge,
             color = Gray500,
             textAlign = TextAlign.Center

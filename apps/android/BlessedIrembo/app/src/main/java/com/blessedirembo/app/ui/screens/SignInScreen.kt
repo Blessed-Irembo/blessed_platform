@@ -68,6 +68,7 @@ import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 /**
  * Sign In Screen
@@ -111,11 +112,11 @@ fun SignInScreen(
     if (resetEmailSent) {
         AlertDialog(
             onDismissRequest = { authViewModel.clearResetEmailSent() },
-            title = { Text("Email Sent") },
-            text = { Text("Check your inbox for a password reset link.") },
+            title = { Text(t("auth.emailSent")) },
+            text = { Text(t("auth.checkInbox")) },
             confirmButton = {
                 TextButton(onClick = { authViewModel.clearResetEmailSent() }) {
-                    Text("OK", color = Teal500)
+                    Text(t("common.confirm"), color = Teal500)
                 }
             }
         )
@@ -125,19 +126,14 @@ fun SignInScreen(
     if (showForgotPassword) {
         AlertDialog(
             onDismissRequest = { showForgotPassword = false },
-            title = { Text("Reset Password") },
+            title = { Text(t("auth.resetPassword")) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        if (selectedTab == 0)
-                            "Enter your registered phone number or email to receive a reset link."
-                        else
-                            "We'll send a password reset link to your email."
-                    )
+                    Text(t("auth.resetPasswordPrompt"))
                     OutlinedTextField(
                         value = resetEmail,
                         onValueChange = { resetEmail = it },
-                        label = { Text(if (selectedTab == 0) "Phone or Email" else "Email address") },
+                        label = { Text(t("auth.emailLabel")) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -151,12 +147,12 @@ fun SignInScreen(
                     },
                     enabled = resetEmail.isNotBlank()
                 ) {
-                    Text("Send Reset Email", color = Teal500)
+                    Text(t("auth.sendResetEmail"), color = Teal500)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showForgotPassword = false }) {
-                    Text("Cancel")
+                    Text(t("common.cancel"))
                 }
             }
         )
@@ -170,7 +166,7 @@ fun SignInScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Sign In",
+                        text = t("auth.signIn"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -214,13 +210,13 @@ fun SignInScreen(
                     modifier = Modifier.size(72.dp)
                 )
                 Text(
-                    text = "Welcome Back",
+                    text = t("auth.signInTitle"),
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold,
                     color = Gray900
                 )
                 Text(
-                    text = "Sign in to continue",
+                    text = t("auth.signInSubtitle"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Gray500
                 )
@@ -268,7 +264,7 @@ fun SignInScreen(
                 // ── Sign-in method picker (iOS pill/segmented style) ──────────
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Sign in with",
+                        text = t("auth.signInWith"),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = Gray900
@@ -282,7 +278,7 @@ fun SignInScreen(
                             .padding(3.dp)
                     ) {
                         Row(modifier = Modifier.fillMaxWidth()) {
-                            listOf("Phone Number", "Email").forEachIndexed { index, label ->
+                            listOf(t("auth.phoneLabel"), t("auth.emailLabel")).forEachIndexed { index, label ->
                                 val isSelected = selectedTab == index
                                 Box(
                                     modifier = Modifier
@@ -325,7 +321,7 @@ fun SignInScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = if (selectedTab == 0) "Phone Number" else "Email",
+                            text = if (selectedTab == 0) t("auth.phoneLabel") else t("auth.emailLabel"),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Gray900
@@ -333,7 +329,7 @@ fun SignInScreen(
                     }
                     if (selectedTab == 0) {
                         Text(
-                            text = "Enter the phone number you registered with",
+                            text = t("auth.phoneModeSub"),
                             style = MaterialTheme.typography.labelSmall,
                             color = Gray500
                         )
@@ -360,7 +356,7 @@ fun SignInScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "Password",
+                            text = t("auth.passwordLabel"),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.SemiBold,
                             color = Gray900
@@ -369,7 +365,7 @@ fun SignInScreen(
                     CustomTextField(
                         value = password,
                         onValueChange = { password = it },
-                        placeholder = "Enter your password",
+                        placeholder = t("auth.passwordPlaceholder"),
                         leadingIcon = Icons.Outlined.Lock,
                         isPassword = true
                     )
@@ -390,13 +386,13 @@ fun SignInScreen(
                         modifier = Modifier.size(48.dp, 28.dp)
                     )
                     Text(
-                        text = " Remember me",
+                        text = " " + t("auth.rememberMe"),
                         style = MaterialTheme.typography.bodySmall,
                         color = Gray500
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(
-                        text = "Forgot password?",
+                        text = t("auth.forgotPassword"),
                         style = MaterialTheme.typography.bodySmall,
                         color = Teal500,
                         fontWeight = FontWeight.SemiBold,
@@ -409,7 +405,7 @@ fun SignInScreen(
 
                 // ── Sign In button ────────────────────────────────────────────
                 PrimaryButton(
-                    text = "Sign In",
+                    text = t("auth.signIn"),
                     onClick = { authViewModel.signIn(identifier, password) },
                     enabled = identifier.isNotBlank() && password.isNotBlank() && !isLoading,
                     isLoading = isLoading
@@ -433,7 +429,7 @@ fun SignInScreen(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = "We look up your account using your registered phone number. Your password stays the same.",
+                            text = t("auth.phoneModeNote"),
                             style = MaterialTheme.typography.labelSmall,
                             color = Gray500
                         )
@@ -445,9 +441,9 @@ fun SignInScreen(
             Spacer(modifier = Modifier.height(24.dp))
             Text(
                 text = buildAnnotatedString {
-                    append("Don't have an account? ")
+                    append(t("auth.noAccount") + " ")
                     withStyle(SpanStyle(color = Teal500, fontWeight = FontWeight.SemiBold)) {
-                        append("Sign Up")
+                        append(t("auth.signUp"))
                     }
                 },
                 style = MaterialTheme.typography.bodyMedium,

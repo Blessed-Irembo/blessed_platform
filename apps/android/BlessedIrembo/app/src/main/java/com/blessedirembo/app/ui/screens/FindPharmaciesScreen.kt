@@ -69,6 +69,7 @@ import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.PharmacyUiState
 import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -207,7 +208,7 @@ fun FindPharmaciesScreen(
                     )
                 ) {
                     Text(
-                        text = "View Details",
+                        text = t("map.viewDetails"),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = White
@@ -228,7 +229,7 @@ fun FindPharmaciesScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Find Pharmacies",
+                        text = t("map.nearMe"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -263,7 +264,7 @@ fun FindPharmaciesScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
-                            Text("Loading pharmacies...", style = MaterialTheme.typography.bodyMedium, color = Gray500)
+                            Text(t("common.loading"), style = MaterialTheme.typography.bodyMedium, color = Gray500)
                         }
                     }
 
@@ -285,7 +286,7 @@ fun FindPharmaciesScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${state.pharmacies.size} pharmacies nearby",
+                                text = "${state.pharmacies.size} ${t("map.pharmacies")} ${t("map.nearMe")}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Gray900
@@ -301,7 +302,7 @@ fun FindPharmaciesScreen(
                                     modifier = Modifier.size(20.dp)
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Sort", style = MaterialTheme.typography.bodyMedium, color = Teal500, fontWeight = FontWeight.Medium)
+                                Text(t("map.sort"), style = MaterialTheme.typography.bodyMedium, color = Teal500, fontWeight = FontWeight.Medium)
                             }
                         }
 
@@ -385,7 +386,7 @@ fun FindPharmaciesScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     placeholder = {
-                        Text(text = "Search pharmacies...", color = Gray400)
+                        Text(text = t("map.searchPlaceholder"), color = Gray400)
                     },
                     leadingIcon = {
                         Icon(imageVector = Icons.Filled.Search, contentDescription = null, tint = Gray400)

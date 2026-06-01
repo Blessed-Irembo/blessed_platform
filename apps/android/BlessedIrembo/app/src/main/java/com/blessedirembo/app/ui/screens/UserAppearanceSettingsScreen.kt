@@ -38,6 +38,7 @@ import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,7 +53,7 @@ fun UserAppearanceSettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Appearance",
+                        text = t("appearance.title"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -82,7 +83,7 @@ fun UserAppearanceSettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Appearance Mode",
+                text = t("appearance.themeSection"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -95,26 +96,26 @@ fun UserAppearanceSettingsScreen(
                     .background(White)
             ) {
                 ThemeOptionRow(
-                    title = "System Settings",
+                    title = t("appearance.system"),
                     isSelected = selectedTheme == 0,
                     onClick = { selectedTheme = 0 }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 ThemeOptionRow(
-                    title = "Light Mode",
+                    title = t("appearance.light"),
                     isSelected = selectedTheme == 1,
                     onClick = { selectedTheme = 1 }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 ThemeOptionRow(
-                    title = "Dark Mode",
+                    title = t("appearance.dark"),
                     isSelected = selectedTheme == 2,
                     onClick = { selectedTheme = 2 }
                 )
             }
             
             Text(
-                text = "Choose how the Blessed Irembo app looks for you. System option matches your device settings.",
+                text = t("appearance.themeFooter"),
                 style = MaterialTheme.typography.bodySmall,
                 color = Gray500,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)

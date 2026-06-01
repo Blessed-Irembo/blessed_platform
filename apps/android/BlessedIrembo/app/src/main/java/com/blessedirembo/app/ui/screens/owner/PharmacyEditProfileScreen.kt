@@ -66,6 +66,7 @@ import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import com.blessedirembo.app.util.t
 
 /**
  * Pharmacy Edit Profile Screen
@@ -118,7 +119,7 @@ fun PharmacyEditProfileScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Edit Profile", fontWeight = FontWeight.SemiBold) },
+                title = { Text(t("owner.editProfile"), fontWeight = FontWeight.SemiBold) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -146,7 +147,7 @@ fun PharmacyEditProfileScreen(
                 colors = CardDefaults.cardColors(containerColor = White)
             ) {
                 Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(0.dp)) {
-                    Text("Current Information",
+                    Text(t("profile.currentInfo"),
                         style = MaterialTheme.typography.labelMedium,
                         color = Gray500,
                         modifier = Modifier.padding(bottom = 12.dp))
@@ -154,22 +155,22 @@ fun PharmacyEditProfileScreen(
                     InfoRow(
                         icon = Icons.Outlined.Business,
                         iconColor = Teal500,
-                        label = "Pharmacy Name",
-                        value = pharmacy?.name?.ifBlank { "Not set" } ?: "Not set"
+                        label = t("auth.pharmacyNameLabel"),
+                        value = pharmacy?.name?.ifBlank { t("common.notSet") } ?: t("common.notSet")
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(vertical = 8.dp))
                     InfoRow(
                         icon = Icons.Outlined.Email,
                         iconColor = EditBlue,
-                        label = "Email",
-                        value = pharmacy?.email?.ifBlank { "Not set" } ?: "Not set"
+                        label = t("profile.email"),
+                        value = pharmacy?.email?.ifBlank { t("common.notSet") } ?: t("common.notSet")
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(vertical = 8.dp))
                     InfoRow(
                         icon = Icons.Outlined.Phone,
                         iconColor = StaffGreen,
-                        label = "Phone Number",
-                        value = pharmacy?.phoneNumber?.ifBlank { pharmacy?.phone }?.ifBlank { "Not set" } ?: "Not set"
+                        label = t("profile.phone"),
+                        value = pharmacy?.phoneNumber?.ifBlank { pharmacy?.phone }?.ifBlank { t("common.notSet") } ?: t("common.notSet")
                     )
 
                     if (!isEditing) {
@@ -178,7 +179,7 @@ fun PharmacyEditProfileScreen(
                             onClick = { isEditing = true; loadCurrentValues() },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Edit Profile", color = Teal500, fontWeight = FontWeight.SemiBold)
+                            Text(t("owner.editProfile"), color = Teal500, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }
@@ -195,27 +196,27 @@ fun PharmacyEditProfileScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text("Edit Details",
+                        Text(t("profile.editDetails"),
                             style = MaterialTheme.typography.labelMedium,
                             color = Gray500)
 
                         CustomTextField(
                             value = name,
                             onValueChange = { name = it },
-                            placeholder = "Pharmacy Name",
+                            placeholder = t("auth.pharmacyNameLabel"),
                             leadingIcon = Icons.Outlined.Business
                         )
                         CustomTextField(
                             value = email,
                             onValueChange = { email = it },
-                            placeholder = "Email Address",
+                            placeholder = t("auth.emailLabel"),
                             leadingIcon = Icons.Outlined.Email,
                             keyboardType = KeyboardType.Email
                         )
                         CustomTextField(
                             value = phone,
                             onValueChange = { phone = it },
-                            placeholder = "Phone Number",
+                            placeholder = t("auth.phoneLabel"),
                             leadingIcon = Icons.Outlined.Phone,
                             keyboardType = KeyboardType.Phone
                         )
@@ -224,7 +225,7 @@ fun PharmacyEditProfileScreen(
                             onClick = { isEditing = false; loadCurrentValues(); newPassword = "" },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text("Cancel", color = Gray500)
+                            Text(t("common.cancel"), color = Gray500)
                         }
                     }
                 }
@@ -239,25 +240,27 @@ fun PharmacyEditProfileScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text("Security (Optional)",
+                        Text(t("profile.securityOptional"),
                             style = MaterialTheme.typography.labelMedium,
                             color = Gray500)
                         CustomTextField(
                             value = newPassword,
                             onValueChange = { newPassword = it },
-                            placeholder = "New password (leave blank to keep current)",
+                            placeholder = t("profile.newPassword"),
                             leadingIcon = Icons.Outlined.Lock,
                             isPassword = true
                         )
-                        Text("Leave blank to keep your current password.",
+                        Text(t("owner.keepCurrentPassword"),
                             style = MaterialTheme.typography.labelSmall,
                             color = Gray500)
                     }
                 }
 
                 // ── Save Button ──
+                val successMsg = t("profile.profileUpdated")
+                val errorMsg = t("common.error")
                 PrimaryButton(
-                    text = "Save Changes",
+                    text = if (isSaving) t("common.saving") else t("profile.saveChanges"),
                     onClick = {
                         val pharmId = pharmacy?.id
                         if (pharmId.isNullOrBlank() || name.isBlank()) return@PrimaryButton
@@ -265,16 +268,15 @@ fun PharmacyEditProfileScreen(
                             isSaving = true
                             val result = repo.updatePharmacyProfile(pharmId, name.trim(), email.trim(), phone.trim())
                             if (result.isSuccess) {
-                                // Optional password update
                                 if (newPassword.isNotBlank()) {
                                     FirebaseAuth.getInstance().currentUser?.updatePassword(newPassword)
                                 }
-                                snackbarHostState.showSnackbar("Profile updated successfully ✓")
+                                snackbarHostState.showSnackbar(successMsg)
                                 pharmacyViewModel.loadPharmacyByOwnerId(authViewModel.currentUser?.uid ?: "")
                                 isEditing = false
                                 newPassword = ""
                             } else {
-                                snackbarHostState.showSnackbar("Failed: ${result.exceptionOrNull()?.message}")
+                                snackbarHostState.showSnackbar("$errorMsg: ${result.exceptionOrNull()?.message}")
                             }
                             isSaving = false
                         }

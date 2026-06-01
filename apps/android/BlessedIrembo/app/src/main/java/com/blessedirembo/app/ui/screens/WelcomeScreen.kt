@@ -31,6 +31,7 @@ import com.blessedirembo.app.ui.components.FloatingLanguageSwitcher
 import com.blessedirembo.app.ui.components.RoleSelectionCard
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
+import com.blessedirembo.app.util.t
 
 /**
  * Welcome Screen
@@ -61,7 +62,7 @@ fun WelcomeScreen(
 
         // Welcome Title
         Text(
-            text = "Welcome Back!",
+            text = t("role.welcome"),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onSurface
@@ -71,7 +72,7 @@ fun WelcomeScreen(
 
         // Subtitle
         Text(
-            text = "How would you like to continue?",
+            text = t("role.subtitle"),
             style = MaterialTheme.typography.bodyLarge,
             color = Gray500
         )
@@ -84,16 +85,16 @@ fun WelcomeScreen(
         ) {
             // Looking for pharmacy option
             RoleSelectionCard(
-                title = "I'm looking for\na pharmacy",
-                description = "Find and connect\nwith pharmacies",
+                title = t("role.userTitle"),
+                description = t("role.userDesc"),
                 icon = Icons.Outlined.Person,
                 onClick = onLookingForPharmacy
             )
 
             // Pharmacy owner option
             RoleSelectionCard(
-                title = "I own a pharmacy",
-                description = "Register your pharmacy",
+                title = t("role.pharmacyTitle"),
+                description = t("role.pharmacyDesc"),
                 icon = Icons.Outlined.LocalPharmacy,
                 onClick = onOwnPharmacy
             )
@@ -107,14 +108,14 @@ fun WelcomeScreen(
         ) {
             Text(
                 text = buildAnnotatedString {
-                    append("Already have an account? ")
+                    append(t("role.alreadyAccount") + " ")
                     withStyle(
                         style = SpanStyle(
                             color = Teal500,
                             fontWeight = FontWeight.SemiBold
                         )
                     ) {
-                        append("Sign In")
+                        append(t("role.signIn"))
                     }
                 },
                 style = MaterialTheme.typography.bodyMedium,

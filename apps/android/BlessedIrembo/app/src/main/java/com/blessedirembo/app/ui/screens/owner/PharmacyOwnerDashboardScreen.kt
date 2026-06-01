@@ -43,6 +43,7 @@ import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -164,7 +165,7 @@ fun PharmacyOwnerDashboardScreen(
                 icon = Icons.Filled.Email, // Email stands in for message.fill
                 iconBackgroundColor = Color(0xFF25D366), // WhatsApp green
                 value = "${pharmacy?.whatsappClicks ?: 0}",
-                label = "WhatsApp Clicks",
+                label = t("dashboard.whatsappClicks"),
                 percentageChange = "",
                 isPositive = true,
                 modifier = Modifier.weight(1f)
@@ -175,7 +176,7 @@ fun PharmacyOwnerDashboardScreen(
                 icon = if (isPremium) Icons.Filled.Star else Icons.Filled.Person,
                 iconBackgroundColor = if (isPremium) PurpleAccent else Teal500,
                 value = pharmacy?.subscriptionPlan ?: "Free",
-                label = "Subscription",
+                label = t("dashboard.subscription"),
                 percentageChange = "",
                 isPositive = true,
                 modifier = Modifier.weight(1f)
@@ -193,7 +194,7 @@ fun PharmacyOwnerDashboardScreen(
                 icon = Icons.Filled.Visibility,
                 iconBackgroundColor = BlueAccent,
                 value = "${pharmacy?.profileViews ?: 0}",
-                label = "Profile Views",
+                label = t("dashboard.profileViews"),
                 percentageChange = "",
                 isPositive = true,
                 modifier = Modifier.weight(1f)
@@ -203,8 +204,8 @@ fun PharmacyOwnerDashboardScreen(
             StatCard(
                 icon = Icons.Filled.Schedule, // clock fill equivalent
                 iconBackgroundColor = if (isOpen) SuccessGreen else Color(0xFFEF4444),
-                value = if (isOpen) "Open" else "Closed",
-                label = "Status",
+                value = if (isOpen) t("map.open") else t("map.closed"),
+                label = t("dashboard.status"),
                 percentageChange = "",
                 isPositive = isOpen,
                 modifier = Modifier.weight(1f)

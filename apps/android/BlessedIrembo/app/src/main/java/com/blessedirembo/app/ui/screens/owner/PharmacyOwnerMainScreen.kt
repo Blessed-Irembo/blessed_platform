@@ -34,6 +34,7 @@ import com.blessedirembo.app.ui.theme.White
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import com.blessedirembo.app.util.t
 
 /**
  * Navigation item for pharmacy owner bottom nav

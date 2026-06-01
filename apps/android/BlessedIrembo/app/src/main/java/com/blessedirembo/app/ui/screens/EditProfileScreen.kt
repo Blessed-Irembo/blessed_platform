@@ -55,6 +55,7 @@ import com.blessedirembo.app.data.repository.UserRepository
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +110,7 @@ fun EditProfileScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Edit Profile",
+                        text = t("profile.editProfileTitle"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -148,7 +149,7 @@ fun EditProfileScreen(
                         .padding(24.dp)
                 ) {
                     Text(
-                        text = "Personal Information",
+                        text = t("profile.personalDetailsTitle"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -158,7 +159,7 @@ fun EditProfileScreen(
                     OutlinedTextField(
                         value = fullName,
                         onValueChange = { fullName = it },
-                        label = { Text("Full Name") },
+                        label = { Text(t("auth.fullNameLabel")) },
                         leadingIcon = { Icon(Icons.Filled.Person, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
@@ -170,7 +171,7 @@ fun EditProfileScreen(
                     OutlinedTextField(
                         value = phone,
                         onValueChange = { phone = it },
-                        label = { Text("Phone Number") },
+                        label = { Text(t("auth.phoneLabel")) },
                         leadingIcon = { Icon(Icons.Filled.Phone, contentDescription = null) },
                         modifier = Modifier.fillMaxWidth(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -180,7 +181,7 @@ fun EditProfileScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                     
                     Text(
-                        text = "Security",
+                        text = t("profile.securityOptional"),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(bottom = 16.dp)
@@ -190,7 +191,7 @@ fun EditProfileScreen(
                     OutlinedTextField(
                         value = password,
                         onValueChange = { password = it },
-                        label = { Text("New Password (Optional)") },
+                        label = { Text(t("profile.newPassword")) },
                         leadingIcon = { Icon(Icons.Filled.Lock, contentDescription = null) },
                         trailingIcon = {
                             val image = if (isPasswordVisible) Icons.Filled.Visibility else Icons.Filled.VisibilityOff
@@ -230,7 +231,7 @@ fun EditProfileScreen(
                             )
                         } else {
                             Text(
-                                text = "Save Changes",
+                                text = t("profile.saveChanges"),
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = FontWeight.SemiBold
                             )

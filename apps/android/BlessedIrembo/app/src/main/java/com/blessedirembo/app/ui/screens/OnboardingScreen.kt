@@ -40,28 +40,29 @@ import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray200
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
+import com.blessedirembo.app.util.t
 import kotlinx.coroutines.launch
 
 data class OnboardingPage(
-    val title: String,
-    val description: String,
+    val titleKey: String,
+    val descriptionKey: String,
     val icon: ImageVector
 )
 
 val onboardingPages = listOf(
     OnboardingPage(
-        title = "Welcome to Blessed Irembo",
-        description = "Find trusted pharmacies anywhere in Rwanda. Access medication and healthcare services with ease.",
+        titleKey = "onboarding.page1.title",
+        descriptionKey = "onboarding.page1.desc",
         icon = Icons.Default.Map
     ),
     OnboardingPage(
-        title = "Discover Nearby Pharmacies",
-        description = "Search by location, check availability, and find the nearest pharmacy to you in seconds.",
+        titleKey = "onboarding.page2.title",
+        descriptionKey = "onboarding.page2.desc",
         icon = Icons.Default.LocationOn
     ),
     OnboardingPage(
-        title = "Connect Instantly",
-        description = "Get in touch with pharmacies directly. Share your needs and receive prompt responses.",
+        titleKey = "onboarding.page3.title",
+        descriptionKey = "onboarding.page3.desc",
         icon = Icons.Default.Phone
     )
 )
@@ -103,7 +104,7 @@ fun OnboardingScreen(
                     }
                 }) {
                     Text(
-                        text = "Skip",
+                        text = t("onboarding.skip"),
                         color = Gray500,
                         style = MaterialTheme.typography.bodyLarge
                     )
@@ -143,7 +144,7 @@ fun OnboardingScreen(
 
         // Bottom Button
         PrimaryButton(
-            text = if (isLastPage) "Get Started" else "Next",
+            text = if (isLastPage) t("onboarding.getStarted") else t("onboarding.next"),
             onClick = {
                 if (isLastPage) {
                     onFinish()
@@ -179,7 +180,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
         Spacer(modifier = Modifier.height(48.dp))
 
         Text(
-            text = page.title,
+            text = t(page.titleKey),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.onBackground,
@@ -190,7 +191,7 @@ fun OnboardingPageContent(page: OnboardingPage) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = page.description,
+            text = t(page.descriptionKey),
             style = MaterialTheme.typography.bodyLarge,
             color = Gray500,
             textAlign = TextAlign.Center,

@@ -41,6 +41,7 @@ import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,7 @@ fun UserLocationSettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Location Services",
+                        text = t("profile.location"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -94,7 +95,7 @@ fun UserLocationSettingsScreen(
             Spacer(modifier = Modifier.height(24.dp))
             
             Text(
-                text = "Location Services",
+                text = t("profile.location"),
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
                 color = Gray900
@@ -103,7 +104,7 @@ fun UserLocationSettingsScreen(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = "Blessed Irembo uses your location to show you nearby verified pharmacies on the map and calculate distances accurately.",
+                text = t("settings.locationUsageDesc"),
                 style = MaterialTheme.typography.bodyLarge,
                 color = Gray500,
                 textAlign = TextAlign.Center,
@@ -138,7 +139,7 @@ fun UserLocationSettingsScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = "Manage Android Settings",
+                        text = t("settings.manageSettings"),
                         style = MaterialTheme.typography.titleMedium,
                         color = White
                     )

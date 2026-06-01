@@ -38,6 +38,7 @@ import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +56,7 @@ fun UserNotificationSettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Notifications",
+                        text = t("profile.notifications"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -86,7 +87,7 @@ fun UserNotificationSettingsScreen(
 
             // App Notifications Section
             Text(
-                text = "App Notifications",
+                text = t("settings.appNotifications"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -99,26 +100,26 @@ fun UserNotificationSettingsScreen(
                     .background(White)
             ) {
                 SettingsSwitchRow(
-                    title = "Push Notifications",
+                    title = t("profile.notifications"),
                     checked = pushEnabled,
                     onCheckedChange = { pushEnabled = it }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 SettingsSwitchRow(
-                    title = "Email Alerts",
+                    title = t("settings.emailAlerts"),
                     checked = emailEnabled,
                     onCheckedChange = { emailEnabled = it }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 SettingsSwitchRow(
-                    title = "SMS Notifications",
+                    title = t("settings.smsAlerts"),
                     checked = smsEnabled,
                     onCheckedChange = { smsEnabled = it }
                 )
             }
             
             Text(
-                text = "Enable these to stay up-to-date with your orders and pharmacy interactions.",
+                text = t("settings.appNotificationsFooter"),
                 style = MaterialTheme.typography.bodySmall,
                 color = Gray500,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -128,7 +129,7 @@ fun UserNotificationSettingsScreen(
 
             // Marketing Section
             Text(
-                text = "Marketing",
+                text = t("settings.marketing"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -141,7 +142,7 @@ fun UserNotificationSettingsScreen(
                     .background(White)
             ) {
                 SettingsSwitchRow(
-                    title = "Promotional Offers",
+                    title = t("settings.promotionalOffers"),
                     checked = promoEnabled,
                     onCheckedChange = { promoEnabled = it }
                 )

@@ -38,6 +38,7 @@ import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +55,7 @@ fun UserPrivacySettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Privacy & Security",
+                        text = t("profile.privacy"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -85,7 +86,7 @@ fun UserPrivacySettingsScreen(
 
             // Data Sharing Section
             Text(
-                text = "Data Sharing",
+                text = t("settings.dataSharing"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -98,20 +99,20 @@ fun UserPrivacySettingsScreen(
                     .background(White)
             ) {
                 SettingsSwitchRow(
-                    title = "Share Usage Data",
+                    title = t("settings.shareUsageData"),
                     checked = shareData,
                     onCheckedChange = { shareData = it }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 SettingsSwitchRow(
-                    title = "Allow Analytics",
+                    title = t("settings.allowAnalytics"),
                     checked = analyticsEnabled,
                     onCheckedChange = { analyticsEnabled = it }
                 )
             }
             
             Text(
-                text = "Help us improve the Blessed Irembo map accuracy and services by sharing anonymous usage data.",
+                text = t("settings.dataSharingFooter"),
                 style = MaterialTheme.typography.bodySmall,
                 color = Gray500,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -121,7 +122,7 @@ fun UserPrivacySettingsScreen(
 
             // Legal Information Section
             Text(
-                text = "Legal Information",
+                text = t("settings.legalInfo"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -134,7 +135,7 @@ fun UserPrivacySettingsScreen(
                     .background(White)
             ) {
                 LinkRow(
-                    title = "Privacy Policy",
+                    title = t("profile.privacyPolicy"),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
                         context.startActivity(intent)
@@ -142,7 +143,7 @@ fun UserPrivacySettingsScreen(
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 LinkRow(
-                    title = "Terms and Conditions",
+                    title = t("profile.terms"),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms-and-conditions"))
                         context.startActivity(intent)

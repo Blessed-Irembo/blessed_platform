@@ -70,6 +70,7 @@ import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 // Logout button red color
 val LogoutRed = Color(0xFFFF6B6B)
@@ -127,7 +128,7 @@ fun ProfileScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Profile",
+                        text = t("profile.title"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -212,7 +213,7 @@ fun ProfileScreen(
             
             // Personal Information Section
             Text(
-                text = "Personal Information",
+                text = t("profile.personalInfo"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -230,19 +231,19 @@ fun ProfileScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     PersonalInfoItem(
                         icon = Icons.Filled.Person,
-                        label = "Full Name",
+                        label = t("profile.fullName"),
                         value = userName
                     )
                     HorizontalDivider(color = Gray100)
                     PersonalInfoItem(
                         icon = Icons.Filled.Email,
-                        label = "Email",
+                        label = t("profile.email"),
                         value = userEmail
                     )
                     HorizontalDivider(color = Gray100)
                     PersonalInfoItem(
                         icon = Icons.Filled.Phone,
-                        label = "Phone",
+                        label = t("profile.phone"),
                         value = userPhone
                     )
                 }
@@ -252,7 +253,7 @@ fun ProfileScreen(
             
             // Settings Section
             Text(
-                text = "Settings",
+                text = t("nav.settings"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -270,25 +271,25 @@ fun ProfileScreen(
                 Column {
                     SettingsListItem(
                         icon = Icons.Filled.Notifications,
-                        title = "Notifications",
+                        title = t("profile.notifications"),
                         onClick = onNotificationsClick
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Lock,
-                        title = "Privacy & Security",
+                        title = t("profile.privacy"),
                         onClick = onPrivacyClick
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.LocationOn,
-                        title = "Location Services",
+                        title = t("profile.location"),
                         onClick = onLocationClick
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Brush,
-                        title = "Appearance",
+                        title = t("profile.appearance"),
                         onClick = onAppearanceClick
                     )
                 }
@@ -298,7 +299,7 @@ fun ProfileScreen(
             
             // About Section
             Text(
-                text = "About",
+                text = t("profile.about"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -316,7 +317,7 @@ fun ProfileScreen(
                 Column {
                     SettingsListItem(
                         icon = Icons.AutoMirrored.Filled.Help,
-                        title = "Help & Support",
+                        title = t("profile.help"),
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/help"))
                             context.startActivity(intent)
@@ -325,7 +326,7 @@ fun ProfileScreen(
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Description,
-                        title = "Terms & Conditions",
+                        title = t("profile.terms"),
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms"))
                             context.startActivity(intent)
@@ -334,7 +335,7 @@ fun ProfileScreen(
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
                         icon = Icons.Filled.Shield,
-                        title = "Privacy Policy",
+                        title = t("profile.privacyPolicy"),
                         onClick = {
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
                             context.startActivity(intent)
@@ -368,7 +369,7 @@ fun ProfileScreen(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Logout",
+                    text = t("profile.logout"),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold
                 )

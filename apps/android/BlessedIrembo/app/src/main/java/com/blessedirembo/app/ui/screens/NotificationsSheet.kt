@@ -42,6 +42,7 @@ import com.blessedirembo.app.ui.theme.Teal50
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.NotificationViewModel
+import com.blessedirembo.app.util.t
 import java.text.SimpleDateFormat
 import java.util.Locale
 
@@ -72,7 +73,7 @@ fun NotificationsSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Notifications",
+                    text = t("profile.notifications"),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                     color = Gray900
@@ -96,7 +97,7 @@ fun NotificationsSheet(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "No notifications right now.",
+                        text = t("common.noNotifications"),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Gray500
                     )

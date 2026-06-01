@@ -51,6 +51,7 @@ import com.blessedirembo.app.ui.components.PrimaryButton
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -101,7 +102,7 @@ fun UserSignUpScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Sign Up",
+                        text = t("auth.signUp"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -110,7 +111,7 @@ fun UserSignUpScreen(
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+                            contentDescription = t("common.cancel")
                         )
                     }
                 },
@@ -147,7 +148,7 @@ fun UserSignUpScreen(
 
             // Title
             Text(
-                text = "Create Account",
+                text = t("auth.signUp"),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -156,7 +157,7 @@ fun UserSignUpScreen(
 
             // Subtitle
             Text(
-                text = "Sign up to find pharmacies",
+                text = t("auth.registerUserSubtitle"),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Gray500
             )
@@ -170,14 +171,14 @@ fun UserSignUpScreen(
                 CustomTextField(
                     value = fullName,
                     onValueChange = { fullName = it },
-                    placeholder = "Full Name",
+                    placeholder = t("auth.fullNameLabel"),
                     leadingIcon = Icons.Outlined.Person
                 )
 
                 CustomTextField(
                     value = email,
                     onValueChange = { email = it },
-                    placeholder = "Email",
+                    placeholder = t("auth.emailLabel"),
                     leadingIcon = Icons.Outlined.Email,
                     keyboardType = KeyboardType.Email
                 )
@@ -185,7 +186,7 @@ fun UserSignUpScreen(
                 CustomTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    placeholder = "Phone Number",
+                    placeholder = t("auth.phoneLabel"),
                     leadingIcon = Icons.Outlined.Phone,
                     keyboardType = KeyboardType.Phone
                 )
@@ -193,7 +194,7 @@ fun UserSignUpScreen(
                 CustomTextField(
                     value = password,
                     onValueChange = { password = it },
-                    placeholder = "Password",
+                    placeholder = t("auth.passwordLabel"),
                     leadingIcon = Icons.Outlined.Lock,
                     isPassword = true
                 )
@@ -201,7 +202,7 @@ fun UserSignUpScreen(
                 CustomTextField(
                     value = confirmPassword,
                     onValueChange = { confirmPassword = it },
-                    placeholder = "Confirm Password",
+                    placeholder = t("auth.confirmPasswordLabel"),
                     leadingIcon = Icons.Outlined.Lock,
                     isPassword = true,
                     imeAction = ImeAction.Done
@@ -217,17 +218,7 @@ fun UserSignUpScreen(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = buildAnnotatedString {
-                        append("I accept the ")
-                        withStyle(
-                            style = SpanStyle(
-                                color = Teal500,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        ) {
-                            append("Terms & Conditions")
-                        }
-                    },
+                    text = t("auth.acceptTerms"),
                     style = MaterialTheme.typography.bodyMedium,
                     color = Gray500,
                     modifier = Modifier.weight(1f)
@@ -248,7 +239,7 @@ fun UserSignUpScreen(
 
             // Sign Up Button
             PrimaryButton(
-                text = "Sign Up",
+                text = t("auth.signUp"),
                 onClick = {
                     if (password == confirmPassword) {
                         authViewModel.signUpWithProfile(
@@ -271,14 +262,14 @@ fun UserSignUpScreen(
             // Sign In Link
             Text(
                 text = buildAnnotatedString {
-                    append("Already have an account? ")
+                    append(t("role.alreadyAccount") + " ")
                     withStyle(
                         style = SpanStyle(
                             color = Teal500,
                             fontWeight = FontWeight.SemiBold
                         )
                     ) {
-                        append("Sign In")
+                        append(t("role.signIn"))
                     }
                 },
                 style = MaterialTheme.typography.bodyMedium,

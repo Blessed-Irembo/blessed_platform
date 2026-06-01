@@ -2,6 +2,8 @@ package com.blessedirembo.app.util
 
 import android.content.Context
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,3 +64,13 @@ object LanguageManager {
 
 /** CompositionLocal so Composables can access the current language without passing it down. */
 val LocalLanguage = compositionLocalOf { Language.ENGLISH }
+
+/**
+ * Top-level Composable function to resolve a translation key.
+ * Automatically recomposes when the selected language in LanguageManager changes.
+ */
+@androidx.compose.runtime.Composable
+fun t(key: String): String {
+    val language by LanguageManager.selectedLanguage.collectAsState(initial = Language.ENGLISH)
+    return Translations.catalog[language.code]?.get(key) ?: key
+}

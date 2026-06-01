@@ -50,6 +50,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import com.blessedirembo.app.util.t
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -64,6 +65,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.analytics.AnalyticsManager
 import com.blessedirembo.app.data.model.OperatingHours
@@ -198,15 +200,15 @@ fun PharmacyDetailScreen(
                 if (p.isVerified || p.is24_7 || p.isPremium) {
                     Row(modifier = Modifier.padding(bottom = 16.dp)) {
                         if (p.isVerified) {
-                            BadgeView("Verified", Teal500)
+                            BadgeView(t("details.verified"), Teal500)
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         if (p.is24_7) {
-                            BadgeView("24/7 Available", Color(0xFF3B82F6))
+                            BadgeView(t("details.alwaysOpen"), Color(0xFF3B82F6))
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         if (p.isPremium) {
-                            BadgeView("Premium Member", Color(0xFF4F46E5))
+                            BadgeView(t("details.premiumMember"), Color(0xFF4F46E5))
                         }
                     }
                 }
@@ -219,27 +221,38 @@ fun PharmacyDetailScreen(
                 HorizontalDivider(color = Gray100)
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Quick action buttons
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    // Call
+                // Quick action buttons — stacked vertically to handle long translated labels
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    // Call button
+                    val dialableNumber = "+250" + p.phoneNumber.filter { it.isDigit() }.let {
+                        if (it.startsWith("250")) it.substring(3) else if (it.startsWith("0")) it.substring(1) else it
+                    }
                     Button(
                         onClick = {
-                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${p.phoneNumber.filter { it.isDigit() }}"))
+                            val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:$dialableNumber"))
                             context.startActivity(intent)
                         },
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .height(50.dp)
                             .border(1.dp, Color(0xFF99F6E4), RoundedCornerShape(12.dp)),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF0FDFA), contentColor = Color(0xFF0F766E)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(imageVector = Icons.Filled.Phone, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.Filled.Phone, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Call Pharmacy", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = t("details.call"),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            maxLines = 1
+                        )
                     }
 
-                        // WhatsApp
+                    // WhatsApp button
                     Button(
                         onClick = {
                             pharmacyViewModel.incrementWhatsAppClicks(pharmacyId)
@@ -248,14 +261,19 @@ fun PharmacyDetailScreen(
                             context.startActivity(intent)
                         },
                         modifier = Modifier
-                            .weight(1f)
+                            .fillMaxWidth()
                             .height(50.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF25D366), contentColor = White),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(imageVector = Icons.Filled.Email, contentDescription = null, modifier = Modifier.size(16.dp)) // SF Message fallback roughly
+                        Icon(imageVector = Icons.Filled.Email, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("WhatsApp", fontWeight = FontWeight.SemiBold)
+                        Text(
+                            text = t("details.whatsapp"),
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 14.sp,
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -270,18 +288,18 @@ fun PharmacyDetailScreen(
                     .padding(vertical = 20.dp)
             ) {
                 Text(
-                    text = "Contact & Hours",
+                    text = t("details.contactHoursTitle"),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = Gray900,
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp)
                 )
 
-                ContactRow(icon = Icons.Filled.LocationOn, iconColor = Color(0xFF0D9488), label = "Address", value = p.address.ifBlank { "N/A" })
+                ContactRow(icon = Icons.Filled.LocationOn, iconColor = Color(0xFF0D9488), label = t("auth.addressLabel"), value = p.address.ifBlank { "N/A" })
                 HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = Gray100)
-                ContactRow(icon = Icons.Filled.Phone, iconColor = Color(0xFF2563EB), label = "Phone", value = p.phoneNumber.ifBlank { "N/A" })
+                ContactRow(icon = Icons.Filled.Phone, iconColor = Color(0xFF2563EB), label = t("auth.phoneLabel"), value = p.phoneNumber.ifBlank { "N/A" })
                 HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = Gray100)
-                ContactRow(icon = Icons.Filled.Email, iconColor = Color(0xFF7C3AED), label = "Email", value = p.email.ifBlank { "N/A" })
+                ContactRow(icon = Icons.Filled.Email, iconColor = Color(0xFF7C3AED), label = t("auth.emailLabel"), value = p.email.ifBlank { "N/A" })
                 HorizontalDivider(modifier = Modifier.padding(start = 56.dp), color = Gray100)
 
                 // Hours Expandable Row
@@ -303,7 +321,7 @@ fun PharmacyDetailScreen(
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text("Hours", style = MaterialTheme.typography.labelSmall, color = Gray500)
+                            Text(t("details.hours"), style = MaterialTheme.typography.labelSmall, color = Gray500)
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Box(
                                     modifier = Modifier
@@ -312,7 +330,7 @@ fun PharmacyDetailScreen(
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = if (p.isCurrentlyOpen) "Open now" else "Closed now",
+                                    text = if (p.isCurrentlyOpen) t("details.openNow") else t("details.closedNow"),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = if (p.isCurrentlyOpen) SuccessGreen else Color.Red
@@ -367,7 +385,7 @@ fun PharmacyDetailScreen(
                                     )
                                     if (oh.is24Hours) {
                                         Text(
-                                            text = "Open 24 hours",
+                                            text = t("details.open24Hours"),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = if (isToday) Color(0xFF0D9488) else Gray500
                                         )
@@ -380,7 +398,7 @@ fun PharmacyDetailScreen(
                                         )
                                     } else {
                                         Text(
-                                            text = "Closed",
+                                            text = t("map.closed"),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = if (isToday) Color.Red else Gray500.copy(alpha = 0.6f)
                                         )
@@ -405,7 +423,7 @@ fun PharmacyDetailScreen(
                     .padding(20.dp)
             ) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    Text("Location", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gray900)
+                    Text(t("details.location"), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Gray900)
                     Text(String.format(Locale.US, "%.4f, %.4f", p.latitude, p.longitude), style = MaterialTheme.typography.labelSmall, color = Gray500)
                 }
 
@@ -431,7 +449,7 @@ fun PharmacyDetailScreen(
                 ) {
                     Icon(imageVector = Icons.Filled.Directions, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Get Directions", fontWeight = FontWeight.SemiBold)
+                    Text(t("details.getDirections"), fontWeight = FontWeight.SemiBold)
                 }
             }
             

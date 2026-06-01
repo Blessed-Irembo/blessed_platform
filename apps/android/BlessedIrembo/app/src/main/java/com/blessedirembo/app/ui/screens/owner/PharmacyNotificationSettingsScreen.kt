@@ -32,6 +32,7 @@ import com.blessedirembo.app.ui.screens.SettingsSwitchRow
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray900
 import com.blessedirembo.app.ui.theme.White
+import com.blessedirembo.app.util.t
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun PharmacyNotificationSettingsScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = "Notifications",
+                        text = t("profile.notifications"),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.SemiBold
                     )
@@ -79,7 +80,7 @@ fun PharmacyNotificationSettingsScreen(
 
             // General Section
             Text(
-                text = "General",
+                text = t("settings.general"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -92,13 +93,13 @@ fun PharmacyNotificationSettingsScreen(
                     .background(White)
             ) {
                 SettingsSwitchRow(
-                    title = "Push Notifications",
+                    title = t("settings.appNotifications"),
                     checked = pushNotifications,
                     onCheckedChange = { pushNotifications = it }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 SettingsSwitchRow(
-                    title = "Email Notifications",
+                    title = t("settings.emailAlerts"),
                     checked = emailNotifications,
                     onCheckedChange = { emailNotifications = it }
                 )
@@ -108,7 +109,7 @@ fun PharmacyNotificationSettingsScreen(
 
             // Updates Section
             Text(
-                text = "Updates",
+                text = t("settings.updates"),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = Gray900,
@@ -121,7 +122,7 @@ fun PharmacyNotificationSettingsScreen(
                     .background(White)
             ) {
                 SettingsSwitchRow(
-                    title = "Marketing & Tips",
+                    title = t("settings.marketingTips"),
                     checked = marketingEmails,
                     onCheckedChange = { marketingEmails = it }
                 )

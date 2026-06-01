@@ -48,6 +48,7 @@ import com.blessedirembo.app.ui.theme.SuccessGreen
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
+import com.blessedirembo.app.util.t
 
 private val WhatsAppGreen = Color(0xFF25D366)
 private val PurpleIndigo = Color(0xFF4F46E5)
@@ -87,7 +88,7 @@ fun AnalyticsScreen(
         // ── Page Header ──────────────────────────────────────────────────────
         Column {
             Text(
-                text = "Analytics",
+                text = t("analytics.title"),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
                 color = Gray900
@@ -103,7 +104,7 @@ fun AnalyticsScreen(
                         .background(SuccessGreen)
                 )
                 Text(
-                    text = "Live data",
+                    text = t("analytics.liveData"),
                     style = MaterialTheme.typography.labelSmall,
                     color = Gray500
                 )
@@ -118,14 +119,14 @@ fun AnalyticsScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AnalyticsCard(
-                title = "WhatsApp Clicks",
+                title = t("analytics.whatsappClicks"),
                 value = "$whatsappClicks",
                 icon = Icons.Filled.Email,
                 color = WhatsAppGreen,
                 modifier = Modifier.weight(1f)
             )
             AnalyticsCard(
-                title = "Profile Views",
+                title = t("analytics.profileViews"),
                 value = "$profileViews",
                 icon = Icons.Filled.Visibility,
                 color = BlueColor,
@@ -140,15 +141,15 @@ fun AnalyticsScreen(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             AnalyticsCard(
-                title = "Subscription",
+                title = t("analytics.subscription"),
                 value = subscriptionPlan,
                 icon = if (isPremium) Icons.Filled.Star else Icons.Filled.Person,
                 color = if (isPremium) PurpleIndigo else Teal500,
                 modifier = Modifier.weight(1f)
             )
             AnalyticsCard(
-                title = "Status",
-                value = if (isOpen) "Open" else "Closed",
+                title = t("analytics.status"),
+                value = if (isOpen) t("details.openNow") else t("map.closed"),
                 icon = Icons.Filled.Schedule,
                 color = if (isOpen) SuccessGreen else RedColor,
                 modifier = Modifier.weight(1f)
@@ -159,7 +160,7 @@ fun AnalyticsScreen(
 
         // ── WhatsApp Engagement Section ──────────────────────────────────────
         Text(
-            text = "WhatsApp Engagement",
+            text = t("analytics.whatsappEngagement"),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = Gray900
@@ -169,15 +170,15 @@ fun AnalyticsScreen(
             icon = Icons.Filled.Email,
             iconColor = WhatsAppGreen,
             count = whatsappClicks,
-            label = "Total WhatsApp contacts",
-            description = "Every tap on \"Chat on WhatsApp\" from your pharmacy details by the user on this platform is counted here in real time."
+            label = t("analytics.totalWhatsapp"),
+            description = t("analytics.whatsappDesc")
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
         // ── Profile Views Section ────────────────────────────────────────────
         Text(
-            text = "Profile Views",
+            text = t("analytics.profileViews"),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = Gray900
@@ -187,8 +188,8 @@ fun AnalyticsScreen(
             icon = Icons.Filled.Visibility,
             iconColor = BlueColor,
             count = profileViews,
-            label = "Users who opened your pharmacy profile",
-            description = "A view is counted each time any user taps into the full details screen of your pharmacy — both from the map and from search results."
+            label = t("analytics.usersOpened"),
+            description = t("analytics.profileViewDesc")
         )
 
         Spacer(modifier = Modifier.height(80.dp))
