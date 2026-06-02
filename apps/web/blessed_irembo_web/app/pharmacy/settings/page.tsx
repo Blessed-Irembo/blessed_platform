@@ -552,7 +552,7 @@ export default function PharmacySettings() {
                             type="time"
                             value={hoursData.openTime}
                             onChange={(e) => setHoursData({ ...hoursData, openTime: e.target.value })}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
                             required
                           />
                         </div>
@@ -562,7 +562,7 @@ export default function PharmacySettings() {
                             type="time"
                             value={hoursData.closeTime}
                             onChange={(e) => setHoursData({ ...hoursData, closeTime: e.target.value })}
-                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 text-gray-900 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white outline-none transition-all"
                             required
                           />
                         </div>

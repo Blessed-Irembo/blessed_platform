@@ -11,7 +11,7 @@ import LanguageSwitcher from '@/components/LanguageSwitcher';
 /**
  * Pharmacy Registration Page
  *
- * Verifies the pharmacy's Rwanda FDA council registration number (NPC/Axxxx)
+ * Verifies the pharmacy's Rwanda NPC( national pharmacy council) council registration number (NPC/Axxxx)
  * against the licensed_pharmacies Firestore collection seeded from the
  * official December 2025 list. Only verified pharmacies may sign up.
  */
@@ -117,8 +117,7 @@ export default function RegisterPharmacyPage() {
   // ── Handlers ────────────────────────────────────────────────────────────
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, type } = e.target;
-    // @ts-ignore
-    const value = type === 'checkbox' ? e.target.checked : e.target.value;
+    const value = type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }));
   };
@@ -186,7 +185,8 @@ export default function RegisterPharmacyPage() {
       // signUpPharmacy() creates the Firebase Auth session automatically.
       // Redirect straight to the pharmacy dashboard — no need to log in again.
       router.replace('/pharmacy/dashboard');
-    } catch (error: any) {
+    } catch (err: unknown) {
+      const error = err as Error & { code?: string };
       const msg: string = error.message ?? '';
       if (msg.includes('INVALID_LICENSE')) {
         setErrors({ registrationNumber: t.registerPharmacy.errors.registrationNumberNotFound });
@@ -282,9 +282,9 @@ export default function RegisterPharmacyPage() {
         <div className="bg-white rounded-2xl border border-gray-200 p-8 md:p-12 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-6">
 
-            {(errors as any).general && (
+            {errors.general && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                {(errors as any).general}
+                {errors.general}
               </div>
             )}
 
@@ -431,7 +431,7 @@ export default function RegisterPharmacyPage() {
                   id="is24Hours"
                   name="is24Hours"
                   checked={formData.is24Hours}
-                  onChange={handleChange as any}
+                  onChange={handleChange}
                   className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-gray-300 rounded cursor-pointer"
                 />
                 <label htmlFor="is24Hours" className="ml-2 block text-sm text-gray-900 cursor-pointer">
@@ -447,11 +447,11 @@ export default function RegisterPharmacyPage() {
                       name="operatingDays"
                       value={formData.operatingDays}
                       onChange={handleChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-teal-500 focus:border-teal-500"
                     >
-                      <option value="Everyday">{t.pharmacyDetail.days.monday}-{t.pharmacyDetail.days.sunday}</option>
-                      <option value="Monday - Friday">{t.pharmacyDetail.days.monday} - {t.pharmacyDetail.days.friday}</option>
-                      <option value="Monday - Saturday">{t.pharmacyDetail.days.monday} - {t.pharmacyDetail.days.saturday}</option>
+                      <option value="Everyday" className="text-gray-900 bg-white">{t.pharmacyDetail.days.monday}-{t.pharmacyDetail.days.sunday}</option>
+                      <option value="Monday - Friday" className="text-gray-900 bg-white">{t.pharmacyDetail.days.monday} - {t.pharmacyDetail.days.friday}</option>
+                      <option value="Monday - Saturday" className="text-gray-900 bg-white">{t.pharmacyDetail.days.monday} - {t.pharmacyDetail.days.saturday}</option>
                     </select>
                   </div>
                   <div>
@@ -461,7 +461,7 @@ export default function RegisterPharmacyPage() {
                       name="openTime"
                       value={formData.openTime}
                       onChange={handleChange}
-                      className={`block w-full px-3 py-2 border ${errors.openTime ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500`}
+                      className={`block w-full px-3 py-2 border ${errors.openTime ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm bg-white text-gray-900 focus:ring-teal-500 focus:border-teal-500`}
                     />
                     {errors.openTime && <p className="mt-1 text-xs text-red-600">{errors.openTime}</p>}
                   </div>
@@ -472,7 +472,7 @@ export default function RegisterPharmacyPage() {
                       name="closeTime"
                       value={formData.closeTime}
                       onChange={handleChange}
-                      className={`block w-full px-3 py-2 border ${errors.closeTime ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm bg-white focus:ring-teal-500 focus:border-teal-500`}
+                      className={`block w-full px-3 py-2 border ${errors.closeTime ? 'border-red-300' : 'border-gray-300'} rounded-lg text-sm bg-white text-gray-900 focus:ring-teal-500 focus:border-teal-500`}
                     />
                     {errors.closeTime && <p className="mt-1 text-xs text-red-600">{errors.closeTime}</p>}
                   </div>
@@ -681,7 +681,7 @@ export default function RegisterPharmacyPage() {
               {errors.confirmPassword && <p className="mt-2 text-sm text-red-600 font-medium">{errors.confirmPassword}</p>}
             </div>
 
-            {/* ── FDA verification notice ── */}
+            {/* ── NPC verification notice ── */}
             <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
               <div className="flex gap-3">
                 <svg className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

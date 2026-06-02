@@ -287,14 +287,14 @@ export const translations = {
       },
       stats: {
         licensed: "Licensed Pharmacies",
-        verified: "FDA Verified",
+        verified: "NPC( national pharmacy council) Verified",
         districts: "Districts Covered",
         access: "Platform Access"
       },
       story: {
         title: "Our Story",
         p1: "Blessed Irembo was born out of a simple but powerful observation: in Rwanda, finding a pharmacy — especially one that has the specific medication you need — can be a time-consuming and frustrating experience. People often visit multiple pharmacies only to find that what they need is out of stock or unavailable.",
-        p2: "Our founders, driven by a commitment to improving healthcare access in Rwanda, set out to build a platform that would serve as a comprehensive directory of all licensed pharmacies, verified against the Rwanda FDA's official records, and presented in an easy-to-use digital format accessible from any smartphone or computer.",
+        p2: "Our founders, driven by a commitment to improving healthcare access in Rwanda, set out to build a platform that would serve as a comprehensive directory of all licensed pharmacies, verified against the Rwanda NPC( national pharmacy council)'s official records, and presented in an easy-to-use digital format accessible from any smartphone or computer.",
         p3: "Today, Blessed Irembo is operated by Blessed HealthConnect Ltd, a Rwandan company dedicated to leveraging technology for better healthcare outcomes across the country."
       },
       cta: {
@@ -318,7 +318,7 @@ export const translations = {
         },
         {
           question: "How do I register my pharmacy?",
-          answer: "Click \"For Pharmacies\" in the navigation menu, then follow the registration steps. You will need your Rwanda FDA Council Registration Number (NPC/Axxxx) to sign up."
+          answer: "Click \"For Pharmacies\" in the navigation menu, then follow the registration steps. You will need your Rwanda NPC( national pharmacy council) Council Registration Number (NPC/Axxxx) to sign up."
         },
         {
           question: "What is the pharmacy free trial?",
@@ -398,7 +398,7 @@ export const translations = {
       },
       listings: {
         title: "3. Pharmacy Listings",
-        text: "Pharmacies listed on Blessed Irembo must be licensed by the Rwanda Food and Drugs Authority (FDA). We verify registration numbers during signup, but we are not liable for any inaccuracies in the information provided by pharmacies. Users should independently verify important medical information before making decisions."
+        text: "Pharmacies listed on Blessed Irembo must be licensed by the Rwanda NPC( national pharmacy council). We verify registration numbers during signup, but we are not liable for any inaccuracies in the information provided by pharmacies. Users should independently verify important medical information before making decisions."
       },
       subscriptions: {
         title: "4. Subscription Services",
@@ -466,7 +466,7 @@ export const translations = {
       howItWorks: {
         title: "How It Works",
         steps: [
-          { title: "Register", desc: "Sign up with your Rwanda FDA Council Registration Number." },
+          { title: "Register", desc: "Sign up with your Rwanda NPC( national pharmacy council) Council Registration Number." },
           { title: "Get Verified", desc: "Our team verifies your registration and activates your listing." },
           { title: "Grow", desc: "Users find your pharmacy on the map and contact you directly." }
         ]
@@ -646,11 +646,11 @@ export const translations = {
     registerPharmacy: {
       title: "Register Pharmacy",
       subtitle: "Your council registration number is verified against the official list.",
-      fdaList: "Rwanda FDA December 2025",
+      fdaList: "as issued by NPC( national pharmacy council)",
       labels: {
-        registrationNumber: "Council Registration Number",
+        registrationNumber: "Council Registration Number of responsible personnel",
         registrationNumberPlaceholder: "NPC/A0000",
-        registrationNumberHint: "Format: NPC/A0000 — as issued by Rwanda FDA",
+        registrationNumberHint: "Format: NPC/A0000 — as issued by Rwanda NPC( national pharmacy council)",
         pharmacyName: "Pharmacy Name",
         pharmacyNamePlaceholder: "Enter pharmacy name",
         ownerName: "Owner / Responsible Person",
@@ -686,7 +686,7 @@ export const translations = {
         passwordPlaceholder: "Create secure password (min. 6 characters)",
         confirmPassword: "Confirm Password",
         confirmPasswordPlaceholder: "Re-enter your password",
-        fdaNotice: "Verified by Rwanda FDA. Your council registration number is cross-checked against the official list of 725 licensed human retail pharmacies."
+        fdaNotice: "Verified by Rwanda NPC( national pharmacy council). Your council registration number is cross-checked against the official list of 725 licensed human retail pharmacies."
       },
       submitButton: "Register Pharmacy",
       registering: "Registering...",
@@ -696,7 +696,7 @@ export const translations = {
         checking: "Checking...",
         verified: "Verified",
         alreadyRegistered: "Already registered",
-        notFound: "Not found in the Rwanda FDA licensed list"
+        notFound: "Not found in the Rwanda NPC( national pharmacy council) licensed list"
       },
       errors: {
         pharmacyNameRequired: "Pharmacy name is required",
@@ -709,8 +709,8 @@ export const translations = {
         closeTimeRequired: "Closing time required",
         locationRequired: "Click \"Use My Location\" to capture your GPS coordinates.",
         locationRequiredManual: "Enter valid latitude and longitude coordinates.",
-        registrationNumberRequired: "Council registration number is required",
-        registrationNumberNotFound: "Not found in the Rwanda FDA licensed pharmacy list",
+        registrationNumberRequired: "Council registration number of responsible personnel is required",
+        registrationNumberNotFound: "Not found in the Rwanda NPC( national pharmacy council) licensed pharmacy list",
         registrationNumberTaken: "This pharmacy is already registered on Blessed Irembo",
         registrationNumberChecking: "Still verifying — please wait a moment",
         passwordRequired: "Password is required",
@@ -731,8 +731,8 @@ export const translations = {
       settings: "Igenamiterere",
     },
     hero: {
-      title: "Shaka Farumasi Wizerwa Aho Ariho Hose mu Rwanda",
-      subtitle: "Ikora ku nkunga ya Blessed HealthConnect Ltd, Blessed Irembo iguhuza na farumasi zujuje ibyangombwa mu gihugu hose. Shaka aho uherereye, reba niba imiti ihari, ubone imiti ukeneye mu gihe gikwiye.",
+      title: "Shaka Farumasi Zizewe Aho Ariho Hose mu Rwanda",
+      subtitle: "Blessed Irembo Ikora ishikamiye kuri Blessed HealthConnect Ltd, iguhuza farumasi zujuje ibyangombwa mu gihugu hose. Shaka aho uherereye, reba niba imiti ihari, ubone imiti ukeneye mu gihe gikwiye.",
       cta_find: "Shaka Farumasi",
       cta_register: "Iyandikishe nka Farumasi",
     },
@@ -1006,14 +1006,14 @@ export const translations = {
       },
       stats: {
         licensed: "Farumasi Zifite Impushya",
-        verified: "Zagenzuwe na FDA",
+        verified: "Zagenzuwe na NPC( national pharmacy council)",
         districts: "Uturere Twagezweho",
         access: "Uburyo bwo kuyikoresha"
       },
       story: {
         title: "Amateka Yacu",
         p1: "Blessed Irembo yavutse ishingiye ku kintu cyoroheje ariko gifite imbaraga: mu Rwanda, gushaka farumasi — cyane cyane ifite umuti wihariye ukeneye — bishobora gutwara igihe kinini kandi bikagorana. Abantu akenshi basura farumasi nyinshi bakaza gusanga ibyo bakeneye bidahari.",
-        p2: "Abashinze uru urubuga, babitewe n'ubushake bwo kunoza uburyo bwo kubona serivisi z'ubuzima mu Rwanda, biyemeje kubaka urubuga rwaba rurimo farumasi zose zifite impushya, zagenzuwe hakoreshejwe amakuru ya FDA y'u Rwanda, kandi zigaragara mu buryo bworoshye bwakoreshwa kuri terefone cyangwa mudasobwa.",
+        p2: "Abashinze uru urubuga, babitewe n'ubushake bwo kunoza uburyo bwo kubona serivisi z'ubuzima mu Rwanda, biyemeje kubaka urubuga rwaba rurimo farumasi zose zifite impushya, zagenzuwe hakoreshejwe amakuru ya NPC( national pharmacy council) y'u Rwanda, kandi zigaragara mu buryo bworoshye bwakoreshwa kuri terefone cyangwa mudasobwa.",
         p3: "Uyu munsi, Blessed Irembo icungwa na Blessed HealthConnect Ltd, ikigo cy'Abanyarwanda cyiyemeje gukoresha ikoranabuhanga mu kuzamura ireme rya serivisi z'ubuzima mu gihugu hose."
       },
       cta: {
@@ -1037,7 +1037,7 @@ export const translations = {
         },
         {
           question: "Ni gute nakwiyandikisha nka farumasi?",
-          answer: "Kanda \"Kuri Farumasi\" ahabanza, hanyuma ukurikize amabwiriza yo kwiyandikisha. Uzakenera nimero yawe yo kwiyandikisha muri Rwanda FDA (NPC/Axxxx) kugira ngo wiyandikishe."
+          answer: "Kanda \"Kuri Farumasi\" ahabanza, hanyuma ukurikize amabwiriza yo kwiyandikisha. Uzakenera nimero yawe yo kwiyandikisha muri Rwanda NPC( national pharmacy council) (NPC/Axxxx) kugira ngo wiyandikishe."
         },
         {
           question: "Ese farumasi ihabwa igihe cy'igerageza?",
@@ -1117,7 +1117,7 @@ export const translations = {
       },
       listings: {
         title: "3. Urutonde rwa Farumasi",
-        text: "Farumasi zose ziri kuri Blessed Irembo zigomba kuba zifite uruhushya rwa Rwanda FDA. Dusuzuma nimero zo kwiyandikisha igihe bafungura konti, ariko ntabwo turyozwa amakuru atari yo yatanzwe na farumasi. Abakoresha bagomba kwisuzumira amakuru y'ingenzi y'ubuvuzi mbere yo gufata imyanzuro."
+        text: "Farumasi zose ziri kuri Blessed Irembo zigomba kuba zifite uruhushya rwa Rwanda NPC( national pharmacy council). Dusuzuma nimero zo kwiyandikisha igihe bafungura konti, ariko ntabwo turyozwa amakuru atari yo yatanzwe na farumasi. Abakoresha bagomba kwisuzumira amakuru y'ingenzi y'ubuvuzi mbere yo gufata imyanzuro."
       },
       subscriptions: {
         title: "4. Serivisi z'Ifatabuguzi",
@@ -1185,8 +1185,8 @@ export const translations = {
       howItWorks: {
         title: "Uko Bikora",
         steps: [
-          { title: "Iyandikishe", desc: "Andika amakuru yawe ukoresheje nimero yawe yo kwiyandikisha muri Rwanda FDA." },
-          { title: "Genzurwa", desc: "Itsinda ryacu rirasuzuma nimero yawe maze rikakwemerera kugaragara ku rubuga." },
+          { title: "Iyandikishe", desc: "Andika amakuru yawe ukoresheje nimero yawe yo kwiyandikisha muri Rwanda NPC( national pharmacy council)." },
+          { title: "Genzurwa", desc: "Itsinda ryacu rirasuzuma nimero yawe maze rikakwemerera kugaragara ku urubuga." },
           { title: "Aguka", desc: "Abakoresha babona farumasi yawe ku ikarita maze bakakwandikira cyangwa bakaguhamagara." }
         ]
       },
@@ -1365,11 +1365,11 @@ export const translations = {
     registerPharmacy: {
       title: "Iyandikishe nka Farumasi",
       subtitle: "Nimero yawe yo kwiyandikisha muri koperative y'abafuramatama isuzumwa hakoreshejwe urutonde rwemewe.",
-      fdaList: "Rwanda FDA Ukuboza 2025",
+      fdaList: "nk'uko yatanzwe na NPC( national pharmacy council)",
       labels: {
-        registrationNumber: "Nimero yo Kwiyandikisha muri Koperative",
+        registrationNumber: "Nimero ya NPC ya farumasiye.",
         registrationNumberPlaceholder: "NPC/A0000",
-        registrationNumberHint: "Uburyo bwanditsemo: NPC/A0000 — nk'uko yatanzwe na Rwanda FDA",
+        registrationNumberHint: "Uburyo bwanditsemo: NPC/A0000 — nk'uko yatanzwe na Rwanda NPC( national pharmacy council)",
         pharmacyName: "Izina rya Farumasi",
         pharmacyNamePlaceholder: "Andika izina rya farumasi",
         ownerName: "Nyirayo / Umuntu Ubishinzwe",
@@ -1405,7 +1405,7 @@ export const translations = {
         passwordPlaceholder: "Andika ijambo ry'ibanga rifite inyuguti 6",
         confirmPassword: "Emeza Ijambo ry'ibanga",
         confirmPasswordPlaceholder: "Subiramo ijambo ry'ibanga ryawe",
-        fdaNotice: "Yagenzuwe na Rwanda FDA. Nimero yawe yo kwiyandikisha isuzumwa hakoreshejwe urutonde rwemewe rwa farumasi 725 zifite impushya."
+        fdaNotice: "Yagenzuwe na Rwanda NPC( national pharmacy council). Nimero yawe yo kwiyandikisha isuzumwa hakoreshejwe urutonde rwemewe rwa farumasi 725 zifite impushya."
       },
       submitButton: "Iyandikishe nka Farumasi",
       registering: "Kwiyandikisha...",
@@ -1415,7 +1415,7 @@ export const translations = {
         checking: "Biracyasuzumwa...",
         verified: "Yagenzuwe",
         alreadyRegistered: "Isanzwe iyandikishije",
-        notFound: "Ntabwo iboneka ku rutonde rwa Rwanda FDA"
+        notFound: "Ntabwo iboneka ku rutonde rwa Rwanda NPC( national pharmacy council)"
       },
       errors: {
         pharmacyNameRequired: "Izina rya farumasi ni ngombwa",
@@ -1428,8 +1428,8 @@ export const translations = {
         closeTimeRequired: "Igihe cyo gufunga ni ngombwa",
         locationRequired: "Kanda \"Koresha aho ndi\" kugira ngo ugaragaze aho uherereye kuri GPS.",
         locationRequiredManual: "Andika imibare (latitude na longitude) ifite ishingiro.",
-        registrationNumberRequired: "Nimero yo kwiyandikisha ni ngombwa",
-        registrationNumberNotFound: "Ntabwo ibonetse ku rutonde rwa farumasi zifite impushya rwa Rwanda FDA",
+        registrationNumberRequired: "Nimero yo kwiyandikisha y'abakozi bashinzwe farumasi ni ngombwa",
+        registrationNumberNotFound: "Ntabwo ibonetse ku rutonde rwa farumasi zifite impushya rwa Rwanda NPC( national pharmacy council)",
         registrationNumberTaken: "Iyi farumasi isanzwe iyandikishije kuri Blessed Irembo",
         registrationNumberChecking: "Biracyasuzumwa — utegereze gato",
         passwordRequired: "Ijambo ry'ibanga ni ngombwa",
