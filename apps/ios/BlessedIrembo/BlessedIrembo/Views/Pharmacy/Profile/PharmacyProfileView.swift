@@ -103,15 +103,15 @@ struct PharmacyProfileView: View {
                 NavigationLink(destination: PharmacyNotificationSettingsView()) {
                     Label(appState.t("profile.notifications"), systemImage: "bell.fill")
                 }
-                Link(destination: URL(string: "https://blessedirembo.com/privacy-policy")!) {
+                Link(destination: URL(string: "https://www.blessedirembo.com/privacy-policy")!) {
                     Label(appState.t("profile.privacyPolicy"), systemImage: "shield.fill")
                         .foregroundColor(.primary)
                 }
-                Link(destination: URL(string: "https://blessedirembo.com/terms")!) {
+                Link(destination: URL(string: "https://www.blessedirembo.com/terms")!) {
                     Label(appState.t("profile.terms"), systemImage: "doc.text.fill")
                         .foregroundColor(.primary)
                 }
-                Link(destination: URL(string: "https://blessedirembo.com/help")!) {
+                Link(destination: URL(string: "https://www.blessedirembo.com/help")!) {
                     Label(appState.t("profile.help"), systemImage: "questionmark.circle.fill")
                         .foregroundColor(.primary)
                 }

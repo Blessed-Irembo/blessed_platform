@@ -10,6 +10,7 @@ export const translations = {
       logout: "Log out",
       profile: "My Profile",
       settings: "Settings",
+      downloadApp: "Download App",
     },
     hero: {
       title: "Find Trusted Pharmacies Anywhere in Rwanda",
@@ -385,6 +386,7 @@ export const translations = {
     terms: {
       title: "Terms and Conditions",
       lastUpdated: "Last updated: April 2025",
+      consentNotice: "By registering on Blessed Irembo, operated by Blessed HealthConnect Ltd, you consent that your personal and/or business information will be collected, stored, and securely processed solely for the purpose of providing and managing platform services. Your data will be handled in accordance with applicable laws of Rwanda, including Law No. 058/2021 relating to the protection of personal data and privacy. We do not sell, share, or use your information for any other purpose unless required by law or with your explicit consent.",
       acceptance: {
         title: "1. Acceptance of Terms",
         text: "By accessing or using Blessed Irembo, you agree to be bound by these Terms and Conditions. If you do not agree, please do not use the platform. These terms apply to all users, including pharmacies and the general public."
@@ -719,6 +721,21 @@ export const translations = {
         generic: "Something went wrong. Please try again."
       }
     },
+    download: {
+      title: "Download the Blessed Irembo App",
+      subtitle: "Access the best pharmacy finder in Rwanda directly from your mobile device. Search pharmacies on the go, check real-time availability, and view contact details instantly.",
+      playStoreButton: "Get it on Google Play",
+      appStoreButton: "Download on the App Store",
+      qrTitle: "Scan to Download",
+      qrText: "Scan the QR code below with your phone's camera to download the app directly.",
+      featuresTitle: "Mobile App Features",
+      feature1Title: "Real-time Map Search",
+      feature1Desc: "Locate verified pharmacies near you in real-time with interactive mapping.",
+      feature2Title: "Direct WhatsApp Chat",
+      feature2Desc: "Message pharmacies directly to check medicine availability and pricing.",
+      feature3Title: "24/7 Hours & Info",
+      feature3Desc: "Find which pharmacies are open 24/7, check reviews, and get directions."
+    }
   },
   rw: {
     nav: {
@@ -729,6 +746,7 @@ export const translations = {
       logout: "Sohoka",
       profile: "Umwirondoro wanjye",
       settings: "Igenamiterere",
+      downloadApp: "Manura App",
     },
     hero: {
       title: "Shaka Farumasi Zizewe Aho Ariho Hose mu Rwanda",
@@ -1104,6 +1122,7 @@ export const translations = {
     terms: {
       title: "Amategeko n'Amabwiriza",
       lastUpdated: "Iheruka kuvugururwa: Mata 2025",
+      consentNotice: "Binyuze mu kwiyandikisha kuri Blessed Irembo, icungwa na Blessed HealthConnect Ltd, wemeye ko amakuru yawe bwite cyangwa ay'ubucuruzi bwawe akusanywa, akabikwa, kandi agacungwa mu buryo bwizewe ku bw'intego yo gutanga no gucunga serivisi z'uru rubuga gusa. Amakuru yawe azafatwa mu buryo buhuye n'amategeko ya Repubulika y'u Rwanda, ryaba Itegeko N° 058/2021 ryerekeye kurinda amakuru bwite n'imibereho bwite y'umuntu. Ntabwo tugurisha, dusangira, cyangwa ngo dukoreshe amakuru yawe ku bindi bikorwa ibyo ari byo byose, keretse bibaye ngombwa bishingiye ku mategeko cyangwa ku ruhushya rwawe bwite.",
       acceptance: {
         title: "1. Kwemera Amategeko",
         text: "Gukoresha Blessed Irembo bivuze ko wemeye kubahiriza aya mategeko n'amabwiriza. Niba utayemeye, nyamuneka ntukoreshe uru rubuga. Aya mategeko areba abakoresha bose, harimo farumasi n'abaturage bose."
@@ -1437,6 +1456,21 @@ export const translations = {
         passwordsMismatch: "Amagambo y'ibanga ntabwo ahuye",
         generic: "Hagaragaye ikibazo. Ongera ugerageze."
       }
+    },
+    download: {
+      title: "Manura Porogaramu ya Blessed Irembo",
+      subtitle: "Bona uburyo bwo gushaka farumasi bworoshye cyane mu Rwanda binyuze kuri terefone yawe. Shaka farumasi aho uherereye hose, reba niba imiti ihari, kandi ubone nimero zabo ako kanya.",
+      playStoreButton: "Yikure kuri Google Play",
+      appStoreButton: "Manura kuri App Store",
+      qrTitle: "Sikana hano uyimanurire",
+      qrText: "Sikana iyi kode (QR) ukoresheje kamera ya terefone yawe kugira ngo uhite umanura porogaramu.",
+      featuresTitle: "Ibyiza bya Porogaramu ya Terefone",
+      feature1Title: "Gushakisha Kuri Ikarita",
+      feature1Desc: "Shaka farumasi zujuje ibyangombwa zikuri hafi ukanze ku ikarita yacu.",
+      feature2Title: "Kuvugana Kuri WhatsApp",
+      feature2Desc: "Vugana na farumasi ako kanya kuri WhatsApp ubaze niba imiti ihari n'igiciro cyayo.",
+      feature3Title: "Gufungura 24/7 n'Amakuru",
+      feature3Desc: "Shaka farumasi zifunguye amanywa n'ijoro (24/7), reba uko bazigisha, kandi uhabwe icyerekezo."
     }
   }
 };

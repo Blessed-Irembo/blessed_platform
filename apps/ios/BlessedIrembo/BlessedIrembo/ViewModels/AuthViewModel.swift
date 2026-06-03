@@ -170,7 +170,7 @@ class AuthViewModel: ObservableObject {
             if licenseStatus == .alreadyTaken {
                 return showValidationError("This pharmacy is already registered. Please sign in instead.")
             }
-            return showValidationError("Please enter a valid Rwanda FDA council registration number")
+            return showValidationError("Please enter a valid Rwanda NPC council registration number")
         }
         guard !pharmacyName.isEmpty else { return showValidationError("Please enter pharmacy name") }
         guard !ownerName.isEmpty else { return showValidationError("Please enter owner name") }

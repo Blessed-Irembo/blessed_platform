@@ -150,7 +150,7 @@ struct SignUpUserView: View {
 
                         // 6. Terms & Conditions
                         Toggle(isOn: $acceptedTerms) {
-                            Text(appState.t("auth.acceptTerms"))
+                            Text(LocalizedStringKey(appState.t("auth.acceptTerms")))
                                 .font(.subheadline)
                                 .foregroundColor(.textPrimary)
                         }

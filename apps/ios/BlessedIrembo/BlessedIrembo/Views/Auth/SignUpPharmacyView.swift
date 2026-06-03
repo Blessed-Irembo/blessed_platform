@@ -48,6 +48,7 @@ struct SignUpPharmacyView: View {
     // MARK: – UI state
     @State private var showPassword        = false
     @State private var showConfirmPassword = false
+    @State private var acceptedTerms       = false
 
     // Computed effective coordinates
     private var effectiveLocation: CLLocationCoordinate2D? {
@@ -188,6 +189,14 @@ struct SignUpPharmacyView: View {
             // ── FDA notice ──
             fdaNotice
 
+            // ── Terms & Conditions ──
+            Toggle(isOn: $acceptedTerms) {
+                Text(LocalizedStringKey(appState.t("auth.acceptTerms")))
+                    .font(.subheadline)
+                    .foregroundColor(.textPrimary)
+            }
+            .tint(.primaryTeal)
+
             // ── Submit ──
             PrimaryButton(
                 title: appState.t("auth.registerPharmacy"),
@@ -198,12 +207,14 @@ struct SignUpPharmacyView: View {
             .disabled(
                 viewModel.licenseStatus == .checking ||
                 viewModel.licenseStatus == .alreadyTaken ||
-                viewModel.licenseStatus == .invalid
+                viewModel.licenseStatus == .invalid ||
+                !acceptedTerms
             )
             .opacity(
                 (viewModel.licenseStatus == .checking ||
                  viewModel.licenseStatus == .alreadyTaken ||
-                 viewModel.licenseStatus == .invalid) ? 0.5 : 1.0
+                 viewModel.licenseStatus == .invalid ||
+                 !acceptedTerms) ? 0.5 : 1.0
             )
 
             // Sign in link

@@ -85,6 +85,12 @@ export default function Header() {
             >
               {t.nav.findPharmacies}
             </Link>
+            <Link
+              href="/download"
+              className="text-gray-700 font-medium hover:text-teal-600 transition-colors"
+            >
+              {t.nav.downloadApp}
+            </Link>
           </div>
 
           {/* Right side — auth-aware + Language Switcher */}
@@ -277,6 +283,13 @@ export default function Header() {
               onClick={() => setMobileMenuOpen(false)}
             >
               {t.nav.findPharmacies}
+            </Link>
+            <Link 
+              href="/download" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-teal-600 hover:bg-gray-50"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t.nav.downloadApp}
             </Link>
             
             {currentUser ? (

@@ -59,10 +59,8 @@ class AppState: ObservableObject {
             selectedLanguage = lang
         }
 
-        // Splash: show for at least 2 seconds while Firebase resolves auth
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
-            self?.isLoading = false
-        }
+        // Initialize loading state: only wait/load if there is a cached active user session to resolve
+        isLoading = Auth.auth().currentUser != nil
 
         // Attach Firebase auth state listener
         attachAuthListener()
@@ -98,38 +96,46 @@ class AppState: ObservableObject {
                 // User is signed in — fetch their role from Firestore
                 FirebaseManager.shared.fetchUserRole(uid: firebaseUser.uid) { role in
                     DispatchQueue.main.async {
-                        switch role {
-                        case .user(let data):
-                            self.stopPharmacyListener()
-                            self.currentPharmacy = nil
-                            self.currentUser = User(
-                                id: firebaseUser.uid,
-                                fullName: data["fullName"] as? String ?? "",
-                                email: firebaseUser.email ?? "",
-                                phoneNumber: data["phoneNumber"] as? String ?? ""
-                            )
-                            self.isAuthenticated = true
-                            self.navigationPath = NavigationPath()
+                        withAnimation(.easeInOut(duration: 0.35)) {
+                            switch role {
+                            case .user(let data):
+                                self.stopPharmacyListener()
+                                self.currentPharmacy = nil
+                                self.currentUser = User(
+                                    id: firebaseUser.uid,
+                                    fullName: data["fullName"] as? String ?? "",
+                                    email: firebaseUser.email ?? "",
+                                    phoneNumber: data["phoneNumber"] as? String ?? ""
+                                )
+                                self.isAuthenticated = true
+                                self.navigationPath = NavigationPath()
+                                self.isLoading = false
 
-                        case .pharmacy:
-                            // Start a real-time listener so all pharmacy metrics
-                            // (whatsappClicks, rating, reviewCount) stay in sync.
-                            self.currentUser = nil
-                            self.startPharmacyListener(uid: firebaseUser.uid, email: firebaseUser.email ?? "")
-                            self.isAuthenticated = true
-                            self.navigationPath = NavigationPath()
+                            case .pharmacy:
+                                // Start a real-time listener so all pharmacy metrics
+                                // (whatsappClicks, rating, reviewCount) stay in sync.
+                                self.currentUser = nil
+                                self.startPharmacyListener(uid: firebaseUser.uid, email: firebaseUser.email ?? "")
+                                self.isAuthenticated = true
+                                self.navigationPath = NavigationPath()
+                                self.isLoading = false
 
-                        case nil:
-                            // Firestore doc missing; sign out to be safe
-                            try? Auth.auth().signOut()
-                            self.clearAuthState()
+                            case nil:
+                                // Firestore doc missing; sign out to be safe
+                                try? Auth.auth().signOut()
+                                self.clearAuthState()
+                                self.isLoading = false
+                            }
                         }
                     }
                 }
             } else {
                 // Signed out
                 DispatchQueue.main.async {
-                    self.clearAuthState()
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        self.clearAuthState()
+                        self.isLoading = false
+                    }
                 }
             }
         }
@@ -223,7 +229,9 @@ class AppState: ObservableObject {
 
     /// Mark onboarding as completed
     func completeOnboarding() {
-        hasCompletedOnboarding = true
+        withAnimation(.easeInOut(duration: 0.35)) {
+            hasCompletedOnboarding = true
+        }
         UserDefaults.standard.set(true, forKey: UserDefaultsKeys.hasCompletedOnboarding)
     }
 
@@ -232,17 +240,21 @@ class AppState: ObservableObject {
     /// Called after successful Firebase signIn when role is already known by AuthViewModel.
     /// For pharmacy users the real-time listener will populate currentPharmacy automatically.
     func signIn(user: User) {
-        currentUser = user
-        isAuthenticated = true
-        navigationPath = NavigationPath()
+        withAnimation(.easeInOut(duration: 0.35)) {
+            currentUser = user
+            isAuthenticated = true
+            navigationPath = NavigationPath()
+        }
     }
 
     func signIn(pharmacy: Pharmacy) {
         // Seed the initial snapshot so the UI loads immediately,
         // then the real-time listener will keep it up to date.
-        currentPharmacy = pharmacy
-        isAuthenticated = true
-        navigationPath = NavigationPath()
+        withAnimation(.easeInOut(duration: 0.35)) {
+            currentPharmacy = pharmacy
+            isAuthenticated = true
+            navigationPath = NavigationPath()
+        }
         // Listener is already started by attachAuthListener → startPharmacyListener
     }
 
@@ -254,7 +266,9 @@ class AppState: ObservableObject {
             // clearAuthState() will be called by the auth listener
         } catch {
             print("Sign out error: \(error.localizedDescription)")
-            clearAuthState()
+            withAnimation(.easeInOut(duration: 0.35)) {
+                clearAuthState()
+            }
         }
     }
 
