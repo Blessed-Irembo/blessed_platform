@@ -27,6 +27,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -54,6 +55,11 @@ fun NotificationsSheet(
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = false)
     val notifications by notificationViewModel.notifications.collectAsState()
+
+    // Auto-mark all as read when the sheet is opened (mirrors iOS behavior)
+    LaunchedEffect(Unit) {
+        notificationViewModel.markAllAsRead()
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,

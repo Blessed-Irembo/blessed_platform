@@ -27,6 +27,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddPhotoAlternate
 import androidx.compose.material.icons.filled.Cancel
@@ -85,6 +86,8 @@ import com.blessedirembo.app.ui.viewmodel.SubscriptionViewModel
 import com.blessedirembo.app.util.t
 import java.text.SimpleDateFormat
 import java.util.Locale
+
+private val IosBackground = Color(0xFFF2F2F7)
 
 @Composable
 fun SubscriptionScreen(
@@ -179,8 +182,9 @@ fun SubscriptionScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Gray100)
+            .background(IosBackground)
             .verticalScroll(scrollState)
+            .statusBarsPadding()
             .padding(horizontal = 16.dp)
             .padding(top = 16.dp)
     ) {
@@ -231,8 +235,8 @@ private fun StatusBanner(status: SubscriptionStatus) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(color.copy(alpha = 0.08f), RoundedCornerShape(14.dp))
-            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(14.dp))
+            .background(color.copy(alpha = 0.08f), RoundedCornerShape(10.dp))
+            .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(10.dp))
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -309,13 +313,8 @@ private fun PlanCard(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(
-                elevation = if (plan.isPopular) 6.dp else 2.dp,
-                shape = RoundedCornerShape(14.dp),
-                ambientColor = if (plan.isPopular) Teal500.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.05f),
-                spotColor = if (plan.isPopular) Teal500.copy(alpha = 0.15f) else Color.Black.copy(alpha = 0.05f)
-            )
-            .clip(RoundedCornerShape(14.dp))
+            .background(White, RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(10.dp))
     ) {
         // Popular badge
         if (plan.isPopular) {

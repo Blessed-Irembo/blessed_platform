@@ -46,4 +46,22 @@ class NotificationViewModel : ViewModel() {
             }
         }
     }
+
+    fun markAllAsRead() {
+        viewModelScope.launch {
+            try {
+                val unreadNotifs = _notifications.value.filter { !it.isRead }
+                val batch = db.batch()
+                unreadNotifs.forEach { notif ->
+                    val docRef = notificationsCollection.document(notif.id)
+                    batch.update(docRef, "isRead", true)
+                }
+                if (unreadNotifs.isNotEmpty()) {
+                    batch.commit()
+                }
+            } catch (e: Exception) {
+                // Handle error if needed
+            }
+        }
+    }
 }

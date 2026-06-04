@@ -328,16 +328,16 @@ fun ProfileScreen(
                         icon = Icons.Filled.Description,
                         title = t("profile.terms"),
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.blessedirembo.com/terms"))
                             context.startActivity(intent)
                         }
                     )
                     HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                     SettingsListItem(
-                        icon = Icons.Filled.Shield,
                         title = t("profile.privacyPolicy"),
+                        icon = Icons.Filled.Shield,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.blessedirembo.com/privacy-policy"))
                             context.startActivity(intent)
                         }
                     )
