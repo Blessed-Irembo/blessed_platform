@@ -61,35 +61,36 @@ export default function PharmaciesPage() {
     async function loadPharmacies() {
       try {
         // Only show pharmacies where isActive is not explicitly false
-        const q = query(
-          collection(db, 'pharmacies'),
-          where('isActive', '!=', false)
-        );
-        const snapshot = await getDocs(q);
-        const list: Pharmacy[] = snapshot.docs.map((docSnap) => {
-          const data = docSnap.data();
-          const rawDistrict: string = data.district ?? '';
-          const district = rawDistrict
-            .split(' ')
-            .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
-            .join(' ');
-          return {
-            id: docSnap.id,
-            name: data.name ?? 'Unknown Pharmacy',
-            address: data.address ?? '',
-            district,
-            phone: data.phoneNumber ?? '',
-            email: data.email ?? '',
-            isOpen: checkIfPharmacyIsOpen(data.operatingHours),
-            hours: formatOperatingHours(data.operatingHours, data.hours),
-            operatingHours: data.operatingHours ?? null,
-            rating: data.rating ?? 0,
-            distance: '',
-            verified: data.isVerified ?? false,
-            latitude: data.latitude ?? 0,
-            longitude: data.longitude ?? 0,
-          };
-        });
+        const snapshot = await getDocs(collection(db, 'pharmacies'));
+        const list: Pharmacy[] = snapshot.docs
+          .filter((docSnap) => {
+            const data = docSnap.data();
+            return data.isActive !== false;
+          })
+          .map((docSnap) => {
+            const data = docSnap.data();
+            const rawDistrict: string = data.district ?? '';
+            const district = rawDistrict
+              .split(' ')
+              .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(' ');
+            return {
+              id: docSnap.id,
+              name: data.name ?? 'Unknown Pharmacy',
+              address: data.address ?? '',
+              district,
+              phone: data.phoneNumber ?? '',
+              email: data.email ?? '',
+              isOpen: checkIfPharmacyIsOpen(data.operatingHours),
+              hours: formatOperatingHours(data.operatingHours, data.hours),
+              operatingHours: data.operatingHours ?? null,
+              rating: data.rating ?? 0,
+              distance: '',
+              verified: data.isVerified ?? false,
+              latitude: data.latitude ?? 0,
+              longitude: data.longitude ?? 0,
+            };
+          });
         setPharmacies(list.filter((p) => p.latitude !== 0 && p.longitude !== 0));
       } catch (err) {
         console.error('Failed to load pharmacies from Firestore:', err);

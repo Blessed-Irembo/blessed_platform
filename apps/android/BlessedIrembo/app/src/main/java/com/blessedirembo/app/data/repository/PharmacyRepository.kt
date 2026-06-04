@@ -57,10 +57,9 @@ class PharmacyRepository {
         return try {
             val snapshot = pharmaciesCollection
                 .whereEqualTo("isVerified", true)
-                .whereEqualTo("isActive", true)
                 .get()
                 .await()
-            val pharmacies = snapshot.toObjects(Pharmacy::class.java)
+            val pharmacies = snapshot.toObjects(Pharmacy::class.java).filter { it.isActive }
             Result.success(pharmacies)
         } catch (e: Exception) {
             Result.failure(e)
@@ -154,6 +153,7 @@ class PharmacyRepository {
                 "operatingHours" to ohMap,
                 "ownerId" to uid,
                 "isVerified" to false,
+                "isActive" to true,
                 "rating" to 0.0,
                 "reviewCount" to 0,
                 "whatsappClicks" to 0,

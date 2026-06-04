@@ -214,6 +214,7 @@ struct SignUpUserView: View {
     }
 
     private func signUp() {
+        appState.isRegistering = true
         viewModel.signUpUser(
             fullName: fullName,
             phoneNumber: phoneNumber,
@@ -222,6 +223,7 @@ struct SignUpUserView: View {
             confirmPassword: confirmPassword,
             acceptedTerms: acceptedTerms
         ) { result in
+            appState.isRegistering = false
             switch result {
             case .success(let user):
                 appState.signIn(user: user)

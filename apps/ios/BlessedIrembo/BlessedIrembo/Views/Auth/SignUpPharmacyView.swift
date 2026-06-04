@@ -607,6 +607,7 @@ struct SignUpPharmacyView: View {
         formatter.dateFormat = "HH:mm"
         let orderedDays = OperatingHours.allDays.filter { selectedDays.contains($0) }
 
+        appState.isRegistering = true
         viewModel.signUpPharmacy(
             pharmacyName: pharmacyName,
             ownerName: ownerName,
@@ -623,6 +624,7 @@ struct SignUpPharmacyView: View {
             password: password,
             confirmPassword: confirmPassword
         ) { result in
+            appState.isRegistering = false
             switch result {
             case .success(let pharmacy):
                 appState.signIn(pharmacy: pharmacy)

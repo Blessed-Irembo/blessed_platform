@@ -20,6 +20,7 @@ class AppState: ObservableObject {
     @Published var currentPharmacy: Pharmacy?
     @Published var navigationPath = NavigationPath()
     @Published var selectedLanguage: Language = .english
+    @Published var isRegistering = false
 
     /// Computed subscription status based on the live currentPharmacy.
     /// Used by PharmacyMainView to gate tab content without needing a ViewModel.
@@ -91,6 +92,10 @@ class AppState: ObservableObject {
     private func attachAuthListener() {
         authHandle = Auth.auth().addStateDidChangeListener { [weak self] _, firebaseUser in
             guard let self = self else { return }
+
+            if self.isRegistering {
+                return
+            }
 
             if let firebaseUser = firebaseUser {
                 // User is signed in — fetch their role from Firestore
