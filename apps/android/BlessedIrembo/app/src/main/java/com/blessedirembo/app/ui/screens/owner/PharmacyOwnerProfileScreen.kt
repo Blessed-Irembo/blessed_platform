@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Help
 import androidx.compose.material.icons.filled.AccessTime
@@ -63,6 +64,7 @@ val TimeOrange = Color(0xFFF97316)
 val LocationRed = Color(0xFFEF4444)
 val PlanPurple = Color(0xFFA855F7)
 val StaffGreen = Color(0xFF22C55E)
+private val IosBackground = Color(0xFFF2F2F7)
 
 /**
  * Pharmacy Owner Profile Screen
@@ -97,15 +99,15 @@ fun PharmacyOwnerProfileScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(Gray100)
+            .background(IosBackground)
             .verticalScroll(scrollState)
+            .statusBarsPadding()
     ) {
         // Header with pharmacy info
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(White)
-                .padding(24.dp),
+                .padding(top = 16.dp, bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             // Pharmacy icon
@@ -157,8 +159,6 @@ fun PharmacyOwnerProfileScreen(
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
         // Business Information Section
         SectionHeader(title = t("owner.businessInfo"))
         
@@ -166,7 +166,7 @@ fun PharmacyOwnerProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(10.dp),
             colors = CardDefaults.cardColors(containerColor = White),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
@@ -192,8 +192,6 @@ fun PharmacyOwnerProfileScreen(
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
         // Management Section
         SectionHeader(title = t("owner.management"))
         
@@ -201,7 +199,7 @@ fun PharmacyOwnerProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(10.dp),
             colors = CardDefaults.cardColors(containerColor = White),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
@@ -215,8 +213,6 @@ fun PharmacyOwnerProfileScreen(
             }
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
-        
         // App Settings Section
         SectionHeader(title = t("nav.settings"))
         
@@ -224,7 +220,7 @@ fun PharmacyOwnerProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
-            shape = RoundedCornerShape(16.dp),
+            shape = RoundedCornerShape(10.dp),
             colors = CardDefaults.cardColors(containerColor = White),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
@@ -236,10 +232,10 @@ fun PharmacyOwnerProfileScreen(
                     iconTint = Teal500
                 )
                 SettingsListItem(
-                    icon = Icons.Filled.Shield,
                     title = t("profile.privacyPolicy"),
+                    icon = Icons.Filled.Shield,
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.blessedirembo.com/privacy-policy"))
                         context.startActivity(intent)
                     },
                     iconTint = Teal500
@@ -248,7 +244,7 @@ fun PharmacyOwnerProfileScreen(
                     icon = Icons.Filled.Description,
                     title = t("profile.terms"),
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.blessedirembo.com/terms"))
                         context.startActivity(intent)
                     },
                     iconTint = Teal500
@@ -265,21 +261,31 @@ fun PharmacyOwnerProfileScreen(
             }
         }
         
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
         // Sign Out Button
-        TextButton(
-            onClick = onSignOutClick,
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
+                .clickable { onSignOutClick() },
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
         ) {
-            Text(
-                text = t("profile.logout"),
-                style = MaterialTheme.typography.bodyLarge,
-                color = Color(0xFFEF4444),
-                fontWeight = FontWeight.SemiBold
-            )
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = t("profile.logout"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color(0xFFEF4444),
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
         }
         
         Spacer(modifier = Modifier.height(100.dp)) // Bottom nav spacing
@@ -292,6 +298,6 @@ private fun SectionHeader(title: String) {
         text = title,
         style = MaterialTheme.typography.bodyMedium,
         color = Gray500,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 6.dp)
     )
 }

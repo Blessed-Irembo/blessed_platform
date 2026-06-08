@@ -18,7 +18,7 @@ import com.blessedirembo.app.auth.FirebaseAuthManager
 import com.blessedirembo.app.data.model.UserRole
 import com.blessedirembo.app.ui.screens.FindPharmaciesScreen
 import com.blessedirembo.app.ui.screens.HomeScreen
-import com.blessedirembo.app.ui.screens.OnboardingScreen
+
 import com.blessedirembo.app.ui.screens.PharmacyDetailScreen
 import com.blessedirembo.app.ui.screens.PharmacyRegistrationScreen
 import com.blessedirembo.app.ui.screens.ProfileScreen
@@ -33,7 +33,7 @@ import com.blessedirembo.app.ui.screens.owner.PharmacyOwnerMainScreen
  */
 sealed class Screen(val route: String) {
     data object Splash : Screen("splash")
-    data object Onboarding : Screen("onboarding")
+
     data object Welcome : Screen("welcome")
     data object UserSignUp : Screen("user_signup")
     data object PharmacyRegistration : Screen("pharmacy_registration")
@@ -103,7 +103,7 @@ fun NavGraph(
                                 navController.navigateToHome(role ?: UserRole.USER)
                             }
                         } else {
-                            navController.navigate(Screen.Onboarding.route) {
+                            navController.navigate(Screen.Welcome.route) {
                                 popUpTo(Screen.Splash.route) { inclusive = true }
                             }
                         }
@@ -112,16 +112,7 @@ fun NavGraph(
             )
         }
 
-        // ── Onboarding Screen ─────────────────────────────────────────────────
-        composable(route = Screen.Onboarding.route) {
-            OnboardingScreen(
-                onFinish = {
-                    navController.navigate(Screen.Welcome.route) {
-                        popUpTo(Screen.Onboarding.route) { inclusive = true }
-                    }
-                }
-            )
-        }
+
 
         // ── Welcome / Role Selection Screen ────────────────────────────────────
         composable(route = Screen.Welcome.route) {

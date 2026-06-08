@@ -27,7 +27,6 @@ enum Constants {
     
     // MARK: - Animation
     enum Animation {
-        static let splashDuration: Double = 2.0
         static let pageTransition: Double = 0.3
     }
     

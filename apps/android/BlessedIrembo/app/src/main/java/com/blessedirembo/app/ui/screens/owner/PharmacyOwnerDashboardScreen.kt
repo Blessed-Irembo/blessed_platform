@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Notifications
@@ -21,6 +23,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.LocalPharmacy
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -59,6 +62,7 @@ import androidx.compose.runtime.setValue
 
 val BlueAccent = Color(0xFF3B82F6)
 val PurpleAccent = Color(0xFF4F46E5)
+private val IosBackground = Color(0xFFF2F2F7)
 
 /**
  * Pharmacy Owner Dashboard Screen
@@ -97,30 +101,43 @@ fun PharmacyOwnerDashboardScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Gray100)
+            .background(IosBackground)
             .verticalScroll(scrollState)
+            .statusBarsPadding()
             .padding(16.dp)
     ) {
         // Header
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Column {
-                Text(
-                    text = "Blessed Irembo",
-                    fontSize = 34.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Gray900
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Filled.LocalPharmacy,
+                        contentDescription = null,
+                        tint = Teal500,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Blessed Irembo",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Teal500
+                    )
+                }
                 Text(
                     text = pharmacy?.name?.uppercase() ?: "PHARMACY NAME",
                     style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
                     color = Gray500,
-                    modifier = Modifier.padding(top = 4.dp),
-                    letterSpacing = 2.sp
+                    modifier = Modifier.padding(top = 8.dp),
+                    letterSpacing = 1.sp
                 )
+                Spacer(modifier = Modifier.height(12.dp))
+                FloatingLanguageSwitcher()
             }
             
             // Notification bell with badge
@@ -215,11 +232,5 @@ fun PharmacyOwnerDashboardScreen(
         Spacer(modifier = Modifier.height(80.dp)) // Bottom nav spacing
     } // end Column
 
-    // Floating language switcher overlay
-    FloatingLanguageSwitcher(
-        modifier = Modifier
-            .align(Alignment.TopEnd)
-            .padding(top = 16.dp, end = 16.dp)
-    )
     } // end Box
 }

@@ -65,6 +65,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.withStyle
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.CircularProgressIndicator
@@ -246,12 +248,31 @@ fun PharmacyRegistrationScreen(
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
-                Text(
-                    text = t("auth.registerPharmacySubtitle"),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Gray500,
-                    textAlign = TextAlign.Center
-                )
+                val subtitle = t("auth.registerPharmacySubtitle")
+                // Split at "NPC" to colorize that part in teal
+                val npcIndex = subtitle.indexOf("NPC")
+                if (npcIndex >= 0) {
+                    val before = subtitle.substring(0, npcIndex)
+                    val npcPart = subtitle.substring(npcIndex)
+                    Text(
+                        text = androidx.compose.ui.text.buildAnnotatedString {
+                            append(before)
+                            withStyle(androidx.compose.ui.text.SpanStyle(color = Teal500)) {
+                                append(npcPart)
+                            }
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Gray500,
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Gray500,
+                        textAlign = TextAlign.Center
+                    )
+                }
             }
 
             // ── Form card ─────────────────────────────────────────

@@ -170,21 +170,21 @@ struct ProfileView: View {
                 .padding(.horizontal, 4)
             
             VStack(spacing: 0) {
-                Link(destination: URL(string: "https://blessedirembo.com/help")!) {
+                Link(destination: URL(string: "https://www.blessedirembo.com/help")!) {
                     SettingsRow(icon: "info.circle.fill", title: appState.t("profile.help"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
-                Link(destination: URL(string: "https://blessedirembo.com/terms")!) {
+                Link(destination: URL(string: "https://www.blessedirembo.com/terms")!) {
                     SettingsRow(icon: "doc.text.fill", title: appState.t("profile.terms"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
                 
                 Divider().padding(.leading, 56)
                 
-                Link(destination: URL(string: "https://blessedirembo.com/privacy-policy")!) {
+                Link(destination: URL(string: "https://www.blessedirembo.com/privacy-policy")!) {
                     SettingsRow(icon: "shield.fill", title: appState.t("profile.privacyPolicy"), hasChevron: true)
                 }
                 .buttonStyle(.plain)

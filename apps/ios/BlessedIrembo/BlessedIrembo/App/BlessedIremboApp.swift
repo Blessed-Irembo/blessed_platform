@@ -36,23 +36,38 @@ private struct ContentRootView: View {
 
     var body: some View {
         NavigationStack(path: $appState.navigationPath) {
-            Group {
+            ZStack {
                 if appState.isLoading {
-                    SplashView()
+                    ZStack {
+                        Color(.systemBackground)
+                            .ignoresSafeArea()
+                        ProgressView()
+                            .scaleEffect(1.2)
+                            .tint(.primaryTeal)
+                    }
+                    .transition(.opacity)
                 } else if !appState.hasCompletedOnboarding {
                     OnboardingContainerView()
+                        .transition(.opacity)
                 } else if !appState.isAuthenticated {
                     RoleSelectionView()
+                        .transition(.opacity)
                 } else if appState.currentUser != nil {
                     UserMainView()
+                        .transition(.opacity)
                 } else if appState.currentPharmacy != nil {
                     PharmacyMainView()
+                        .transition(.opacity)
                 } else {
                     Text("Main App")
                         .font(.title)
                         .foregroundColor(Color.textPrimary)
+                        .transition(.opacity)
                 }
             }
+            .animation(.easeInOut(duration: 0.35), value: appState.isLoading)
+            .animation(.easeInOut(duration: 0.35), value: appState.isAuthenticated)
+            .animation(.easeInOut(duration: 0.35), value: appState.hasCompletedOnboarding)
         }
     }
 }

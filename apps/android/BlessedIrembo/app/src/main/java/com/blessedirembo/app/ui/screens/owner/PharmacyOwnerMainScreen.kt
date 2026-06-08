@@ -6,13 +6,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Message
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.CreditCard
 import androidx.compose.material.icons.outlined.BarChart
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Person
-import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.icons.outlined.AccountCircle
+import androidx.compose.material.icons.outlined.CreditCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -88,10 +87,10 @@ fun PharmacyOwnerMainScreen(
     }
 
     val navItems = listOf(
-        OwnerNavItem("Home",         Icons.Filled.Home,    Icons.Outlined.Home),
-        OwnerNavItem("Analytics",    Icons.Filled.BarChart,Icons.Outlined.BarChart),
-        OwnerNavItem("Profile",      Icons.Filled.Person,  Icons.Outlined.Person),
-        OwnerNavItem("Subscription", Icons.Filled.Star,    Icons.Outlined.Star)
+        OwnerNavItem("Home",         Icons.Filled.Home,          Icons.Outlined.Home),
+        OwnerNavItem("Analytics",    Icons.Filled.BarChart,      Icons.Outlined.BarChart),
+        OwnerNavItem("Profile",      Icons.Filled.AccountCircle, Icons.Outlined.AccountCircle),
+        OwnerNavItem("Subscription", Icons.Filled.CreditCard,    Icons.Outlined.CreditCard)
     )
 
     // Hide bottom nav when in sub-screens

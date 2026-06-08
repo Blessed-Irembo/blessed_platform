@@ -52,6 +52,10 @@ import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.util.t
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -80,6 +84,7 @@ fun UserSignUpScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var acceptTerms by remember { mutableStateOf(false) }
+    var validationError by remember { mutableStateOf<String?>(null) }
     val authState by authViewModel.authState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -95,6 +100,16 @@ fun UserSignUpScreen(
         }
     }
 
+    // React to local validation errors (e.g. password mismatch)
+    LaunchedEffect(validationError) {
+        val err = validationError
+        if (err != null) {
+            snackbarHostState.showSnackbar(err)
+            validationError = null
+        }
+    }
+
+    val context = LocalContext.current
     val isLoading = authState is AuthState.Loading
 
     Scaffold(
@@ -120,7 +135,8 @@ fun UserSignUpScreen(
                 )
             )
         },
-        containerColor = White
+        containerColor = White,
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
 
         Box(
@@ -217,11 +233,41 @@ fun UserSignUpScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
+                // "I accept the " + teal clickable "Terms & Conditions"
+                val termsText = t("auth.acceptTerms")
+                // Find where "Terms" starts in the translated string
+                val termsKeyword = if (termsText.contains("Terms")) "Terms & Conditions"
+                                   else if (termsText.contains("Amategeko")) "Amategeko n'Amabwiriza"
+                                   else "Terms & Conditions"
+                val splitIndex = termsText.indexOf(termsKeyword)
                 Text(
-                    text = t("auth.acceptTerms"),
+                    text = buildAnnotatedString {
+                        if (splitIndex >= 0) {
+                            append(termsText.substring(0, splitIndex))
+                            withStyle(
+                                SpanStyle(
+                                    color = Teal500,
+                                    fontWeight = FontWeight.SemiBold,
+                                    textDecoration = TextDecoration.Underline
+                                )
+                            ) {
+                                append(termsKeyword)
+                            }
+                        } else {
+                            append(termsText)
+                        }
+                    },
                     style = MaterialTheme.typography.bodyMedium,
                     color = Gray500,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable {
+                            val intent = Intent(
+                                Intent.ACTION_VIEW,
+                                Uri.parse("https://www.blessedirembo.com/terms")
+                            )
+                            context.startActivity(intent)
+                        }
                 )
                 Switch(
                     checked = acceptTerms,
@@ -241,16 +287,19 @@ fun UserSignUpScreen(
             PrimaryButton(
                 text = t("auth.signUp"),
                 onClick = {
-                    if (password == confirmPassword) {
-                        authViewModel.signUpWithProfile(
-                            email = email,
-                            password = password,
-                            fullName = fullName,
-                            phone = phoneNumber,
-                            role = com.blessedirembo.app.data.model.UserRole.USER
-                        )
-                    } else {
-                        // Show password mismatch — handled via snackbar mechanism below
+                    when {
+                        password != confirmPassword -> {
+                            validationError = "Passwords do not match. Please try again."
+                        }
+                        else -> {
+                            authViewModel.signUpWithProfile(
+                                email = email,
+                                password = password,
+                                fullName = fullName,
+                                phone = phoneNumber,
+                                role = com.blessedirembo.app.data.model.UserRole.USER
+                            )
+                        }
                     }
                 },
                 enabled = acceptTerms && fullName.isNotBlank() && email.isNotBlank() && !isLoading,

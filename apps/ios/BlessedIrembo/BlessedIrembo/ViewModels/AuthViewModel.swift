@@ -125,15 +125,20 @@ class AuthViewModel: ObservableObject {
             ]
             
             self.db.collection("users").document(uid).setData(userData) { error in
-                if error == nil {
-                    self.db.collection("phone_to_email").document(normalizedPhone).setData(["email": loginEmail])
+                if let error = error {
+                    try? Auth.auth().signOut()
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+                        self.showValidationError("Profile save failed: \(error.localizedDescription)")
+                        completion(.failure(error))
+                    }
+                    return
                 }
+                
+                self.db.collection("phone_to_email").document(normalizedPhone).setData(["email": loginEmail])
+                
                 DispatchQueue.main.async {
                     self.isLoading = false
-                    if let error = error {
-                        self.showValidationError("Profile save failed: \(error.localizedDescription)")
-                        return
-                    }
                     let user = User(
                         id: uid,
                         fullName: fullName,
@@ -170,13 +175,14 @@ class AuthViewModel: ObservableObject {
             if licenseStatus == .alreadyTaken {
                 return showValidationError("This pharmacy is already registered. Please sign in instead.")
             }
-            return showValidationError("Please enter a valid Rwanda FDA council registration number")
+            return showValidationError("Please enter a valid Rwanda NPC council registration number")
         }
         guard !pharmacyName.isEmpty else { return showValidationError("Please enter pharmacy name") }
         guard !ownerName.isEmpty else { return showValidationError("Please enter owner name") }
         guard User.isValidPhoneNumber(phoneNumber) else { return showValidationError("Please enter a valid phone number") }
         guard User.isValidEmail(email) else { return showValidationError("Please enter a valid email address") }
         guard !address.isEmpty else { return showValidationError("Please enter pharmacy address") }
+        guard latitude != 0.0 && longitude != 0.0 else { return showValidationError("Please select your location via GPS or enter coordinates") }
         guard password.count >= 6 else { return showValidationError("Password must be at least 6 characters") }
         guard password == confirmPassword else { return showValidationError("Passwords do not match") }
         
@@ -217,6 +223,7 @@ class AuthViewModel: ObservableObject {
                 "longitude": longitude,
                 "role": "pharmacy",
                 "isVerified": true,    // verified against FDA list
+                "isActive": true,
                 "rating": 0.0,
                 "reviewCount": 0,
                 "whatsappClicks": 0,
@@ -234,9 +241,11 @@ class AuthViewModel: ObservableObject {
             
             self.db.collection("pharmacies").document(uid).setData(pharmacyData) { error in
                 if let error = error {
+                    try? Auth.auth().signOut()
                     DispatchQueue.main.async {
                         self.isLoading = false
                         self.showValidationError("Profile save failed: \(error.localizedDescription)")
+                        completion(.failure(error))
                     }
                     return
                 }

@@ -137,7 +137,7 @@ fun UserPrivacySettingsScreen(
                 LinkRow(
                     title = t("profile.privacyPolicy"),
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/privacy-policy"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.blessedirembo.com/privacy-policy"))
                         context.startActivity(intent)
                     }
                 )
@@ -145,7 +145,7 @@ fun UserPrivacySettingsScreen(
                 LinkRow(
                     title = t("profile.terms"),
                     onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://blessedirembo.com/terms-and-conditions"))
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.blessedirembo.com/terms"))
                         context.startActivity(intent)
                     }
                 )
