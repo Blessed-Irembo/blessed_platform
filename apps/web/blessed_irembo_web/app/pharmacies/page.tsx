@@ -37,6 +37,28 @@ const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
 
 export default function PharmaciesPage() {
   const { t, language } = useLanguage();
+  const DISTRICT_GROUPS = [
+    {
+      label: t.pharmacies.districts.kigali,
+      districts: ['Gasabo', 'Kicukiro', 'Nyarugenge']
+    },
+    {
+      label: t.pharmacies.districts.northern,
+      districts: ['Burera', 'Gakenke', 'Gicumbi', 'Musanze', 'Rulindo']
+    },
+    {
+      label: t.pharmacies.districts.southern,
+      districts: ['Gisagara', 'Huye', 'Kamonyi', 'Muhanga', 'Nyamagabe', 'Nyanza', 'Nyaruguru', 'Ruhango']
+    },
+    {
+      label: t.pharmacies.districts.eastern,
+      districts: ['Bugesera', 'Gatsibo', 'Kayonza', 'Kirehe', 'Ngoma', 'Nyagatare', 'Rwamagana']
+    },
+    {
+      label: t.pharmacies.districts.western,
+      districts: ['Karongi', 'Ngororero', 'Nyabihu', 'Nyamasheke', 'Rubavu', 'Rutsiro', 'Rusizi']
+    }
+  ];
   // Require authentication — redirects to /login if not signed in
   // useRequireUserRole: redirects to /login if unauthenticated, to /pharmacy/dashboard if pharmacy
   const { loading, userRole } = useRequireUserRole();
@@ -53,6 +75,8 @@ export default function PharmaciesPage() {
   const [isLocating, setIsLocating] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [isDistrictDropdownOpen, setIsDistrictDropdownOpen] = useState(false);
+  const districtDropdownRef = useRef<HTMLDivElement>(null);
   const [userPhone, setUserPhone] = useState('');
   const [expandedHoursId, setExpandedHoursId] = useState<string | null>(null);
 
@@ -117,6 +141,9 @@ export default function PharmaciesPage() {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownOpen(false);
+      }
+      if (districtDropdownRef.current && !districtDropdownRef.current.contains(event.target as Node)) {
+        setIsDistrictDropdownOpen(false);
       }
     }
     document.addEventListener('mousedown', handleClickOutside);
@@ -241,54 +268,70 @@ export default function PharmaciesPage() {
 
             {/* District filter */}
             <div className="md:col-span-3">
-              <select
-                id="district-filter"
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="block w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              >
-                <option value="all">{t.pharmacies.allDistricts}</option>
-                <optgroup label={t.pharmacies.districts.kigali}>
-                  <option value="Gasabo">Gasabo</option>
-                  <option value="Kicukiro">Kicukiro</option>
-                  <option value="Nyarugenge">Nyarugenge</option>
-                </optgroup>
-                <optgroup label={t.pharmacies.districts.northern}>
-                  <option value="Burera">Burera</option>
-                  <option value="Gakenke">Gakenke</option>
-                  <option value="Gicumbi">Gicumbi</option>
-                  <option value="Musanze">Musanze</option>
-                  <option value="Rulindo">Rulindo</option>
-                </optgroup>
-                <optgroup label={t.pharmacies.districts.southern}>
-                  <option value="Gisagara">Gisagara</option>
-                  <option value="Huye">Huye</option>
-                  <option value="Kamonyi">Kamonyi</option>
-                  <option value="Muhanga">Muhanga</option>
-                  <option value="Nyamagabe">Nyamagabe</option>
-                  <option value="Nyanza">Nyanza</option>
-                  <option value="Nyaruguru">Nyaruguru</option>
-                  <option value="Ruhango">Ruhango</option>
-                </optgroup>
-                <optgroup label={t.pharmacies.districts.eastern}>
-                  <option value="Bugesera">Bugesera</option>
-                  <option value="Gatsibo">Gatsibo</option>
-                  <option value="Kayonza">Kayonza</option>
-                  <option value="Kirehe">Kirehe</option>
-                  <option value="Ngoma">Ngoma</option>
-                  <option value="Nyagatare">Nyagatare</option>
-                  <option value="Rwamagana">Rwamagana</option>
-                </optgroup>
-                <optgroup label={t.pharmacies.districts.western}>
-                  <option value="Karongi">Karongi</option>
-                  <option value="Ngororero">Ngororero</option>
-                  <option value="Nyabihu">Nyabihu</option>
-                  <option value="Nyamasheke">Nyamasheke</option>
-                  <option value="Rubavu">Rubavu</option>
-                  <option value="Rutsiro">Rutsiro</option>
-                  <option value="Rusizi">Rusizi</option>
-                </optgroup>
-              </select>
+              <div className="relative" ref={districtDropdownRef}>
+                <button
+                  id="district-filter"
+                  type="button"
+                  onClick={() => setIsDistrictDropdownOpen(!isDistrictDropdownOpen)}
+                  className="flex items-center justify-between w-full px-3 py-2.5 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-left text-sm cursor-pointer shadow-sm"
+                >
+                  <span className="truncate">
+                    {selectedDistrict === 'all' ? t.pharmacies.allDistricts : selectedDistrict}
+                  </span>
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform shrink-0 ${isDistrictDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={2}
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+
+                {isDistrictDropdownOpen && (
+                  <div className="absolute left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedDistrict('all');
+                        setIsDistrictDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                        selectedDistrict === 'all' ? 'bg-teal-50 text-teal-700 font-semibold' : 'text-gray-900'
+                      }`}
+                    >
+                      {t.pharmacies.allDistricts}
+                    </button>
+                    {DISTRICT_GROUPS.map((group) => (
+                      <div key={group.label} className="border-t border-gray-100 first:border-t-0">
+                        <div className="px-4 py-1.5 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                          {group.label}
+                        </div>
+                        <div className="py-1">
+                          {group.districts.map((dist) => (
+                            <button
+                              type="button"
+                              key={dist}
+                              onClick={() => {
+                                setSelectedDistrict(dist);
+                                setIsDistrictDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-6 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                                selectedDistrict.toLowerCase() === dist.toLowerCase()
+                                  ? 'bg-teal-50 text-teal-700 font-semibold'
+                                  : 'text-gray-700'
+                              }`}
+                            >
+                              {dist}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Open-now toggle */}

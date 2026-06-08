@@ -776,7 +776,7 @@ export const translations = {
       button: "Shaka Farumasi None"
     },
     footer: {
-      desc: "Guhuza Abanyarwanda na farumasi zizerwa mu gihugu hose. Gana imiti vuba kandi bworoshye.",
+      desc: "Guhuza Abanyarwanda na farumasi zizerwa mu gihugu hose. Wabona imiti vuba kandi bworoshye.",
       solution: "Igisubizo mu buvuzi gitanzwe na",
       quickLinks: "Ihuza Rikoreshwa Cyane",
       contact: "Twandikire",

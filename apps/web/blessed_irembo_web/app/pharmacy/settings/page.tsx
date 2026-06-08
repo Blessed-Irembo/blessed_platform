@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/AuthContext';
 import { useRequireAuth } from '@/lib/authHooks';
 import { usePharmacyData } from '@/lib/usePharmacyData';
-import { doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { doc, updateDoc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, deleteUser } from 'firebase/auth';
 import LoadingScreen from '@/components/ui/LoadingScreen';
@@ -180,6 +180,19 @@ export default function PharmacySettings() {
       let finalLat = mapLocation.lat;
       let finalLng = mapLocation.lng;
       let district = pharmacy?.district || '';
+
+      // If district is missing, try to fallback to licensed_pharmacies list
+      if (!district && pharmacy?.registrationNumber) {
+        try {
+          const docId = pharmacy.registrationNumber.toUpperCase().trim().replace('/', '_');
+          const licenseSnap = await getDoc(doc(db, 'licensed_pharmacies', docId));
+          if (licenseSnap.exists()) {
+            district = licenseSnap.data().district || '';
+          }
+        } catch (err) {
+          console.error('Failed to fallback fetch district:', err);
+        }
+      }
 
       // If the map pin hasn't been moved from 0,0, try geocoding
       if (finalLat === 0 && finalLng === 0) {
