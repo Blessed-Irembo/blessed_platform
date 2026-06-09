@@ -32,7 +32,7 @@ export default function PharmacyOwnersSection() {
           {/* Left Column - Image */}
           <div className="relative h-96 md:h-[500px] order-2 md:order-1">
             <Image
-              src="/pharmacist2.jpg"
+              src="/pharmacist2.png"
               alt="Pharmacy owner working"
               fill
               className="object-cover rounded-lg shadow-lg"
