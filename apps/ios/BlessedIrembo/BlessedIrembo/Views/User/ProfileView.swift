@@ -8,6 +8,7 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var appState: AppState
     @State private var showLogoutConfirmation = false
+    @State private var showDeleteAccountSheet = false
     @Environment(\.dismiss) var dismiss
     
     private var demoUser: User {
@@ -31,6 +32,9 @@ struct ProfileView: View {
                 
                 // Logout Button
                 logoutButton
+                
+                // Delete Account Button
+                deleteAccountButton
                 
                 Spacer(minLength: 40)
             }
@@ -222,6 +226,36 @@ struct ProfileView: View {
             .shadow(color: Color.red.opacity(0.3), radius: 8, x: 0, y: 4)
         }
         .padding(.top, 8)
+    }
+    
+    // MARK: - Delete Account Button
+    
+    private var deleteAccountButton: some View {
+        Button(action: {
+            showDeleteAccountSheet = true
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 20))
+                
+                Text(appState.t("profile.deleteAccount"))
+                    .font(.system(size: 17, weight: .semibold))
+            }
+            .foregroundColor(.red)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.white)
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.red.opacity(0.3), lineWidth: 1)
+            )
+        }
+        .padding(.top, 8)
+        .sheet(isPresented: $showDeleteAccountSheet) {
+            DeleteAccountSheet()
+                .environmentObject(appState)
+        }
     }
     
     // MARK: - Actions

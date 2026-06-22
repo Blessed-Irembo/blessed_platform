@@ -67,6 +67,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.withStyle
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.CircularProgressIndicator
@@ -115,6 +120,7 @@ fun PharmacyRegistrationScreen(
     var physicalAddress by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var acceptTerms by remember { mutableStateOf(false) }
 
     // ─── License validation state ─────────────────────────────────
     var licenseError by remember { mutableStateOf<String?>(null) }
@@ -136,6 +142,7 @@ fun PharmacyRegistrationScreen(
 
     val authState by authViewModel.authState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(authState) {
         when (val state = authState) {
@@ -640,6 +647,58 @@ fun PharmacyRegistrationScreen(
                     )
                 }
 
+                // Terms and Conditions Toggle
+                Row(
+                    modifier = Modifier.padding(vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    val termsText = t("auth.acceptTerms")
+                    val termsKeyword = if (termsText.contains("Terms")) "Terms & Conditions"
+                                       else if (termsText.contains("Amategeko")) "Amategeko n'Amabwiriza"
+                                       else "Terms & Conditions"
+                    val splitIndex = termsText.indexOf(termsKeyword)
+                    Text(
+                        text = buildAnnotatedString {
+                            if (splitIndex >= 0) {
+                                append(termsText.substring(0, splitIndex))
+                                withStyle(
+                                    SpanStyle(
+                                        color = Teal500,
+                                        fontWeight = FontWeight.SemiBold,
+                                        textDecoration = TextDecoration.Underline
+                                    )
+                                ) {
+                                    append(termsKeyword)
+                                }
+                            } else {
+                                append(termsText)
+                            }
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Gray500,
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable {
+                                val intent = Intent(
+                                    Intent.ACTION_VIEW,
+                                    Uri.parse("https://www.blessedirembo.com/terms")
+                                )
+                                context.startActivity(intent)
+                            }
+                    )
+                    Switch(
+                        checked = acceptTerms,
+                        onCheckedChange = { acceptTerms = it },
+                        colors = SwitchDefaults.colors(
+                            checkedThumbColor = White,
+                            checkedTrackColor = Teal500,
+                            uncheckedThumbColor = White,
+                            uncheckedTrackColor = Gray500.copy(alpha = 0.3f)
+                        )
+                    )
+                }
+
                 // ── Register Button ──
                 PrimaryButton(
                     text = t("auth.registerPharmacy"),
@@ -665,7 +724,7 @@ fun PharmacyRegistrationScreen(
                             )
                         }
                     },
-                    enabled = pharmacyName.isNotBlank() && email.isNotBlank() &&
+                    enabled = licenseVerified && acceptTerms && pharmacyName.isNotBlank() && email.isNotBlank() &&
                               licenseNumber.isNotBlank() && password.isNotBlank() &&
                               password == confirmPassword && !isLoading,
                     isLoading = isLoading

@@ -302,7 +302,7 @@ fun UserSignUpScreen(
                         }
                     }
                 },
-                enabled = acceptTerms && fullName.isNotBlank() && email.isNotBlank() && !isLoading,
+                enabled = acceptTerms && fullName.isNotBlank() && phoneNumber.isNotBlank() && password.isNotBlank() && confirmPassword.isNotBlank() && !isLoading,
                 isLoading = isLoading
             )
 

@@ -180,6 +180,12 @@ enum Translations {
             "profile.privacyPolicy": "Privacy Policy",
             "profile.logout": "Logout",
             "profile.logoutPrompt": "Are you sure you want to logout?",
+            "profile.deleteAccount": "Delete Account",
+            "profile.deleteAccountWarning": "This action is permanent and cannot be undone. All your data, including your profile and pharmacy information, will be permanently deleted.",
+            "profile.deleteAccountConfirmPrompt": "Enter your password to confirm account deletion:",
+            "profile.deleteAccountFailed": "Failed to delete account. Incorrect password or network error.",
+            "profile.deleteAccountConfirmButton": "Delete Permanently",
+            "profile.deleteAccountDeleting": "Deleting...",
             
             // Appearance
             "appearance.title": "Appearance",
@@ -514,6 +520,12 @@ enum Translations {
             "profile.privacyPolicy": "Politiki y'Ibanga",
             "profile.logout": "Sohoka",
             "profile.logoutPrompt": "Ese urashaka gusohoka muri App?",
+            "profile.deleteAccount": "Siba Konti",
+            "profile.deleteAccountWarning": "Iki gikorwa ntigikurwaho kandi ntigishobora gusubirwamo. Amakuru yawe yose, harimo n'ay'umwirondoro wawe na farumasi yawe, azasibwa burundu.",
+            "profile.deleteAccountConfirmPrompt": "Andika ijambo ry'ibanga ryawe wemeze gusiba konti:",
+            "profile.deleteAccountFailed": "Gusiba konti byanze. Ijambo ry'ibanga si ryo cyangwa habaye ikosa rya murandasi.",
+            "profile.deleteAccountConfirmButton": "Siba Burundu",
+            "profile.deleteAccountDeleting": "Gusiba...",
             
             // Appearance
             "appearance.title": "Uko App Ikeye",

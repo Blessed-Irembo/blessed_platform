@@ -50,6 +50,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Shield
 import com.blessedirembo.app.ui.components.SettingsListItem
+import com.blessedirembo.app.ui.components.DeleteAccountDialog
+import com.blessedirembo.app.auth.AuthState
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
@@ -85,6 +87,11 @@ fun PharmacyOwnerProfileScreen(
     val scrollState = rememberScrollState()
     val pharmacy by pharmacyViewModel.ownerPharmacy.collectAsState()
     val context = LocalContext.current
+    
+    var showDeleteDialog by remember { androidx.compose.runtime.mutableStateOf(false) }
+    val deleteAccountState by authViewModel.deleteAccountState.collectAsState()
+    val isDeleting = deleteAccountState is AuthState.Loading
+    val deleteError = (deleteAccountState as? AuthState.Error)?.message
     
     LaunchedEffect(Unit) {
         val uid = authViewModel.currentUser?.uid
@@ -287,8 +294,55 @@ fun PharmacyOwnerProfileScreen(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // Delete Account Button
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .clickable { showDeleteDialog = true },
+            shape = RoundedCornerShape(10.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.Red.copy(alpha = 0.08f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red.copy(alpha = 0.2f))
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 16.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = t("profile.deleteAccount"),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = Color.Red,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
         
         Spacer(modifier = Modifier.height(100.dp)) // Bottom nav spacing
+
+        if (showDeleteDialog) {
+            DeleteAccountDialog(
+                onDismiss = {
+                    authViewModel.resetDeleteAccountState()
+                    showDeleteDialog = false
+                },
+                onConfirm = { password ->
+                    authViewModel.deleteAccount(password) { result ->
+                        if (result.isSuccess) {
+                            showDeleteDialog = false
+                            onSignOutClick()
+                        }
+                    }
+                },
+                isLoading = isDeleting,
+                errorMessage = deleteError
+            )
+        }
     }
 }
 

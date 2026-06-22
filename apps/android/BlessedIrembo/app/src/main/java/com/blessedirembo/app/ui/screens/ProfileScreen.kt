@@ -65,6 +65,10 @@ import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.data.model.UserProfile
 import com.blessedirembo.app.data.repository.UserRepository
 import com.blessedirembo.app.ui.components.SettingsListItem
+import com.blessedirembo.app.ui.components.DeleteAccountDialog
+import com.blessedirembo.app.auth.AuthState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.material.icons.filled.Delete
 import com.blessedirembo.app.ui.theme.Gray100
 import com.blessedirembo.app.ui.theme.Gray500
 import com.blessedirembo.app.ui.theme.Gray900
@@ -105,6 +109,11 @@ fun ProfileScreen(
             userProfile = result.getOrNull()
         }
     }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    val deleteAccountState by authViewModel.deleteAccountState.collectAsState()
+    val isDeleting = deleteAccountState is AuthState.Loading
+    val deleteError = (deleteAccountState as? AuthState.Error)?.message
 
     // Derive display values from FirebaseUser and Firestore UserProfile dynamically
     val userName = userProfile?.fullName?.takeIf { it.isNotBlank() } 
@@ -375,7 +384,55 @@ fun ProfileScreen(
                 )
             }
             
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Delete Account Button
+            Button(
+                onClick = { showDeleteDialog = true },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.Red.copy(alpha = 0.08f),
+                    contentColor = Color.Red
+                ),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color.Red.copy(alpha = 0.2f))
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = t("profile.deleteAccount"),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+            
             Spacer(modifier = Modifier.height(32.dp))
+        }
+
+        if (showDeleteDialog) {
+            DeleteAccountDialog(
+                onDismiss = {
+                    authViewModel.resetDeleteAccountState()
+                    showDeleteDialog = false
+                },
+                onConfirm = { password ->
+                    authViewModel.deleteAccount(password) { result ->
+                        if (result.isSuccess) {
+                            showDeleteDialog = false
+                            onLogoutClick()
+                        }
+                    }
+                },
+                isLoading = isDeleting,
+                errorMessage = deleteError
+            )
         }
     }
 }

@@ -258,6 +258,7 @@ fun NavGraph(
         composable(route = Screen.PharmacyOwnerMain.route) {
             PharmacyOwnerMainScreen(
                 onSignOut = {
+                    authViewModel.signOut()
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(Screen.PharmacyOwnerMain.route) { inclusive = true }
                     }

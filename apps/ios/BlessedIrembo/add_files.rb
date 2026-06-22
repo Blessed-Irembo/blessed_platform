@@ -27,6 +27,9 @@ new_files = {
     'BlessedIrembo/Views/User/UserMapView.swift',
     'BlessedIrembo/Views/User/QuickDetailsSheet.swift',
     'BlessedIrembo/Views/User/PharmacyDetailsView.swift'
+  ],
+  'Views/Auth' => [
+    'BlessedIrembo/Views/Auth/DeleteAccountSheet.swift'
   ]
 }
 

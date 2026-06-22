@@ -8,6 +8,10 @@ import com.blessedirembo.app.data.model.UserRole
 import com.blessedirembo.app.data.repository.PharmacyRepository
 import com.blessedirembo.app.data.repository.UserRepository
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FieldValue
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -315,6 +319,105 @@ class AuthViewModel : ViewModel() {
     fun signOut() {
         FirebaseAuthManager.signOut()
         _authState.value = AuthState.Idle
+    }
+
+    // ─── Delete Account ────────────────────────────────────────────────────────
+
+    private val _deleteAccountState = MutableStateFlow<AuthState>(AuthState.Idle)
+    val deleteAccountState: StateFlow<AuthState> = _deleteAccountState.asStateFlow()
+
+    fun resetDeleteAccountState() {
+        _deleteAccountState.value = AuthState.Idle
+    }
+
+    fun deleteAccount(password: String, onComplete: (Result<Unit>) -> Unit) {
+        viewModelScope.launch {
+            _deleteAccountState.value = AuthState.Loading
+            
+            val user = FirebaseAuthManager.currentUser
+            if (user == null || user.email == null) {
+                val error = Exception("Not authenticated")
+                _deleteAccountState.value = AuthState.Error(error.message ?: "Not authenticated")
+                onComplete(Result.failure(error))
+                return@launch
+            }
+            
+            // 1. Re-authenticate user
+            val credential = EmailAuthProvider.getCredential(user.email!!, password)
+            try {
+                user.reauthenticate(credential).await()
+            } catch (e: Exception) {
+                val errorMsg = FirebaseAuthManager.getErrorMessage(e)
+                _deleteAccountState.value = AuthState.Error(errorMsg)
+                onComplete(Result.failure(Exception(errorMsg)))
+                return@launch
+            }
+            
+            val uid = user.uid
+            val db = FirebaseFirestore.getInstance()
+            val batch = db.batch()
+            
+            // 2. Fetch role to determine what to delete
+            val roleResult = userRepository.fetchUserRole(uid)
+            val role = roleResult.getOrNull()
+            
+            try {
+                if (role == UserRole.PHARMACY_OWNER) {
+                    val pharmacyResult = pharmacyRepository.getPharmacyByOwnerId(uid)
+                    val pharmacy = pharmacyResult.getOrNull()
+                    
+                    // Delete pharmacy document
+                    val pharmacyRef = db.collection("pharmacies").document(uid)
+                    batch.delete(pharmacyRef)
+                    
+                    // Delete phone mapping if phone number exists
+                    val phone = pharmacy?.phoneNumber ?: ""
+                    if (phone.isNotBlank()) {
+                        val phoneRef = db.collection("phone_to_email").document(userRepository.normalizePhoneNumber(phone))
+                        batch.delete(phoneRef)
+                        
+                        val rawPhoneRef = db.collection("phone_to_email").document(phone.trim())
+                        batch.delete(rawPhoneRef)
+                    }
+                    
+                    // Delete user profile doc if it exists for this uid
+                    val userRef = db.collection("users").document(uid)
+                    batch.delete(userRef)
+                } else {
+                    // Regular user
+                    val profileResult = userRepository.getUserProfile(uid)
+                    val profile = profileResult.getOrNull()
+                    
+                    // Delete user profile doc
+                    val userRef = db.collection("users").document(uid)
+                    batch.delete(userRef)
+                    
+                    // Delete phone mapping if exists
+                    val phone = profile?.phone ?: ""
+                    if (phone.isNotBlank()) {
+                        val phoneRef = db.collection("phone_to_email").document(userRepository.normalizePhoneNumber(phone))
+                        batch.delete(phoneRef)
+                        
+                        val rawPhoneRef = db.collection("phone_to_email").document(phone.trim())
+                        batch.delete(rawPhoneRef)
+                    }
+                }
+                
+                // Commit Firestore deletes
+                batch.commit().await()
+                
+                // 3. Delete Firebase Auth user
+                user.delete().await()
+                
+                // Reset state
+                _deleteAccountState.value = AuthState.Idle
+                onComplete(Result.success(Unit))
+            } catch (e: Exception) {
+                val errorMsg = e.message ?: "Failed to delete account data."
+                _deleteAccountState.value = AuthState.Error(errorMsg)
+                onComplete(Result.failure(Exception(errorMsg)))
+            }
+        }
     }
 
     fun clearError() {

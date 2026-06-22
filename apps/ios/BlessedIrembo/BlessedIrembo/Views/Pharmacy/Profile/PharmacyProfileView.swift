@@ -7,6 +7,7 @@ import SwiftUI
 struct PharmacyProfileView: View {
     @EnvironmentObject var appState: AppState
     @State private var showSignOutConfirmation = false
+    @State private var showDeleteConfirmation = false
     
     var body: some View {
         List {
@@ -130,6 +131,20 @@ struct PharmacyProfileView: View {
                     }
                 }
             }
+
+            // Danger Zone (Delete Account)
+            Section(header: Text("Danger Zone")) {
+                Button(role: .destructive) {
+                    showDeleteConfirmation = true
+                } label: {
+                    HStack {
+                        Spacer()
+                        Label(appState.t("profile.deleteAccount"), systemImage: "trash.fill")
+                            .fontWeight(.semibold)
+                        Spacer()
+                    }
+                }
+            }
         }
         .listStyle(.insetGrouped)
         .navigationTitle(appState.t("nav.profile"))
@@ -140,6 +155,10 @@ struct PharmacyProfileView: View {
             }
         } message: {
             Text(appState.t("profile.pharmacy.logoutPrompt"))
+        }
+        .sheet(isPresented: $showDeleteConfirmation) {
+            DeleteAccountSheet()
+                .environmentObject(appState)
         }
     }
 }

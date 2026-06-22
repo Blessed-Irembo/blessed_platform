@@ -165,18 +165,14 @@ fun PharmacyOwnerMainScreen(
                 } else {
                     ExpiredSubscriptionView(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
                 }
-                2 -> if (hasValidSubscription) {
-                    PharmacyOwnerProfileScreen(
-                        onEditProfileClick    = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
-                        onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
-                        onLocationClick       = { profileSubScreen = ProfileSubScreen.EDIT_LOCATION },
-                        onNotificationsClick  = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
-                        onSignOutClick        = onSignOut,
-                        modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
-                    )
-                } else {
-                    ExpiredSubscriptionView(modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding()))
-                }
+                2 -> PharmacyOwnerProfileScreen(
+                    onEditProfileClick    = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
+                    onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
+                    onLocationClick       = { profileSubScreen = ProfileSubScreen.EDIT_LOCATION },
+                    onNotificationsClick  = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
+                    onSignOutClick        = onSignOut,
+                    modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())
+                )
                 3 -> SubscriptionScreen(
                     onBackClick = { selectedTab = 0 }, // Go back to home if they press back (though it's a tab now)
                     modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())

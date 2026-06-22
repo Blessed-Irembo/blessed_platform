@@ -98,6 +98,11 @@ class AppState: ObservableObject {
             }
 
             if let firebaseUser = firebaseUser {
+                // If we are already authenticated with a matching UID, ignore this state change to avoid redundant role fetch/accidental sign out
+                if self.isAuthenticated && (self.currentUser?.id == firebaseUser.uid || self.currentPharmacy?.id == firebaseUser.uid) {
+                    return
+                }
+
                 // User is signed in — fetch their role from Firestore
                 FirebaseManager.shared.fetchUserRole(uid: firebaseUser.uid) { role in
                     DispatchQueue.main.async {
@@ -260,7 +265,8 @@ class AppState: ObservableObject {
             isAuthenticated = true
             navigationPath = NavigationPath()
         }
-        // Listener is already started by attachAuthListener → startPharmacyListener
+        // Start the real-time Firestore listener to keep metrics in sync
+        startPharmacyListener(uid: pharmacy.id, email: pharmacy.email)
     }
 
     // MARK: - Sign Out
@@ -273,6 +279,98 @@ class AppState: ObservableObject {
             print("Sign out error: \(error.localizedDescription)")
             withAnimation(.easeInOut(duration: 0.35)) {
                 clearAuthState()
+            }
+        }
+    }
+
+    // MARK: - Account Deletion
+
+    func deleteAccount(password: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let firebaseUser = Auth.auth().currentUser, let email = firebaseUser.email else {
+            completion(.failure(NSError(domain: "AppState", code: 401, userInfo: [NSLocalizedDescriptionKey: "No authenticated user"])))
+            return
+        }
+
+        // 1. Re-authenticate user to permit deletion
+        let credential = EmailAuthProvider.credential(withEmail: email, password: password)
+        firebaseUser.reauthenticate(with: credential) { [weak self] _, error in
+            guard let self = self else { return }
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            let uid = firebaseUser.uid
+            let db = FirebaseManager.shared.firestore
+            let batch = db.batch()
+
+            // 2. Perform Firestore deletions based on active user role
+            if let currentUser = self.currentUser {
+                let userRef = FirebaseManager.shared.usersCollection.document(uid)
+                batch.deleteDocument(userRef)
+
+                let phone = currentUser.phoneNumber
+                if !phone.isEmpty {
+                    let phoneRef = db.collection("phone_to_email").document(phone)
+                    batch.deleteDocument(phoneRef)
+                }
+
+                batch.commit { error in
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+                    
+                    firebaseUser.delete { error in
+                        if let error = error {
+                            completion(.failure(error))
+                        } else {
+                            DispatchQueue.main.async {
+                                self.clearAuthState()
+                                completion(.success(()))
+                            }
+                        }
+                    }
+                }
+            } else if let currentPharmacy = self.currentPharmacy {
+                let pharmacyRef = FirebaseManager.shared.pharmaciesCollection.document(uid)
+                batch.deleteDocument(pharmacyRef)
+
+                let phone = currentPharmacy.phoneNumber
+                if !phone.isEmpty {
+                    let phoneRef = db.collection("phone_to_email").document(phone)
+                    batch.deleteDocument(phoneRef)
+                }
+
+                batch.commit { error in
+                    if let error = error {
+                        completion(.failure(error))
+                        return
+                    }
+
+                    firebaseUser.delete { error in
+                        if let error = error {
+                            completion(.failure(error))
+                        } else {
+                            DispatchQueue.main.async {
+                                self.clearAuthState()
+                                completion(.success(()))
+                            }
+                        }
+                    }
+                }
+            } else {
+                // Fallback (e.g. no profile document loaded)
+                firebaseUser.delete { error in
+                    if let error = error {
+                        completion(.failure(error))
+                    } else {
+                        DispatchQueue.main.async {
+                            self.clearAuthState()
+                            completion(.success(()))
+                        }
+                    }
+                }
             }
         }
     }
