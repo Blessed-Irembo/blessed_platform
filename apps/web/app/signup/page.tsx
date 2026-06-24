@@ -70,7 +70,7 @@ export default function SignUpPage() {
     setIsSubmitting(true);
 
     try {
-      await signUp(formData.email, formData.password);
+      await signUp(formData.email, formData.password, formData.fullName, formData.phone);
       // Successfully created account — go straight to the app
       router.replace('/pharmacies');
     } catch (error: any) {

@@ -366,20 +366,36 @@ fun PharmacyRegistrationScreen(
                     }
                     // Inline error below field (matches iOS red error row)
                     if (licenseError != null) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                Icons.Outlined.Cancel,
-                                contentDescription = null,
-                                tint = Color.Red,
-                                modifier = Modifier.size(14.dp)
-                            )
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.Cancel,
+                                    contentDescription = null,
+                                    tint = Color.Red,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Text(
+                                    text = licenseError!!,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.Red
+                                )
+                            }
                             Text(
-                                text = licenseError!!,
-                                style = MaterialTheme.typography.labelSmall,
-                                color = Color.Red
+                                text = t("auth.licenseNotFoundLink"),
+                                style = MaterialTheme.typography.labelSmall.copy(textDecoration = TextDecoration.Underline),
+                                color = Teal500,
+                                modifier = Modifier
+                                    .padding(start = 18.dp)
+                                    .clickable {
+                                        val intent = Intent(
+                                            Intent.ACTION_VIEW,
+                                            Uri.parse("https://www.blessedirembo.com/register-pharmacy/request-addition")
+                                        )
+                                        context.startActivity(intent)
+                                    }
                             )
                         }
                     }

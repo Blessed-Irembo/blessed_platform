@@ -323,12 +323,27 @@ struct SignUpPharmacyView: View {
             .font(.caption).fontWeight(.medium)
             .foregroundColor(.orange)
         case .invalid:
-            Label(
-                appState.t("auth.licenseNotFound"),
-                systemImage: "xmark.circle.fill"
-            )
-            .font(.caption).fontWeight(.medium)
-            .foregroundColor(.red)
+            VStack(alignment: .leading, spacing: 6) {
+                Label(
+                    appState.t("auth.licenseNotFound"),
+                    systemImage: "xmark.circle.fill"
+                )
+                .font(.caption).fontWeight(.medium)
+                .foregroundColor(.red)
+                
+                Button {
+                    if let url = URL(string: "https://www.blessedirembo.com/register-pharmacy/request-addition") {
+                        UIApplication.shared.open(url)
+                    }
+                } label: {
+                    Text(appState.t("auth.licenseNotFoundLink"))
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                        .foregroundColor(.primaryTeal)
+                        .underline()
+                }
+                .padding(.leading, 4)
+            }
         default:
             EmptyView()
         }
