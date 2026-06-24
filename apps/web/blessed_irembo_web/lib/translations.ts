@@ -698,7 +698,8 @@ export const translations = {
         checking: "Checking...",
         verified: "Verified",
         alreadyRegistered: "Already registered",
-        notFound: "Not found in the Rwanda NPC( national pharmacy council) licensed list"
+        notFound: "Not found in the Rwanda NPC( national pharmacy council) licensed list",
+        licenseNotFoundLink: "NPC not listed? Request addition here"
       },
       errors: {
         pharmacyNameRequired: "Pharmacy name is required",
@@ -1434,7 +1435,8 @@ export const translations = {
         checking: "Biracyasuzumwa...",
         verified: "Yagenzuwe",
         alreadyRegistered: "Isanzwe iyandikishije",
-        notFound: "Ntabwo iboneka ku rutonde rwa Rwanda NPC( national pharmacy council)"
+        notFound: "Ntabwo iboneka ku rutonde rwa Rwanda NPC( national pharmacy council)",
+        licenseNotFoundLink: "Ese NPC yawe ntiyanditse? Siga ubusabe bwo kuyongeramo hano"
       },
       errors: {
         pharmacyNameRequired: "Izina rya farumasi ni ngombwa",
