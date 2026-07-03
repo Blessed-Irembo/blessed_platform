@@ -2,9 +2,24 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, 'pharmacy_addition_requests'),
+      where('status', '==', 'pending')
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      setPendingRequestsCount(snapshot.size);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const navItems = [
     {
@@ -25,6 +40,25 @@ export default function Sidebar() {
         </svg>
       ),
       badge: 1,
+    },
+    {
+      name: 'Licensed Registry',
+      href: '/dashboard/licensed-pharmacies',
+      icon: (
+        <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+    },
+    {
+      name: 'Addition Requests',
+      href: '/dashboard/addition-requests',
+      icon: (
+        <svg className="w-5 h-5" fill="none" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      ),
+      badge: pendingRequestsCount > 0 ? pendingRequestsCount : undefined,
     },
     {
       name: 'Subscriptions',
