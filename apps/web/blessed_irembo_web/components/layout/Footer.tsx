@@ -16,6 +16,7 @@ export default function Footer() {
     { label: t.footer.links.help, href: '/help' },
     { label: t.footer.links.about, href: '/about' },
     { label: t.footer.links.forPharmacies, href: '/for-pharmacies' },
+    { label: t.footer.contact, href: '/contact' },
   ];
 
   return (
