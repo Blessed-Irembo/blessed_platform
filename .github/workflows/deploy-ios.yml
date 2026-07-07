@@ -54,9 +54,10 @@ jobs:
           # Allow xcodebuild and codesign to access the key without GUI prompts
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$TEMP_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
 
-          # Apply provisioning profile
+          # Apply provisioning profile (rename to UUID.mobileprovision so Xcode can resolve it)
+          UUID=$(/usr/libexec/PlistBuddy -c "Print UUID" /dev/stdin <<< "$(security cms -D -i $PP_PATH)")
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/$UUID.mobileprovision
 
       - name: Update Version & Build Numbers
         run: |
