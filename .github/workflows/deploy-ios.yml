@@ -1,0 +1,116 @@
+name: Deploy iOS to App Store Connect
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_number:
+        description: 'App Store Version (e.g. 1.0.0)'
+        required: true
+        default: '1.0.0'
+      build_number:
+        description: 'Internal Build Number (e.g. 1)'
+        required: true
+        default: '1'
+
+jobs:
+  deploy:
+    name: Build & Upload iOS App
+    runs-on: macos-14
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Select Xcode Version
+        run: sudo xcode-select -s /Applications/Xcode_15.4.app
+
+      - name: Install Apple Certificates & Provisioning Profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          # Create variables
+          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
+          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
+          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+
+          # Import certificate and provisioning profile from secrets
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
+          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+
+          # Create temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+
+          # Import certificate to keychain
+          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
+          security list-keychain -d user -s $KEYCHAIN_PATH
+
+          # Apply provisioning profile
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Update Version & Build Numbers
+        run: |
+          PROJ_PATH="apps/ios/BlessedIrembo/BlessedIrembo.xcodeproj/project.pbxproj"
+          sed -i '' "s/MARKETING_VERSION = .*/MARKETING_VERSION = ${{ github.event.inputs.version_number }};/g" "$PROJ_PATH"
+          sed -i '' "s/CURRENT_PROJECT_VERSION = .*/CURRENT_PROJECT_VERSION = ${{ github.event.inputs.build_number }};/g" "$PROJ_PATH"
+
+      - name: Create ExportOptions.plist
+        run: |
+          cat <<EOF > apps/ios/BlessedIrembo/ExportOptions.plist
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>destination</key>
+              <string>export</string>
+              <key>method</key>
+              <string>app-store</string>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>stripSwiftSymbols</key>
+              <true/>
+              <key>teamID</key>
+              <string>${{ secrets.APPLE_TEAM_ID }}</string>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>com.didianeishimwe.BlessedIrembo</key>
+                  <string>${{ secrets.PROVISIONING_PROFILE_SPECIFIER }}</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Build Archive
+        run: |
+          xcodebuild -project apps/ios/BlessedIrembo/BlessedIrembo.xcodeproj \
+                     -scheme BlessedIrembo \
+                     -configuration Release \
+                     -archivePath $RUNNER_TEMP/BlessedIrembo.xcarchive \
+                     clean archive
+
+      - name: Export IPA
+        run: |
+          xcodebuild -exportArchive \
+                     -archivePath $RUNNER_TEMP/BlessedIrembo.xcarchive \
+                     -exportOptionsPlist apps/ios/BlessedIrembo/ExportOptions.plist \
+                     -exportPath $RUNNER_TEMP/build
+
+      - name: Upload Build to App Store Connect
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: ${{ runner.temp }}/build/BlessedIrembo.ipa
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-key-private: ${{ secrets.APPSTORE_API_KEY_PRIVATE }}
+
+      - name: Clean Up Keychain
+        if: always()
+        run: |
+          security delete-keychain $RUNNER_TEMP/app-signing.keychain-db
