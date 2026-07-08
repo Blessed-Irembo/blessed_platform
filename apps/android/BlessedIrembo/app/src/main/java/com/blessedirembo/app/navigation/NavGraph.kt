@@ -1,11 +1,13 @@
 package com.blessedirembo.app.navigation
 
+import android.content.Intent
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -172,7 +174,8 @@ fun NavGraph(
                     navController.navigate(Screen.SignIn.route) {
                         popUpTo(Screen.Welcome.route)
                     }
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -197,7 +200,8 @@ fun NavGraph(
                 onNotificationsClick = { navController.navigate(Screen.UserNotificationSettings.route) },
                 onPrivacyClick = { navController.navigate(Screen.UserPrivacySettings.route) },
                 onLocationClick = { navController.navigate(Screen.UserLocationSettings.route) },
-                onAppearanceClick = { navController.navigate(Screen.UserAppearanceSettings.route) }
+                onAppearanceClick = { navController.navigate(Screen.UserAppearanceSettings.route) },
+                authViewModel = authViewModel
             )
         }
 
@@ -247,10 +251,19 @@ fun NavGraph(
             arguments = listOf(navArgument("pharmacyId") { type = NavType.StringType })
         ) { backStackEntry ->
             val pharmacyId = backStackEntry.arguments?.getString("pharmacyId") ?: ""
+            val context = LocalContext.current
             PharmacyDetailScreen(
                 pharmacyId = pharmacyId,
                 onBackClick = { navController.popBackStack() },
-                onShareClick = { /* TODO: implement share */ }
+                onShareClick = {
+                    val shareUrl = "https://www.blessedirembo.com/pharmacy/$pharmacyId"
+                    val shareText = "Find this pharmacy on Blessed Irembo:\n$shareUrl"
+                    val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, shareText)
+                    }
+                    context.startActivity(Intent.createChooser(shareIntent, "Share Pharmacy"))
+                }
             )
         }
 
@@ -262,7 +275,8 @@ fun NavGraph(
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(Screen.PharmacyOwnerMain.route) { inclusive = true }
                     }
-                }
+                },
+                authViewModel = authViewModel
             )
         }
     }

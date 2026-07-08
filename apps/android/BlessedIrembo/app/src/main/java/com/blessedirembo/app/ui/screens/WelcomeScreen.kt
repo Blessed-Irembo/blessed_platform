@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -43,10 +45,12 @@ fun WelcomeScreen(
     onOwnPharmacy: () -> Unit,
     onSignIn: () -> Unit
 ) {
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxHeight()
+            .widthIn(max = 480.dp)
+            .fillMaxWidth()
             .padding(horizontal = 24.dp)
             .padding(top = 80.dp, bottom = 40.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -102,25 +106,22 @@ fun WelcomeScreen(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Sign In Link
-        Row(
-            horizontalArrangement = Arrangement.Center
+        // Sign In Button
+        androidx.compose.material3.OutlinedButton(
+            onClick = onSignIn,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(52.dp),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                contentColor = Teal500
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, Teal500)
         ) {
             Text(
-                text = buildAnnotatedString {
-                    append(t("role.alreadyAccount") + " ")
-                    withStyle(
-                        style = SpanStyle(
-                            color = Teal500,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    ) {
-                        append(t("role.signIn"))
-                    }
-                },
-                style = MaterialTheme.typography.bodyMedium,
-                color = Gray500,
-                modifier = Modifier.clickable(onClick = onSignIn)
+                text = t("role.alreadyAccount") + " " + t("role.signIn"),
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
             )
         }
     }

@@ -27,8 +27,16 @@ data class Pharmacy(
     val district: String = "",
     val latitude: Double = 0.0,
     val longitude: Double = 0.0,
+    @get:com.google.firebase.firestore.PropertyName("isOpen")
+    @com.google.firebase.firestore.PropertyName("isOpen")
     val isOpen: Boolean = false,
+    
+    @get:com.google.firebase.firestore.PropertyName("is24_7")
+    @com.google.firebase.firestore.PropertyName("is24_7")
     val is24_7: Boolean = false,
+    
+    @get:com.google.firebase.firestore.PropertyName("isVerified")
+    @com.google.firebase.firestore.PropertyName("isVerified")
     val isVerified: Boolean = false,
     val rating: Double = 0.0,
     val reviewCount: Int = 0,

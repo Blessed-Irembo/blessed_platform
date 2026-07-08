@@ -94,8 +94,15 @@ class AuthViewModel : ViewModel() {
             val result = FirebaseAuthManager.signIn(resolvedEmail, password)
             result.fold(
                 onSuccess = { user ->
+                    // Normalize the input phone number for reliable lookup
+                    val normalizedPhone = if (!trimmed.contains("@")) userRepository.normalizePhoneNumber(trimmed) else null
+                    
                     // PHARMACY always wins: fetchUserRole checks pharmacies before users
-                    val roleResult = userRepository.fetchUserRole(user.uid)
+                    val roleResult = userRepository.fetchUserRole(
+                        uid = user.uid,
+                        email = if (trimmed.contains("@")) trimmed else resolvedEmail,
+                        phone = normalizedPhone ?: trimmed
+                    )
                     val role = roleResult.getOrNull() ?: UserRole.USER
                     AnalyticsManager.logSignIn()
                     _authState.value = AuthState.Success(user, role)
@@ -297,6 +304,10 @@ class AuthViewModel : ViewModel() {
         _resetEmailSent.value = false
     }
 
+    fun resetAuthState() {
+        _authState.value = AuthState.Idle
+    }
+
     // ─── Role resolution ──────────────────────────────────────────────────────
 
     /**
@@ -304,12 +315,27 @@ class AuthViewModel : ViewModel() {
      * Checks pharmacies before users — pharmacy always wins.
      */
     fun getCurrentUserRole(onResult: (String?) -> Unit) {
-        val uid = FirebaseAuthManager.currentUser?.uid ?: run {
+        val user = FirebaseAuthManager.currentUser ?: run {
             onResult(null)
             return
         }
         viewModelScope.launch {
-            val role = userRepository.fetchUserRole(uid).getOrNull()
+            // user.phoneNumber is always null for email-based auth.
+            // Fetch the phone from their Firestore profile instead (stored at sign-up).
+            var storedPhone = userRepository.getUserProfile(user.uid).getOrNull()?.phone
+            
+            // If we don't have a stored phone profile (e.g. admin-created account), 
+            // recover it from the synthetic email if they used Phone Auth
+            if (storedPhone == null && user.email?.endsWith("@blessed-irembo.app") == true) {
+                val digits = user.email!!.substringBefore("@")
+                storedPhone = userRepository.normalizePhoneNumber(digits)
+            }
+            
+            val role = userRepository.fetchUserRole(
+                uid = user.uid,
+                email = user.email,
+                phone = storedPhone
+            ).getOrNull()
             onResult(role)
         }
     }
@@ -358,7 +384,7 @@ class AuthViewModel : ViewModel() {
             val batch = db.batch()
             
             // 2. Fetch role to determine what to delete
-            val roleResult = userRepository.fetchUserRole(uid)
+            val roleResult = userRepository.fetchUserRole(uid, user.email, user.phoneNumber)
             val role = roleResult.getOrNull()
             
             try {

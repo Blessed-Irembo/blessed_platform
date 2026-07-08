@@ -1,5 +1,6 @@
 package com.blessedirembo.app.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.blessedirembo.app.ui.theme.Gray100
@@ -40,16 +42,26 @@ import com.blessedirembo.app.ui.theme.Teal500
 import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.util.t
 
+private const val PREFS_NAME = "notification_settings"
+private const val KEY_PUSH = "push_enabled"
+private const val KEY_EMAIL = "email_enabled"
+private const val KEY_SMS = "sms_enabled"
+private const val KEY_PROMO = "promo_enabled"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserNotificationSettingsScreen(
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var pushEnabled by remember { mutableStateOf(true) }
-    var emailEnabled by remember { mutableStateOf(true) }
-    var smsEnabled by remember { mutableStateOf(false) }
-    var promoEnabled by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    val prefs = remember { context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE) }
+
+    var pushEnabled  by remember { mutableStateOf(prefs.getBoolean(KEY_PUSH,  true)) }
+    var emailEnabled by remember { mutableStateOf(prefs.getBoolean(KEY_EMAIL, true)) }
+    var smsEnabled   by remember { mutableStateOf(prefs.getBoolean(KEY_SMS,   false)) }
+    var promoEnabled by remember { mutableStateOf(prefs.getBoolean(KEY_PROMO, false)) }
+
 
     Scaffold(
         topBar = {
@@ -102,19 +114,28 @@ fun UserNotificationSettingsScreen(
                 SettingsSwitchRow(
                     title = t("profile.notifications"),
                     checked = pushEnabled,
-                    onCheckedChange = { pushEnabled = it }
+                    onCheckedChange = { 
+                        pushEnabled = it
+                        prefs.edit().putBoolean(KEY_PUSH, it).apply()
+                    }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 SettingsSwitchRow(
                     title = t("settings.emailAlerts"),
                     checked = emailEnabled,
-                    onCheckedChange = { emailEnabled = it }
+                    onCheckedChange = { 
+                        emailEnabled = it
+                        prefs.edit().putBoolean(KEY_EMAIL, it).apply()
+                    }
                 )
                 HorizontalDivider(color = Gray100, modifier = Modifier.padding(horizontal = 16.dp))
                 SettingsSwitchRow(
                     title = t("settings.smsAlerts"),
                     checked = smsEnabled,
-                    onCheckedChange = { smsEnabled = it }
+                    onCheckedChange = { 
+                        smsEnabled = it
+                        prefs.edit().putBoolean(KEY_SMS, it).apply()
+                    }
                 )
             }
             
@@ -144,7 +165,10 @@ fun UserNotificationSettingsScreen(
                 SettingsSwitchRow(
                     title = t("settings.promotionalOffers"),
                     checked = promoEnabled,
-                    onCheckedChange = { promoEnabled = it }
+                    onCheckedChange = { 
+                        promoEnabled = it
+                        prefs.edit().putBoolean(KEY_PROMO, it).apply()
+                    }
                 )
             }
         }

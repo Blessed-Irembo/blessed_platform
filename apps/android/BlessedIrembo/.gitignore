@@ -37,3 +37,8 @@ google-services.json
 
 # Environment
 .env
+
+# Keystore files
+*.jks
+*.keystore
+keystore.properties

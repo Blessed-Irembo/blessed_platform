@@ -169,6 +169,7 @@ fun PharmacyOwnerMainScreen(
                     onEditProfileClick    = { profileSubScreen = ProfileSubScreen.EDIT_PROFILE },
                     onOperatingHoursClick = { profileSubScreen = ProfileSubScreen.OPERATING_HOURS },
                     onLocationClick       = { profileSubScreen = ProfileSubScreen.EDIT_LOCATION },
+                    onSubscriptionClick   = { selectedTab = 3 }, // Jump to Subscription tab — mirrors iOS
                     onNotificationsClick  = { profileSubScreen = ProfileSubScreen.NOTIFICATIONS },
                     onSignOutClick        = onSignOut,
                     modifier = Modifier.padding(bottom = paddingValues.calculateBottomPadding())

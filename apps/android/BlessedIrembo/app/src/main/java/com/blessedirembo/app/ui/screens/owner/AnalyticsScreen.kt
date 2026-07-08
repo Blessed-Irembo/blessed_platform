@@ -18,12 +18,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -123,7 +123,7 @@ fun AnalyticsScreen(
             AnalyticsCard(
                 title = t("analytics.whatsappClicks"),
                 value = "$whatsappClicks",
-                icon = Icons.Filled.Email,
+                icon = Icons.Filled.Chat,
                 color = WhatsAppGreen,
                 modifier = Modifier.weight(1f)
             )
@@ -169,7 +169,7 @@ fun AnalyticsScreen(
         )
         Spacer(modifier = Modifier.height(12.dp))
         EngagementCard(
-            icon = Icons.Filled.Email,
+            icon = Icons.Filled.Chat,
             iconColor = WhatsAppGreen,
             count = whatsappClicks,
             label = t("analytics.totalWhatsapp"),
@@ -296,7 +296,7 @@ private fun EngagementCard(
             }
         }
 
-        Divider()
+        HorizontalDivider()
 
         Text(
             text = description,

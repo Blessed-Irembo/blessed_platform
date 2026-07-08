@@ -1,6 +1,5 @@
 package com.blessedirembo.app.auth
 
-import com.google.firebase.auth.ActionCodeSettings
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.tasks.await
@@ -93,16 +92,11 @@ object FirebaseAuthManager {
 
     /**
      * Send a password reset email to the given address.
-     * ActionCodeSettings sets a continueUrl from the app's own domain, which signals to
-     * spam filters that the email is legitimate, keeping it out of the spam folder.
+     * Uses the simple Firebase default reset link — clean and reliable across all devices.
      */
     suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
         return try {
-            val actionCodeSettings = ActionCodeSettings.newBuilder()
-                .setUrl("https://www.blessedirembo.com/reset-password")
-                .setHandleCodeInApp(false)
-                .build()
-            auth.sendPasswordResetEmail(email, actionCodeSettings).await()
+            auth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

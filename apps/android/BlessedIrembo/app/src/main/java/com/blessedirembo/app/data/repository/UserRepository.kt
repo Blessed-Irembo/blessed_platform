@@ -57,7 +57,7 @@ class UserRepository {
      * This ensures that if an account exists in BOTH collections (a pharmacy owner
      * who also has a user doc), they are correctly routed to the pharmacy dashboard.
      */
-    suspend fun fetchUserRole(uid: String): Result<String?> {
+    suspend fun fetchUserRole(uid: String, email: String? = null, phone: String? = null): Result<String?> {
         return try {
             // 1. Check pharmacies by document ID (uid) first — fastest path
             val pharmacyDocById = pharmaciesCollection.document(uid).get().await()
@@ -75,7 +75,31 @@ class UserRepository {
                 return Result.success(com.blessedirembo.app.data.model.UserRole.PHARMACY_OWNER)
             }
 
-            // 3. Check users collection (regular user)
+            // 3. Fallback: Check pharmacies by email if provided
+            if (!email.isNullOrBlank()) {
+                val pharmacyByEmail = pharmaciesCollection
+                    .whereEqualTo("email", email)
+                    .limit(1)
+                    .get()
+                    .await()
+                if (!pharmacyByEmail.isEmpty) {
+                    return Result.success(com.blessedirembo.app.data.model.UserRole.PHARMACY_OWNER)
+                }
+            }
+
+            // 4. Fallback: Check pharmacies by phone if provided
+            if (!phone.isNullOrBlank()) {
+                val pharmacyByPhone = pharmaciesCollection
+                    .whereEqualTo("phoneNumber", phone)
+                    .limit(1)
+                    .get()
+                    .await()
+                if (!pharmacyByPhone.isEmpty) {
+                    return Result.success(com.blessedirembo.app.data.model.UserRole.PHARMACY_OWNER)
+                }
+            }
+
+            // 5. Check users collection (regular user)
             val userDoc = usersCollection.document(uid).get().await()
             if (userDoc.exists() && userDoc.data?.isNotEmpty() == true) {
                 val role = userDoc.getString("role")

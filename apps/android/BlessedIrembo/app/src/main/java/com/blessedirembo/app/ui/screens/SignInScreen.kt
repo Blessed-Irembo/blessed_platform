@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -100,6 +102,11 @@ fun SignInScreen(
     val authState by authViewModel.authState.collectAsState()
     val resetEmailSent by authViewModel.resetEmailSent.collectAsState()
 
+    // Reset auth state on entrance to prevent stale states (like previous success) from auto-redirecting
+    LaunchedEffect(Unit) {
+        authViewModel.resetAuthState()
+    }
+
     // React to auth state changes
     LaunchedEffect(authState) {
         when (val state = authState) {
@@ -137,15 +144,22 @@ fun SignInScreen(
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
+                    val errorMessage = (authState as? AuthState.Error)?.message
+                    if (errorMessage != null) {
+                        Text(
+                            text = errorMessage,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showForgotPassword = false
                         authViewModel.resetPassword(resetEmail)
                     },
-                    enabled = resetEmail.isNotBlank()
+                    enabled = resetEmail.isNotBlank() && authState !is AuthState.Loading
                 ) {
                     Text(t("auth.sendResetEmail"), color = Teal500)
                 }
@@ -190,11 +204,14 @@ fun SignInScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            contentAlignment = Alignment.TopCenter
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxHeight()
+                    .widthIn(max = 480.dp)
+                    .fillMaxWidth()
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {

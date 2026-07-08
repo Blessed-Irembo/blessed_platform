@@ -66,6 +66,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import android.Manifest
+import android.content.pm.PackageManager
+import com.google.android.gms.location.LocationServices
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.blessedirembo.app.analytics.AnalyticsManager
 import com.blessedirembo.app.data.model.OperatingHours
@@ -111,6 +115,19 @@ fun PharmacyDetailScreen(
         return
     }
 
+    var userLocation by remember { mutableStateOf<android.location.Location?>(null) }
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                    if (loc != null) userLocation = loc
+                }
+            } catch (e: SecurityException) { }
+        }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -144,6 +161,16 @@ fun PharmacyDetailScreen(
         },
         containerColor = Gray100
     ) { paddingValues ->
+        val distanceStr = userLocation?.let { loc ->
+            val results = FloatArray(1)
+            android.location.Location.distanceBetween(
+                loc.latitude, loc.longitude,
+                p.latitude, p.longitude,
+                results
+            )
+            val distKm = results[0] / 1000f
+            String.format(java.util.Locale.US, "%.1f km away", distKm)
+        } ?: "—"
         Column(
             modifier = modifier
                 .fillMaxSize()
@@ -151,8 +178,8 @@ fun PharmacyDetailScreen(
         ) {
             // 1. Map Header
             val mapPharmacy = PharmacyInfo(
-                id = p.id, name = p.name, distance = "—", rating = p.rating.toFloat(),
-                reviewCount = p.reviewCount, address = p.address, isOpen = p.isOpen,
+                id = p.id, name = p.name, distance = distanceStr, rating = p.rating.toFloat(),
+                reviewCount = p.reviewCount, address = p.address, isOpen = p.isCurrentlyOpen,
                 isVerified = p.isVerified, latitude = p.latitude, longitude = p.longitude
             )
             Box(
@@ -190,7 +217,11 @@ fun PharmacyDetailScreen(
                             }
                         }
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(text = "—", style = MaterialTheme.typography.bodyMedium, color = Gray500)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Filled.LocationOn, contentDescription = null, tint = Teal500, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(text = distanceStr, style = MaterialTheme.typography.bodyMedium, color = Gray500)
+                        }
                     }
                 }
 
@@ -431,13 +462,13 @@ fun PharmacyDetailScreen(
 
                 Button(
                     onClick = {
-                        val uri = Uri.parse("google.navigation:q=${p.latitude},${p.longitude}&mode=d")
+                        val uri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${p.latitude},${p.longitude}")
                         val intent = Intent(Intent.ACTION_VIEW, uri)
                         intent.setPackage("com.google.android.apps.maps")
                         if (intent.resolveActivity(context.packageManager) != null) {
                             context.startActivity(intent)
                         } else {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse("https://maps.google.com/?daddr=${p.latitude},${p.longitude}&travelmode=driving"))
+                            val browserIntent = Intent(Intent.ACTION_VIEW, uri)
                             context.startActivity(browserIntent)
                         }
                     },

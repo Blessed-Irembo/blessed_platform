@@ -70,6 +70,11 @@ import com.blessedirembo.app.ui.theme.White
 import com.blessedirembo.app.ui.viewmodel.PharmacyUiState
 import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 import com.blessedirembo.app.util.t
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.LocationServices
+import androidx.compose.ui.platform.LocalContext
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -81,6 +86,20 @@ fun FindPharmaciesScreen(
 ) {
     var searchQuery by remember { mutableStateOf("") }
     val uiState by pharmacyViewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var userLocation by remember { mutableStateOf<android.location.Location?>(null) }
+
+    LaunchedEffect(Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                    if (loc != null) userLocation = loc
+                }
+            } catch (e: SecurityException) { }
+        }
+    }
 
     // QuickDetailsSheet state — mirrors iOS selectedPharmacy + QuickDetailsSheet
     var quickPharmacy by remember { mutableStateOf<PharmacyInfo?>(null) }
@@ -312,14 +331,25 @@ fun FindPharmaciesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(state.pharmacies) { pharmacy ->
+                                val distanceStr = userLocation?.let { loc ->
+                                    val results = FloatArray(1)
+                                    android.location.Location.distanceBetween(
+                                        loc.latitude, loc.longitude,
+                                        pharmacy.latitude, pharmacy.longitude,
+                                        results
+                                    )
+                                    val distKm = results[0] / 1000f
+                                    String.format(java.util.Locale.US, "%.1f km away", distKm)
+                                } ?: "—"
+                                
                                 val pharmacyInfo = PharmacyInfo(
                                     id = pharmacy.id,
                                     name = pharmacy.name,
-                                    distance = "—",
+                                    distance = distanceStr,
                                     rating = pharmacy.rating.toFloat(),
                                     reviewCount = pharmacy.reviewCount,
                                     address = pharmacy.address,
-                                    isOpen = pharmacy.isOpen,
+                                    isOpen = pharmacy.isCurrentlyOpen,
                                     isVerified = pharmacy.isVerified,
                                     latitude = pharmacy.latitude,
                                     longitude = pharmacy.longitude
@@ -347,14 +377,24 @@ fun FindPharmaciesScreen(
             } else emptyList()
 
             val mapPharmacies = pharmacies.map { p ->
+                val distanceStr = userLocation?.let { loc ->
+                    val results = FloatArray(1)
+                    android.location.Location.distanceBetween(
+                        loc.latitude, loc.longitude,
+                        p.latitude, p.longitude,
+                        results
+                    )
+                    val distKm = results[0] / 1000f
+                    String.format(java.util.Locale.US, "%.1f km away", distKm)
+                } ?: "—"
                 PharmacyInfo(
                     id = p.id,
                     name = p.name,
-                    distance = "—",
+                    distance = distanceStr,
                     rating = p.rating.toFloat(),
                     reviewCount = p.reviewCount,
                     address = p.address,
-                    isOpen = p.isOpen,
+                    isOpen = p.isCurrentlyOpen,
                     isVerified = p.isVerified,
                     latitude = p.latitude,
                     longitude = p.longitude
