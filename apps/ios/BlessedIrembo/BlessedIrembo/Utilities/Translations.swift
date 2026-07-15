@@ -49,6 +49,7 @@ enum Translations {
             "role.pharmacyDesc": "Register your pharmacy",
             "role.alreadyAccount": "Already have an account?",
             "role.signIn": "Sign In",
+            "role.guestOption": "Browse as Guest",
             
             // Authentication
             "auth.signInTitle": "Welcome Back",
@@ -165,6 +166,9 @@ enum Translations {
             
             // Profile & Settings
             "profile.title": "Profile",
+            "profile.guestWelcome": "You are browsing as Guest",
+            "profile.guestSubtitle": "Sign in or register an account to manage your profile and access full features.",
+            "profile.signInOrRegister": "Sign In / Register",
             "profile.personalInfo": "Personal Information",
             "profile.edit": "Edit",
             "profile.fullName": "Full Name",
@@ -390,6 +394,7 @@ enum Translations {
             "role.pharmacyDesc": "Iyandikishe nka farumasi",
             "role.alreadyAccount": "Usanzwe ufite konti?",
             "role.signIn": "Injira",
+            "role.guestOption": "Gusura nk'umushyitsi",
             
             // Authentication
             "auth.signInTitle": "Murakaza Neza",
@@ -506,6 +511,9 @@ enum Translations {
             
             // Profile & Settings
             "profile.title": "Umwirondoro",
+            "profile.guestWelcome": "Urayobora nk'umushyitsi",
+            "profile.guestSubtitle": "Injira cyangwa wiyandikishe kugira ngo ubashe gucunga umwirondoro wawe no kubona serivisi zose.",
+            "profile.signInOrRegister": "Injira / Iyandikishe",
             "profile.personalInfo": "Amakuru Agutangaho",
             "profile.edit": "Hindura",
             "profile.fullName": "Amazina Yombi",

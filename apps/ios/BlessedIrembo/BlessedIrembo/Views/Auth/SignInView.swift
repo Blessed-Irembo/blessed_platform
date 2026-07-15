@@ -241,7 +241,6 @@ struct SignInView: View {
                     } else if let pharmacy = data.pharmacy {
                         currentAppState.signIn(pharmacy: pharmacy)
                     }
-                    dismissAction()
                 case .failure(let error):
                     print("Sign in failed: \(error)")
                 }

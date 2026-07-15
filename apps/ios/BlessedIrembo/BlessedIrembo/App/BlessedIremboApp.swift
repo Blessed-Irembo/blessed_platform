@@ -49,8 +49,11 @@ private struct ContentRootView: View {
                 } else if !appState.hasCompletedOnboarding {
                     OnboardingContainerView()
                         .transition(.opacity)
-                } else if !appState.isAuthenticated {
+                } else if !appState.isAuthenticated && !appState.isGuest {
                     RoleSelectionView()
+                        .transition(.opacity)
+                } else if appState.isGuest {
+                    UserMainView()
                         .transition(.opacity)
                 } else if appState.currentUser != nil {
                     UserMainView()
@@ -69,5 +72,6 @@ private struct ContentRootView: View {
             .animation(.easeInOut(duration: 0.35), value: appState.isAuthenticated)
             .animation(.easeInOut(duration: 0.35), value: appState.hasCompletedOnboarding)
         }
+        .id(appState.isAuthenticated ? (appState.currentUser?.id ?? appState.currentPharmacy?.id ?? "auth") : "guest")
     }
 }

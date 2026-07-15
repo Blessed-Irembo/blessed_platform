@@ -55,6 +55,22 @@ struct RoleSelectionView: View {
                 
                 Spacer()
                 
+                // Browse as Guest button
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.35)) {
+                        appState.isGuest = true
+                    }
+                }) {
+                    Text(appState.t("role.guestOption"))
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primaryTeal)
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 28)
+                        .background(Color.primaryTeal.opacity(0.08))
+                        .cornerRadius(24)
+                }
+                .padding(.bottom, 12)
+                
                 // Sign in link
                 Button(action: { navigateToSignIn = true }) {
                     HStack(spacing: 4) {

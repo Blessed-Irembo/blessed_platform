@@ -11,18 +11,124 @@ struct ProfileView: View {
     @State private var showDeleteAccountSheet = false
     @Environment(\.dismiss) var dismiss
     
-    private var demoUser: User {
-        User(fullName: "John Doe", email: "user@demo.com", phoneNumber: "+250788123456")
-    }
+    @State private var showAuthOptions = false
+    @State private var navigateToSignIn = false
+    @State private var navigateToUserSignUp = false
+    @State private var navigateToPharmacySignUp = false
     
     var body: some View {
+        Group {
+            if let user = appState.currentUser {
+                authenticatedProfileView(user: user)
+            } else {
+                guestProfileView
+            }
+        }
+        .background(Color.gray.opacity(0.05).ignoresSafeArea())
+        .navigationTitle(appState.t("profile.title"))
+        .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog(
+            appState.t("profile.signInOrRegister"),
+            isPresented: $showAuthOptions,
+            titleVisibility: .visible
+        ) {
+            Button(appState.t("role.signIn")) {
+                navigateToSignIn = true
+            }
+            Button(appState.t("auth.registerUser")) {
+                navigateToUserSignUp = true
+            }
+            Button(appState.t("auth.registerPharmacy")) {
+                navigateToPharmacySignUp = true
+            }
+            Button(appState.t("common.cancel"), role: .cancel) {}
+        }
+        .navigationDestination(isPresented: $navigateToSignIn) {
+            SignInView()
+                .environmentObject(appState)
+        }
+        .navigationDestination(isPresented: $navigateToUserSignUp) {
+            SignUpUserView()
+                .environmentObject(appState)
+        }
+        .navigationDestination(isPresented: $navigateToPharmacySignUp) {
+            SignUpPharmacyView()
+                .environmentObject(appState)
+        }
+    }
+    
+    // MARK: - Guest Profile View
+    
+    private var guestProfileView: some View {
+        VStack(spacing: 32) {
+            Spacer()
+            
+            // Welcome Icon/Illustration
+            ZStack {
+                Circle()
+                    .fill(Color.primaryTeal.opacity(0.1))
+                    .frame(width: 120, height: 120)
+                
+                Image(systemName: "person.crop.circle.badge.plus")
+                    .font(.system(size: 60))
+                    .foregroundColor(.primaryTeal)
+            }
+            
+            // Text Content
+            VStack(spacing: 16) {
+                Text(appState.t("profile.guestWelcome"))
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundColor(.textPrimary)
+                    .multilineTextAlignment(.center)
+                
+                Text(appState.t("profile.guestSubtitle"))
+                    .font(.body)
+                    .foregroundColor(.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 16)
+            }
+            
+            Spacer()
+            
+            // Sign In / Register Button
+            Button(action: {
+                showAuthOptions = true
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: "arrow.right.square.fill")
+                        .font(.system(size: 20))
+                    
+                    Text(appState.t("profile.signInOrRegister"))
+                        .font(.system(size: 17, weight: .semibold))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    LinearGradient(
+                        colors: [Color.primaryTeal, Color.primaryTeal.opacity(0.85)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+                .cornerRadius(12)
+                .shadow(color: Color.primaryTeal.opacity(0.3), radius: 8, x: 0, y: 4)
+            }
+            .padding(.bottom, 40)
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    // MARK: - Authenticated Profile View
+    
+    private func authenticatedProfileView(user: User) -> some View {
         ScrollView {
             VStack(spacing: 24) {
                 // Profile Header
-                profileHeader
+                profileHeader(user: user)
                 
                 // User Info Section
-                userInfoSection
+                userInfoSection(user: user)
                 
                 // Settings Section
                 settingsSection
@@ -41,9 +147,6 @@ struct ProfileView: View {
             .padding(.horizontal, 20)
             .padding(.top, 20)
         }
-        .background(Color.gray.opacity(0.05).ignoresSafeArea())
-        .navigationTitle(appState.t("profile.title"))
-        .navigationBarTitleDisplayMode(.inline)
         .alert(appState.t("profile.logout"), isPresented: $showLogoutConfirmation) {
             Button(appState.t("common.cancel"), role: .cancel) { }
             Button(appState.t("profile.logout"), role: .destructive) {
@@ -56,7 +159,7 @@ struct ProfileView: View {
     
     // MARK: - Profile Header
     
-    private var profileHeader: some View {
+    private func profileHeader(user: User) -> some View {
         VStack(spacing: 16) {
             // Avatar
             ZStack {
@@ -77,11 +180,11 @@ struct ProfileView: View {
             
             // Name and Email
             VStack(spacing: 4) {
-                Text((appState.currentUser ?? demoUser).fullName)
+                Text(user.fullName)
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.textPrimary)
                 
-                Text((appState.currentUser ?? demoUser).email)
+                Text(user.email)
                     .font(.subheadline)
                     .foregroundColor(.textSecondary)
             }
@@ -95,7 +198,7 @@ struct ProfileView: View {
     
     // MARK: - User Info Section
     
-    private var userInfoSection: some View {
+    private func userInfoSection(user: User) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text(appState.t("profile.personalInfo"))
@@ -111,9 +214,9 @@ struct ProfileView: View {
             .padding(.horizontal, 4)
             
             VStack(spacing: 12) {
-                ProfileInfoRow(icon: "person.fill", label: appState.t("profile.fullName"), value: (appState.currentUser ?? demoUser).fullName)
-                ProfileInfoRow(icon: "envelope.fill", label: appState.t("profile.email"), value: (appState.currentUser ?? demoUser).email)
-                ProfileInfoRow(icon: "phone.fill", label: appState.t("profile.phone"), value: (appState.currentUser ?? demoUser).phoneNumber)
+                ProfileInfoRow(icon: "person.fill", label: appState.t("profile.fullName"), value: user.fullName)
+                ProfileInfoRow(icon: "envelope.fill", label: appState.t("profile.email"), value: user.email)
+                ProfileInfoRow(icon: "phone.fill", label: appState.t("profile.phone"), value: user.phoneNumber)
             }
             .padding(16)
             .background(Color.white)

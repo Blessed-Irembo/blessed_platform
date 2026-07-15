@@ -21,6 +21,7 @@ class AppState: ObservableObject {
     @Published var navigationPath = NavigationPath()
     @Published var selectedLanguage: Language = .english
     @Published var isRegistering = false
+    @Published var isGuest = false
 
     /// Computed subscription status based on the live currentPharmacy.
     /// Used by PharmacyMainView to gate tab content without needing a ViewModel.
@@ -118,6 +119,7 @@ class AppState: ObservableObject {
                                     phoneNumber: data["phoneNumber"] as? String ?? ""
                                 )
                                 self.isAuthenticated = true
+                                self.isGuest = false
                                 self.navigationPath = NavigationPath()
                                 self.isLoading = false
 
@@ -127,6 +129,7 @@ class AppState: ObservableObject {
                                 self.currentUser = nil
                                 self.startPharmacyListener(uid: firebaseUser.uid, email: firebaseUser.email ?? "")
                                 self.isAuthenticated = true
+                                self.isGuest = false
                                 self.navigationPath = NavigationPath()
                                 self.isLoading = false
 
@@ -233,6 +236,7 @@ class AppState: ObservableObject {
         currentUser = nil
         currentPharmacy = nil
         isAuthenticated = false
+        isGuest = false
     }
 
     // MARK: - Onboarding
@@ -253,6 +257,7 @@ class AppState: ObservableObject {
         withAnimation(.easeInOut(duration: 0.35)) {
             currentUser = user
             isAuthenticated = true
+            isGuest = false
             navigationPath = NavigationPath()
         }
     }
@@ -263,6 +268,7 @@ class AppState: ObservableObject {
         withAnimation(.easeInOut(duration: 0.35)) {
             currentPharmacy = pharmacy
             isAuthenticated = true
+            isGuest = false
             navigationPath = NavigationPath()
         }
         // Start the real-time Firestore listener to keep metrics in sync
