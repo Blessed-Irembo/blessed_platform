@@ -25,6 +25,7 @@ struct BlessedIremboApp: App {
             // including NavigationLink destinations, receive it automatically.
             ContentRootView()
                 .environmentObject(appState)
+                .preferredColorScheme(.light)
         }
     }
 }
