@@ -56,6 +56,16 @@ object Translations {
             "role.pharmacyDesc" to "Register your pharmacy",
             "role.alreadyAccount" to "Already have an account?",
             "role.signIn" to "Sign In",
+            "role.browseAsGuest" to "Browse as Guest",
+
+            // Guest Mode
+            "guest.signInTitle" to "Sign In to Continue",
+            "guest.signInSubtitle" to "Create a free account or sign in to view pharmacy details and access your profile.",
+            "guest.signInButton" to "Sign In",
+            "guest.createAccount" to "Create Account",
+            "guest.continueBrowsing" to "Continue Browsing",
+            "guest.modeBanner" to "Browsing as Guest",
+            "guest.detailGate" to "Sign in to view full pharmacy details.",
 
             // Authentication
             "auth.signInTitle" to "Welcome Back",
@@ -466,6 +476,16 @@ object Translations {
             "role.pharmacyDesc" to "Iyandikishe nka farumasi",
             "role.alreadyAccount" to "Usanzwe ufite konti?",
             "role.signIn" to "Injira",
+            "role.browseAsGuest" to "Injira nk'Inshuti",
+
+            // Guest Mode
+            "guest.signInTitle" to "Injira kugira ngo Ukomeze",
+            "guest.signInSubtitle" to "Fungura konti bure cyangwa injira kugira ngo ubone amakuru yuzuye ya farumasi.",
+            "guest.signInButton" to "Injira",
+            "guest.createAccount" to "Fungura Konti",
+            "guest.continueBrowsing" to "Komeza Gukora Ubushakashatsi",
+            "guest.modeBanner" to "Uri gukora ubushakashatsi nk'inshuti",
+            "guest.detailGate" to "Injira kugira ngo ubone amakuru yuzuye ya farumasi.",
 
             // Authentication
             "auth.signInTitle" to "Murakaza Neza",

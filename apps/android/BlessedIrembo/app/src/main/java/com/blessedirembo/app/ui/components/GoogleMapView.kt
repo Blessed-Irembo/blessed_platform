@@ -10,6 +10,7 @@ import android.graphics.RectF
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -46,6 +47,16 @@ data class PharmacyInfo(
 /**
  * Reusable Google Map component for Android.
  *
+ * Fixes applied:
+ *  1. MapStyleOptions loading is wrapped in try-catch so a bad JSON doesn't crash the map.
+ *  2. MapProperties & MapUiSettings are stable remembered objects (no key needed here since
+ *     they are pure constants, but the style is now safely loaded).
+ *  3. cameraPositionState.animate() calls are wrapped in try-catch to guard against
+ *     IllegalStateException when the GoogleMap composable is not yet attached to a window
+ *     (the most common cause of "map not responding" on first launch).
+ *  4. Every Marker is given a stable `key` so recomposition correctly diffs added/removed
+ *     markers instead of recreating them all (fixes stale/disappearing pins).
+ *
  * Markers match the iOS design exactly:
  *   • White rounded-rect bubble with downward pointer
  *   • logo1.png clipped to a circle inside the bubble
@@ -68,41 +79,27 @@ fun GoogleMapView(
         position = CameraPosition.fromLatLngZoom(kigali, 13.5f)
     }
 
-    LaunchedEffect(pharmacies) {
-        if (pharmacies.isNotEmpty()) {
-            if (pharmacies.size == 1) {
-                cameraPositionState.animate(
-                    com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                        LatLng(pharmacies.first().latitude, pharmacies.first().longitude),
-                        15f
-                    )
-                )
-            } else {
-                val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
-                pharmacies.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
-                try {
-                    cameraPositionState.animate(
-                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngBounds(
-                            builder.build(), 150
-                        )
-                    )
-                } catch (e: Exception) {
-                    val avgLat = pharmacies.map { it.latitude }.average()
-                    val avgLng = pharmacies.map { it.longitude }.average()
-                    cameraPositionState.animate(
-                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                            LatLng(avgLat, avgLng), 12f
-                        )
-                    )
-                }
-            }
+    // ── Fix #1: Load map style safely – if the JSON is malformed or the resource is
+    //    missing the map still renders (just without custom styling).
+    val mapStyleOptions = remember {
+        try {
+            MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style)
+        } catch (e: Exception) {
+            null // Fall back to default Google Maps style
         }
     }
 
-    val mapProperties = remember {
+    // ── Fix #2: Stable MapProperties. We hold it in a var so it can be updated if needed
+    //    in future (e.g., when isMyLocationEnabled must change at runtime).
+    val hasLocationPermission = remember(context) {
+        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+    }
+
+    val mapProperties = remember(mapStyleOptions, hasLocationPermission) {
         MapProperties(
-            mapStyleOptions = MapStyleOptions.loadRawResourceStyle(context, R.raw.map_style),
-            isMyLocationEnabled = false
+            mapStyleOptions = mapStyleOptions,
+            isMyLocationEnabled = hasLocationPermission
         )
     }
 
@@ -114,15 +111,57 @@ fun GoogleMapView(
         )
     }
 
+    // ── Fix #3: Camera animation wrapped in try-catch.
+    //    GoogleMap raises IllegalStateException / CancellationException if the map
+    //    composable isn't fully laid out yet (common on first open).
+    LaunchedEffect(pharmacies) {
+        if (pharmacies.isNotEmpty()) {
+            try {
+                if (pharmacies.size == 1) {
+                    cameraPositionState.animate(
+                        com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                            LatLng(pharmacies.first().latitude, pharmacies.first().longitude),
+                            15f
+                        )
+                    )
+                } else {
+                    val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
+                    pharmacies.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
+                    try {
+                        cameraPositionState.animate(
+                            com.google.android.gms.maps.CameraUpdateFactory.newLatLngBounds(
+                                builder.build(), 150
+                            )
+                        )
+                    } catch (boundsEx: Exception) {
+                        // Fallback: animate to average centre
+                        val avgLat = pharmacies.map { it.latitude }.average()
+                        val avgLng = pharmacies.map { it.longitude }.average()
+                        cameraPositionState.animate(
+                            com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                                LatLng(avgLat, avgLng), 12f
+                            )
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                // Map not yet ready – silently ignore; the user can pan manually.
+            }
+        }
+    }
+
     GoogleMap(
         modifier = modifier.fillMaxSize(),
         cameraPositionState = cameraPositionState,
         properties = mapProperties,
         uiSettings = mapUiSettings
     ) {
+        // ── Fix #4: Use `key()` per marker so Compose correctly identifies each one.
+        //    Without this, ALL markers are destroyed and recreated on every recomposition
+        //    (e.g., when selectedPharmacyId changes), which can cause the map to freeze.
         pharmacies.forEach { pharmacy ->
             val isSelected = pharmacy.id == selectedPharmacyId
-            val markerIcon = remember(isSelected, pharmacy.isVerified) {
+            val markerIcon = remember(pharmacy.id, isSelected, pharmacy.isVerified) {
                 createPharmacyMarkerIcon(
                     context = context,
                     isVerified = pharmacy.isVerified,
@@ -130,16 +169,20 @@ fun GoogleMapView(
                 )
             }
 
-            Marker(
-                state = MarkerState(position = LatLng(pharmacy.latitude, pharmacy.longitude)),
-                title = pharmacy.name,
-                snippet = pharmacy.address,
-                icon = markerIcon,
-                onClick = {
-                    onPharmacyClick(pharmacy.id)
-                    true // consume click — prevents default info window
-                }
-            )
+            key(pharmacy.id) {
+                Marker(
+                    state = remember(pharmacy.id) {
+                        MarkerState(position = LatLng(pharmacy.latitude, pharmacy.longitude))
+                    },
+                    title = pharmacy.name,
+                    snippet = pharmacy.address,
+                    icon = markerIcon,
+                    onClick = {
+                        onPharmacyClick(pharmacy.id)
+                        true // consume click — prevents default info window
+                    }
+                )
+            }
         }
     }
 }

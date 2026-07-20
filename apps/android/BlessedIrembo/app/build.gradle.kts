@@ -33,8 +33,8 @@ android {
         applicationId = "com.blessedirembo.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -70,6 +70,18 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+    }
+
+    // ── Custom output file names ────────────────────────────────────────────
+    // APK: blessedirembo-v<versionName>-<buildType>.apk
+    applicationVariants.all {
+        val variant = this
+        variant.outputs
+            .map { it as com.android.build.gradle.internal.api.BaseVariantOutputImpl }
+            .forEach { output ->
+                output.outputFileName =
+                    "blessedirembo-v${variant.versionName}-${variant.buildType.name}.apk"
+            }
     }
 }
 

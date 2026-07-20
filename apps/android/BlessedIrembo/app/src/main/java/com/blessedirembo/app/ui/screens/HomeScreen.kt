@@ -65,7 +65,9 @@ import com.blessedirembo.app.util.t
 @Composable
 fun HomeScreen(
     onOpenMap: () -> Unit,
-    onNavigateToProfile: () -> Unit
+    onNavigateToProfile: () -> Unit,
+    isGuest: Boolean = false,
+    onSignInRequired: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
@@ -97,7 +99,7 @@ fun HomeScreen(
                     selected = selectedTab == 1,
                     onClick = {
                         selectedTab = 1
-                        onNavigateToProfile()
+                        if (isGuest) onSignInRequired() else onNavigateToProfile()
                     },
                     icon = {
                         Icon(
@@ -134,6 +136,25 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            // ── Guest mode banner ────────────────────────────────────────────
+            if (isGuest) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 12.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Teal500.copy(alpha = 0.08f))
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = t("guest.modeBanner"),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Teal500,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
+            }
             // ── Circular logo container ──────────────────────────────────────
             Box(
                 modifier = Modifier

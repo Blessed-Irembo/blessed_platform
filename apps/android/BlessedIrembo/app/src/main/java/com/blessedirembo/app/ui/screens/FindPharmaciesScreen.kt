@@ -72,15 +72,40 @@ import com.blessedirembo.app.ui.viewmodel.PharmacyViewModel
 import com.blessedirembo.app.util.t
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import androidx.compose.ui.platform.LocalContext
+
+private fun formatDistance(
+    userLocation: android.location.Location?,
+    pharmacyLat: Double,
+    pharmacyLng: Double
+): String {
+    val refLoc = userLocation ?: android.location.Location("default").apply {
+        latitude = -1.9536
+        longitude = 30.0606
+    }
+    val results = FloatArray(1)
+    android.location.Location.distanceBetween(
+        refLoc.latitude, refLoc.longitude,
+        pharmacyLat, pharmacyLng,
+        results
+    )
+    val distKm = results[0] / 1000f
+    return String.format(java.util.Locale.US, "%.1f km away", distKm)
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindPharmaciesScreen(
     onBackClick: () -> Unit,
     onPharmacyClick: (String) -> Unit,
+    isGuest: Boolean = false,
+    onSignInRequired: () -> Unit = {},
     modifier: Modifier = Modifier,
     pharmacyViewModel: PharmacyViewModel = viewModel()
 ) {
@@ -89,13 +114,52 @@ fun FindPharmaciesScreen(
     val context = LocalContext.current
     var userLocation by remember { mutableStateOf<android.location.Location?>(null) }
 
-    LaunchedEffect(Unit) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val granted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                      permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        if (granted) {
             val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
             try {
                 fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
                     if (loc != null) userLocation = loc
+                }
+            } catch (e: SecurityException) { }
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val hasFineLoc = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarseLoc = ContextCompat.checkSelfPermission(
+            context, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFineLoc && !hasCoarseLoc) {
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        } else {
+            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+            try {
+                val priority = if (hasFineLoc) Priority.PRIORITY_HIGH_ACCURACY
+                               else Priority.PRIORITY_BALANCED_POWER_ACCURACY
+                val request = CurrentLocationRequest.Builder()
+                    .setPriority(priority)
+                    .setMaxUpdateAgeMillis(30_000L)
+                    .setDurationMillis(5_000L)
+                    .build()
+                fusedLocationClient.getCurrentLocation(request, null)
+                    .addOnSuccessListener { loc ->
+                        if (loc != null) userLocation = loc
+                    }
+                fusedLocationClient.lastLocation.addOnSuccessListener { loc ->
+                    if (loc != null && userLocation == null) userLocation = loc
                 }
             } catch (e: SecurityException) { }
         }
@@ -216,7 +280,7 @@ fun FindPharmaciesScreen(
                     onClick = {
                         quickPharmacy = null
                         selectedPharmacyId = null
-                        onPharmacyClick(p.id)
+                        if (isGuest) onSignInRequired() else onPharmacyClick(p.id)
                     },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -331,16 +395,7 @@ fun FindPharmaciesScreen(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             items(state.pharmacies) { pharmacy ->
-                                val distanceStr = userLocation?.let { loc ->
-                                    val results = FloatArray(1)
-                                    android.location.Location.distanceBetween(
-                                        loc.latitude, loc.longitude,
-                                        pharmacy.latitude, pharmacy.longitude,
-                                        results
-                                    )
-                                    val distKm = results[0] / 1000f
-                                    String.format(java.util.Locale.US, "%.1f km away", distKm)
-                                } ?: "—"
+                                val distanceStr = formatDistance(userLocation, pharmacy.latitude, pharmacy.longitude)
                                 
                                 val pharmacyInfo = PharmacyInfo(
                                     id = pharmacy.id,
@@ -357,7 +412,13 @@ fun FindPharmaciesScreen(
                                 PharmacyListItem(
                                     pharmacy = pharmacyInfo,
                                     isSelected = selectedPharmacyId == pharmacy.id,
-                                    onClick = { onPharmacyClick(pharmacy.id) }
+                                    onClick = {
+                                        if (isGuest) {
+                                            onSignInRequired()
+                                        } else {
+                                            onPharmacyClick(pharmacy.id)
+                                        }
+                                    }
                                 )
                             }
                         }
@@ -377,16 +438,7 @@ fun FindPharmaciesScreen(
             } else emptyList()
 
             val mapPharmacies = pharmacies.map { p ->
-                val distanceStr = userLocation?.let { loc ->
-                    val results = FloatArray(1)
-                    android.location.Location.distanceBetween(
-                        loc.latitude, loc.longitude,
-                        p.latitude, p.longitude,
-                        results
-                    )
-                    val distKm = results[0] / 1000f
-                    String.format(java.util.Locale.US, "%.1f km away", distKm)
-                } ?: "—"
+                val distanceStr = formatDistance(userLocation, p.latitude, p.longitude)
                 PharmacyInfo(
                     id = p.id,
                     name = p.name,

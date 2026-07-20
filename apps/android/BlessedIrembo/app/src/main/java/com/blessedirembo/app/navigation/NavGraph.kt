@@ -19,6 +19,7 @@ import com.blessedirembo.app.auth.AuthViewModel
 import com.blessedirembo.app.auth.FirebaseAuthManager
 import com.blessedirembo.app.data.model.UserRole
 import com.blessedirembo.app.ui.screens.FindPharmaciesScreen
+import com.blessedirembo.app.ui.screens.GuestSignInPromptScreen
 import com.blessedirembo.app.ui.screens.HomeScreen
 
 import com.blessedirembo.app.ui.screens.PharmacyDetailScreen
@@ -53,6 +54,11 @@ sealed class Screen(val route: String) {
     }
     // Pharmacy Owner Routes
     data object PharmacyOwnerMain : Screen("pharmacy_owner_main")
+
+    // ── Guest routes ──────────────────────────────────────────────────────────
+    data object GuestHome : Screen("guest_home")
+    data object GuestFindPharmacies : Screen("guest_find_pharmacies")
+    data object GuestSignInPrompt : Screen("guest_sign_in_prompt")
 }
 
 /**
@@ -127,6 +133,11 @@ fun NavGraph(
                 },
                 onSignIn = {
                     navController.navigate(Screen.SignIn.route)
+                },
+                onBrowseAsGuest = {
+                    navController.navigate(Screen.GuestHome.route) {
+                        popUpTo(Screen.Welcome.route) { inclusive = true }
+                    }
                 }
             )
         }
@@ -235,13 +246,50 @@ fun NavGraph(
             )
         }
 
-        // ── Find Pharmacies Screen ─────────────────────────────────────────────
+        // ── Find Pharmacies Screen (authenticated user) ─────────────────────
         composable(route = Screen.FindPharmacies.route) {
             FindPharmaciesScreen(
                 onBackClick = { navController.popBackStack() },
                 onPharmacyClick = { pharmacyId ->
                     navController.navigate(Screen.PharmacyDetail.createRoute(pharmacyId))
                 }
+            )
+        }
+
+        // ── Guest Home Screen ─────────────────────────────────────────────────
+        composable(route = Screen.GuestHome.route) {
+            HomeScreen(
+                isGuest = true,
+                onOpenMap = { navController.navigate(Screen.GuestFindPharmacies.route) },
+                onNavigateToProfile = { /* not used when isGuest=true */ },
+                onSignInRequired = { navController.navigate(Screen.GuestSignInPrompt.route) }
+            )
+        }
+
+        // ── Guest Find Pharmacies Screen ──────────────────────────────────────
+        composable(route = Screen.GuestFindPharmacies.route) {
+            FindPharmaciesScreen(
+                isGuest = true,
+                onBackClick = { navController.popBackStack() },
+                onPharmacyClick = { /* gated — never called for guests */ },
+                onSignInRequired = { navController.navigate(Screen.GuestSignInPrompt.route) }
+            )
+        }
+
+        // ── Guest Sign-In Prompt Screen ───────────────────────────────────────
+        composable(route = Screen.GuestSignInPrompt.route) {
+            GuestSignInPromptScreen(
+                onSignInClick = {
+                    navController.navigate(Screen.SignIn.route) {
+                        popUpTo(Screen.GuestHome.route) { inclusive = true }
+                    }
+                },
+                onCreateAccountClick = {
+                    navController.navigate(Screen.UserSignUp.route) {
+                        popUpTo(Screen.GuestHome.route) { inclusive = true }
+                    }
+                },
+                onContinueBrowsing = { navController.popBackStack() }
             )
         }
 

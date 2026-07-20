@@ -63,10 +63,9 @@ fun RoleSelectionCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon container with teal background
+            // Icon container with teal background — 60.dp matching iOS RoleCard
             Box(
-                modifier = Modifier
-                    .size(48.dp),
+                modifier = Modifier.size(60.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Card(
@@ -76,15 +75,14 @@ fun RoleSelectionCard(
                     )
                 ) {
                     Box(
-                        modifier = Modifier
-                            .size(48.dp),
+                        modifier = Modifier.size(60.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = icon,
                             contentDescription = null,
                             tint = Teal500,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(32.dp)
                         )
                     }
                 }
