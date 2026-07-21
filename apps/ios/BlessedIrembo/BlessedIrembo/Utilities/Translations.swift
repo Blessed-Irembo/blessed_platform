@@ -51,6 +51,15 @@ enum Translations {
             "role.signIn": "Sign In",
             "role.guestOption": "Browse as Guest",
             
+            // Guest Mode
+            "guest.signInTitle": "Sign In to Continue",
+            "guest.signInSubtitle": "Create a free account or sign in to view pharmacy details and access your profile.",
+            "guest.signInButton": "Sign In",
+            "guest.createAccount": "Create Account",
+            "guest.continueBrowsing": "Continue Browsing",
+            "guest.modeBanner": "Browsing as Guest",
+            "guest.detailGate": "Sign in to view full pharmacy details.",
+            
             // Authentication
             "auth.signInTitle": "Welcome Back",
             "auth.signInSubtitle": "Sign in to your account to continue",
@@ -395,6 +404,15 @@ enum Translations {
             "role.alreadyAccount": "Usanzwe ufite konti?",
             "role.signIn": "Injira",
             "role.guestOption": "Gusura nk'umushyitsi",
+            
+            // Guest Mode
+            "guest.signInTitle": "Injira kugira ngo Ukomeze",
+            "guest.signInSubtitle": "Fungura konti bure cyangwa injira kugira ngo ubone amakuru yuzuye ya farumasi.",
+            "guest.signInButton": "Injira",
+            "guest.createAccount": "Fungura Konti",
+            "guest.continueBrowsing": "Komeza Gukora Ubushakashatsi",
+            "guest.modeBanner": "Uri gukora ubushakashatsi nk'inshuti",
+            "guest.detailGate": "Injira kugira ngo ubone amakuru yuzuye ya farumasi.",
             
             // Authentication
             "auth.signInTitle": "Murakaza Neza",
