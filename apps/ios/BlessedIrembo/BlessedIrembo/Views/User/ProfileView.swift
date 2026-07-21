@@ -257,7 +257,7 @@ struct ProfileView: View {
                 Divider().padding(.leading, 56)
                 
                 NavigationLink(destination: UserAppearanceSettingsView()) {
-                    SettingsRow(icon: "paintbrush.fill", title: appState.t("profile.appearance"), hasChevron: true)
+                    SettingsRow(icon: "character.bubble.fill", title: appState.t("profile.appLanguage"), hasChevron: true)
                 }
                 .buttonStyle(.plain)
             }

@@ -50,6 +50,8 @@ enum Translations {
             "role.alreadyAccount": "Already have an account?",
             "role.signIn": "Sign In",
             "role.guestOption": "Browse as Guest",
+            "role.registerUser": "Register as User",
+            "role.registerPharmacy": "Register as Pharmacy",
             
             // Guest Mode
             "guest.signInTitle": "Sign In to Continue",
@@ -188,6 +190,7 @@ enum Translations {
             "profile.privacy": "Privacy & Security",
             "profile.location": "Location Services",
             "profile.appearance": "Appearance",
+            "profile.appLanguage": "App Language",
             "profile.about": "About",
             "profile.help": "Help & Support",
             "profile.terms": "Terms & Conditions",
@@ -404,6 +407,8 @@ enum Translations {
             "role.alreadyAccount": "Usanzwe ufite konti?",
             "role.signIn": "Injira",
             "role.guestOption": "Gusura nk'umushyitsi",
+            "role.registerUser": "Wiyandikishe nk'Umukoresha",
+            "role.registerPharmacy": "Wiyandikishe nka Farumasi",
             
             // Guest Mode
             "guest.signInTitle": "Injira kugira ngo Ukomeze",
@@ -542,6 +547,7 @@ enum Translations {
             "profile.privacy": "Ibanga & Umutekano",
             "profile.location": "Serivisi z'Ahantu Uherereye",
             "profile.appearance": "Uko App Ikeye",
+            "profile.appLanguage": "Ururimi rwa Porogaramu",
             "profile.about": "Ibitwerekeyeho",
             "profile.help": "Ubufasha",
             "profile.terms": "Amategeko n'Amabwiriza",
