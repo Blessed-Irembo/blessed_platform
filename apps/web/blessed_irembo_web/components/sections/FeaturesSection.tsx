@@ -11,11 +11,17 @@ import { useLanguage } from '@/lib/LanguageContext';
  */
 export default function FeaturesSection() {
   const { t } = useLanguage();
-  const [pharmaciesCount, setPharmaciesCount] = useState<number | string>('...');
-  const [usersCount, setUsersCount] = useState<number | string>('...');
-  const [citiesCount, setCitiesCount] = useState<number | string>('...');
+
+  // Set to true in the future when you want to switch from marketing stats to real database stats
+  const USE_REAL_STATS = false;
+
+  const [pharmaciesCount, setPharmaciesCount] = useState<number | string>('350+');
+  const [usersCount, setUsersCount] = useState<number | string>('50,000+');
+  const [citiesCount, setCitiesCount] = useState<number | string>('30');
 
   useEffect(() => {
+    if (!USE_REAL_STATS) return;
+
     async function fetchStats() {
       try {
         const res = await fetch('/api/public/stats');
@@ -33,7 +39,7 @@ export default function FeaturesSection() {
       }
     }
     fetchStats();
-  }, []);
+  }, [USE_REAL_STATS]);
 
   const stats = [
     { label: t.features.stats.pharmacies, value: `${pharmaciesCount}` },
