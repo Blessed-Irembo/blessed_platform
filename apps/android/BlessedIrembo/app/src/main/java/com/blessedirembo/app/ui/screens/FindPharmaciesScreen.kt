@@ -99,6 +99,28 @@ private fun formatDistance(
     return String.format(java.util.Locale.US, "%.1f km away", distKm)
 }
 
+/**
+ * Returns the distance in metres from userLocation to (pharmacyLat, pharmacyLng).
+ * Falls back to Kigali city centre when the user location is not yet known.
+ */
+private fun distanceInMeters(
+    userLocation: android.location.Location?,
+    pharmacyLat: Double,
+    pharmacyLng: Double
+): Float {
+    val refLoc = userLocation ?: android.location.Location("default").apply {
+        latitude = -1.9536
+        longitude = 30.0606
+    }
+    val results = FloatArray(1)
+    android.location.Location.distanceBetween(
+        refLoc.latitude, refLoc.longitude,
+        pharmacyLat, pharmacyLng,
+        results
+    )
+    return results[0]
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindPharmaciesScreen(
@@ -361,6 +383,13 @@ fun FindPharmaciesScreen(
                     }
 
                     is PharmacyUiState.Success -> {
+                        // Sort pharmacies by distance from the user (closest first)
+                        val sortedPharmacies = remember(state.pharmacies, userLocation) {
+                            state.pharmacies.sortedBy { pharmacy ->
+                                distanceInMeters(userLocation, pharmacy.latitude, pharmacy.longitude)
+                            }
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -369,7 +398,7 @@ fun FindPharmaciesScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "${state.pharmacies.size} ${t("map.pharmacies")} ${t("map.nearMe")}",
+                                text = "${sortedPharmacies.size} ${t("map.pharmacies")} ${t("map.nearMe")}",
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Gray900
@@ -389,12 +418,12 @@ fun FindPharmaciesScreen(
                             }
                         }
 
-                        // Pharmacy List — uses updated PharmacyListItem card layout
+                        // Pharmacy List — sorted by distance, closest first
                         LazyColumn(
                             contentPadding = PaddingValues(bottom = 24.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            items(state.pharmacies) { pharmacy ->
+                            items(sortedPharmacies) { pharmacy ->
                                 val distanceStr = formatDistance(userLocation, pharmacy.latitude, pharmacy.longitude)
                                 
                                 val pharmacyInfo = PharmacyInfo(
@@ -437,7 +466,14 @@ fun FindPharmaciesScreen(
                 (uiState as PharmacyUiState.Success).pharmacies
             } else emptyList()
 
-            val mapPharmacies = pharmacies.map { p ->
+            // Sort map markers by distance too, so selected marker z-order is consistent
+            val sortedMapPharmacies = remember(pharmacies, userLocation) {
+                pharmacies.sortedBy { p ->
+                    distanceInMeters(userLocation, p.latitude, p.longitude)
+                }
+            }
+
+            val mapPharmacies = sortedMapPharmacies.map { p ->
                 val distanceStr = formatDistance(userLocation, p.latitude, p.longitude)
                 PharmacyInfo(
                     id = p.id,
@@ -456,6 +492,7 @@ fun FindPharmaciesScreen(
             com.blessedirembo.app.ui.components.GoogleMapView(
                 pharmacies = mapPharmacies,
                 selectedPharmacyId = selectedPharmacyId,
+                userLocation = userLocation,
                 onPharmacyClick = { id ->
                     // Tap on marker → show QuickDetailsSheet (mirrors iOS onPharmacyTap)
                     val pharmacy = mapPharmacies.find { it.id == id }

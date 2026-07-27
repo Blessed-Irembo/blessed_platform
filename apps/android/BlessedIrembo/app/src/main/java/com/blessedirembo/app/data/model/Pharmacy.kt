@@ -78,6 +78,12 @@ data class Pharmacy(
     /**
      * Determine if the pharmacy is currently open based on operating hours.
      * Mirrors iOS Pharmacy.isCurrentlyOpen computed property.
+     *
+     * Fixes applied:
+     *  - Explicitly uses Africa/Kigali timezone (UTC+2) so the check is correct
+     *    regardless of the device's own locale/timezone setting.
+     *  - Day matching is case-insensitive and supports both full names ("Monday")
+     *    and 3-letter abbreviations ("Mon") that Firestore may store.
      */
     @get:com.google.firebase.firestore.Exclude
     val isCurrentlyOpen: Boolean
@@ -86,17 +92,35 @@ data class Pharmacy(
             val hours = parsedOperatingHours
             if (hours.is24Hours) return true
 
-            val now = java.util.Calendar.getInstance()
-            val dayNames = listOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
-            val todayName = dayNames.getOrNull(now.get(java.util.Calendar.DAY_OF_WEEK) - 1) ?: return false
-            if (!hours.days.contains(todayName)) return false
+            // Use Africa/Kigali timezone explicitly so the result is always correct
+            // even when the user's device is set to a different timezone.
+            val kigaliTz = java.util.TimeZone.getTimeZone("Africa/Kigali")
+            val now = java.util.Calendar.getInstance(kigaliTz)
 
-            val currentMinutes = now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
-            val openParts = hours.openTime.split(":").mapNotNull { it.toIntOrNull() }
+            val fullDayNames = listOf(
+                "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+            )
+            val todayFull = fullDayNames.getOrNull(now.get(java.util.Calendar.DAY_OF_WEEK) - 1)
+                ?: return false
+            val todayAbbrev = todayFull.take(3) // e.g. "Mon"
+
+            // Case-insensitive match against both full and abbreviated stored day names.
+            val isWorkingDay = hours.days.any { storedDay ->
+                storedDay.equals(todayFull, ignoreCase = true) ||
+                storedDay.equals(todayAbbrev, ignoreCase = true)
+            }
+            if (!isWorkingDay) return false
+
+            val currentMinutes =
+                now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
+
+            val openParts  = hours.openTime.split(":").mapNotNull { it.toIntOrNull() }
             val closeParts = hours.closeTime.split(":").mapNotNull { it.toIntOrNull() }
             if (openParts.size < 2 || closeParts.size < 2) return false
-            val openMinutes = openParts[0] * 60 + openParts[1]
+
+            val openMinutes  = openParts[0] * 60 + openParts[1]
             val closeMinutes = closeParts[0] * 60 + closeParts[1]
+
             return currentMinutes in openMinutes until closeMinutes
         }
 
