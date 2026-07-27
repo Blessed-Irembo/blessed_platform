@@ -9,7 +9,7 @@ import CoreLocation
 // MARK: - Operating Hours
 
 /// Mirrors the Firestore operatingHours map used by the web.
-struct OperatingHours: Codable {
+struct OperatingHours: Codable, Hashable {
     var is24Hours: Bool
     var days: [String]       // e.g. ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]
     var openTime: String      // e.g. "08:00"
@@ -30,7 +30,7 @@ struct OperatingHours: Codable {
 
 // MARK: - Pharmacy
 
-struct Pharmacy: Codable, Identifiable {
+struct Pharmacy: Codable, Identifiable, Hashable {
     let id: String
     var name: String
     var ownerName: String

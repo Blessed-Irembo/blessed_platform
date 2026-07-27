@@ -2,25 +2,9 @@ import SwiftUI
 
 struct UserAppearanceSettingsView: View {
     @EnvironmentObject var appState: AppState
-    @AppStorage("userInterfaceStyle") private var userInterfaceStyle: Int = 0 // 0=System, 1=Light, 2=Dark
 
     var body: some View {
         Form {
-            // Theme Selection Section
-            Section(
-                header: Text(appState.t("appearance.themeSection")),
-                footer: Text(appState.t("appearance.themeFooter"))
-            ) {
-                Picker(appState.t("appearance.themeLabel"), selection: $userInterfaceStyle) {
-                    Text(appState.t("appearance.system")).tag(0)
-                        .font(.body)
-                    Text(appState.t("appearance.light")).tag(1)
-                    Text(appState.t("appearance.dark")).tag(2)
-                }
-                .pickerStyle(InlinePickerStyle())
-                .tint(.primaryTeal)
-            }
-            
             // App Language Section
             Section(
                 header: Text(appState.t("appearance.languageSection")),
@@ -40,7 +24,7 @@ struct UserAppearanceSettingsView: View {
                 }
             }
         }
-        .navigationTitle(appState.t("appearance.title"))
+        .navigationTitle(appState.t("profile.appLanguage"))
         .navigationBarTitleDisplayMode(.inline)
     }
 }

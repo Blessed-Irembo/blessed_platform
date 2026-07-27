@@ -50,6 +50,17 @@ enum Translations {
             "role.alreadyAccount": "Already have an account?",
             "role.signIn": "Sign In",
             "role.guestOption": "Browse as Guest",
+            "role.registerUser": "Register as User",
+            "role.registerPharmacy": "Register as Pharmacy",
+            
+            // Guest Mode
+            "guest.signInTitle": "Sign In to Continue",
+            "guest.signInSubtitle": "Create a free account or sign in to view pharmacy details and access your profile.",
+            "guest.signInButton": "Sign In",
+            "guest.createAccount": "Create Account",
+            "guest.continueBrowsing": "Continue Browsing",
+            "guest.modeBanner": "Browsing as Guest",
+            "guest.detailGate": "Sign in to view full pharmacy details.",
             
             // Authentication
             "auth.signInTitle": "Welcome Back",
@@ -179,6 +190,7 @@ enum Translations {
             "profile.privacy": "Privacy & Security",
             "profile.location": "Location Services",
             "profile.appearance": "Appearance",
+            "profile.appLanguage": "App Language",
             "profile.about": "About",
             "profile.help": "Help & Support",
             "profile.terms": "Terms & Conditions",
@@ -395,6 +407,17 @@ enum Translations {
             "role.alreadyAccount": "Usanzwe ufite konti?",
             "role.signIn": "Injira",
             "role.guestOption": "Gusura nk'umushyitsi",
+            "role.registerUser": "Wiyandikishe nk'Umukoresha",
+            "role.registerPharmacy": "Wiyandikishe nka Farumasi",
+            
+            // Guest Mode
+            "guest.signInTitle": "Injira kugira ngo Ukomeze",
+            "guest.signInSubtitle": "Fungura konti bure cyangwa injira kugira ngo ubone amakuru yuzuye ya farumasi.",
+            "guest.signInButton": "Injira",
+            "guest.createAccount": "Fungura Konti",
+            "guest.continueBrowsing": "Komeza Gukora Ubushakashatsi",
+            "guest.modeBanner": "Uri gukora ubushakashatsi nk'inshuti",
+            "guest.detailGate": "Injira kugira ngo ubone amakuru yuzuye ya farumasi.",
             
             // Authentication
             "auth.signInTitle": "Murakaza Neza",
@@ -524,6 +547,7 @@ enum Translations {
             "profile.privacy": "Ibanga & Umutekano",
             "profile.location": "Serivisi z'Ahantu Uherereye",
             "profile.appearance": "Uko App Ikeye",
+            "profile.appLanguage": "Ururimi rwa Porogaramu",
             "profile.about": "Ibitwerekeyeho",
             "profile.help": "Ubufasha",
             "profile.terms": "Amategeko n'Amabwiriza",

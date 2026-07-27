@@ -9,7 +9,7 @@ import { useAuth } from '@/lib/AuthContext';
 /**
  * Pharmacy Registration Page
  *
- * Verifies the pharmacy's Rwanda FDA council registration number (NPC/Axxxx)
+ * Verifies the pharmacy's Rwanda NPC( national pharmacy council) council registration number (NPC/Axxxx)
  * against the licensed_pharmacies Firestore collection seeded from the
  * official December 2025 list. Only verified pharmacies may sign up.
  */
@@ -132,7 +132,7 @@ export default function RegisterPharmacyPage() {
     if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = 'Council registration number is required';
     } else if (licenseStatus === 'invalid') {
-      newErrors.registrationNumber = 'Not found in the Rwanda FDA licensed pharmacy list';
+      newErrors.registrationNumber = 'Not found in the Rwanda NPC( national pharmacy council) licensed pharmacy list';
     } else if (licenseStatus === 'already_taken') {
       newErrors.registrationNumber = 'This pharmacy is already registered on Blessed Irembo';
     } else if (licenseStatus === 'checking') {
@@ -221,7 +221,7 @@ export default function RegisterPharmacyPage() {
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
-          Not found in the Rwanda FDA licensed list
+          Not found in the Rwanda NPC( national pharmacy council) licensed list
         </div>
         <p className="text-gray-600 text-xs font-normal">
           NPC not listed?{' '}
@@ -259,7 +259,7 @@ export default function RegisterPharmacyPage() {
           <h1 className="text-4xl font-bold text-gray-900 mb-3">Register Pharmacy</h1>
           <p className="text-gray-600">
             Your council registration number is verified against the{' '}
-            <span className="font-medium text-teal-700">Rwanda FDA December 2025</span> licensed list.
+            <span className="font-medium text-teal-700">as issued by NPC( national pharmacy council)</span>.
           </p>
         </div>
 
@@ -275,10 +275,10 @@ export default function RegisterPharmacyPage() {
             {/* ── Council Registration Number (most important — put first) ── */}
             <div>
               <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
-                Council Registration Number <span className="text-teal-600">*</span>
+                Council Registration Number of responsible personnel <span className="text-teal-600">*</span>
               </label>
               <p className="text-xs text-gray-500 mb-2">
-                Format: <code className="bg-gray-100 px-1 rounded">NPC/A0000</code> — as issued by Rwanda FDA
+                Format: <code className="bg-gray-100 px-1 rounded">NPC/A0000</code> — as issued by Rwanda NPC( national pharmacy council)
               </p>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
@@ -609,14 +609,14 @@ export default function RegisterPharmacyPage() {
               {errors.confirmPassword && <p className="mt-2 text-sm text-red-600 font-medium">{errors.confirmPassword}</p>}
             </div>
 
-            {/* ── FDA verification notice ── */}
+            {/* ── NPC verification notice ── */}
             <div className="bg-teal-50 border border-teal-200 rounded-lg p-4">
               <div className="flex gap-3">
                 <svg className="w-5 h-5 text-teal-600 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
                 <p className="text-sm text-teal-800">
-                  <strong>Verified by Rwanda FDA.</strong> Your council registration number is cross-checked against the official December 2025 list of 725 licensed human retail pharmacies.
+                  <strong>Verified by Rwanda NPC( national pharmacy council).</strong> Your council registration number is cross-checked against the official December 2025 list of 725 licensed human retail pharmacies.
                 </p>
               </div>
             </div>
