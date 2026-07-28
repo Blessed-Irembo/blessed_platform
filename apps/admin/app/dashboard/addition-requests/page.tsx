@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
 import { useRequireAdmin } from '@/lib/adminAuthHooks';
-import { collection, doc, updateDoc, setDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, updateDoc, setDoc, getDoc, onSnapshot, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 interface AdditionRequest {
@@ -66,19 +66,35 @@ export default function AdditionRequestsPage() {
       const docId = formattedNpc.replace('/', '_');
       const licenseRef = doc(db, 'licensed_pharmacies', docId);
 
-      // Create / merge target document in licensed_pharmacies
-      await setDoc(licenseRef, {
-        registrationNumber: formattedNpc,
-        name: req.pharmacyName.toUpperCase(),
-        councilTechnician: '',
-        province: '',
-        district: req.address,
-        sector: '',
-        cell: '',
-        licenseExpiryDate: '',
-        isRegistered: false,
-        createdAt: serverTimestamp(),
-      }, { merge: true });
+      // Check if document already exists to preserve registration status
+      const licenseSnap = await getDoc(licenseRef);
+      
+      if (licenseSnap.exists()) {
+        const existingData = licenseSnap.data();
+        await setDoc(licenseRef, {
+          registrationNumber: formattedNpc,
+          name: req.pharmacyName.toUpperCase(),
+          district: req.address,
+          // Preserve critical fields
+          isRegistered: existingData.isRegistered ?? false,
+          registeredUid: existingData.registeredUid ?? null,
+          createdAt: existingData.createdAt ?? serverTimestamp(),
+        }, { merge: true });
+      } else {
+        // Create / merge target document in licensed_pharmacies
+        await setDoc(licenseRef, {
+          registrationNumber: formattedNpc,
+          name: req.pharmacyName.toUpperCase(),
+          councilTechnician: '',
+          province: '',
+          district: req.address,
+          sector: '',
+          cell: '',
+          licenseExpiryDate: '',
+          isRegistered: false,
+          createdAt: serverTimestamp(),
+        }, { merge: true });
+      }
 
       // Update addition request status to approved
       const requestRef = doc(db, 'pharmacy_addition_requests', req.id);
