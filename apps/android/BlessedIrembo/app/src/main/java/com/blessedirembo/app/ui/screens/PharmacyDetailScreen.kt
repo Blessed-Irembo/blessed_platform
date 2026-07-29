@@ -396,9 +396,18 @@ fun PharmacyDetailScreen(
                             val todayName = daysOfWeek[todayIndex]
                             val oh = p.parsedOperatingHours
 
+                            // If no structured days, try to parse the plain-text openingHours string.
+                            val effectiveHours = if (oh.days.isNotEmpty() || oh.is24Hours) oh
+                                                 else p.parseFallbackHours() ?: oh
+
                             daysOfWeek.forEachIndexed { index, day ->
                                 val isToday = day == todayName
-                                val isOpen = oh.is24Hours || oh.days.contains(day)
+                                // Case-insensitive day match so "Mon" stored values still work
+                                val isDayOpen = effectiveHours.is24Hours ||
+                                    effectiveHours.days.any { d ->
+                                        d.equals(day, ignoreCase = true) ||
+                                        d.equals(day.take(3), ignoreCase = true)
+                                    }
 
                                 Row(
                                     modifier = Modifier
@@ -414,15 +423,15 @@ fun PharmacyDetailScreen(
                                         fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Normal,
                                         color = if (isToday) Color(0xFF0F766E) else Gray900
                                     )
-                                    if (oh.is24Hours) {
+                                    if (effectiveHours.is24Hours) {
                                         Text(
                                             text = t("details.open24Hours"),
                                             style = MaterialTheme.typography.bodyMedium,
                                             color = if (isToday) Color(0xFF0D9488) else Gray500
                                         )
-                                    } else if (isOpen) {
+                                    } else if (isDayOpen) {
                                         Text(
-                                            text = "${oh.openTime} – ${oh.closeTime}",
+                                            text = "${effectiveHours.openTime} – ${effectiveHours.closeTime}",
                                             style = MaterialTheme.typography.bodyMedium,
                                             fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Normal,
                                             color = if (isToday) Color(0xFF0D9488) else Gray500

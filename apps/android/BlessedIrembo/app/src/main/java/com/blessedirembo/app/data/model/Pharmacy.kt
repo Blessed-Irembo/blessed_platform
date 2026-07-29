@@ -77,51 +77,175 @@ data class Pharmacy(
 
     /**
      * Determine if the pharmacy is currently open based on operating hours.
-     * Mirrors iOS Pharmacy.isCurrentlyOpen computed property.
      *
-     * Fixes applied:
-     *  - Explicitly uses Africa/Kigali timezone (UTC+2) so the check is correct
-     *    regardless of the device's own locale/timezone setting.
-     *  - Day matching is case-insensitive and supports both full names ("Monday")
-     *    and 3-letter abbreviations ("Mon") that Firestore may store.
+     * Strategy (in priority order):
+     *  1. is24_7 flag or operatingHours.is24Hours → always open.
+     *  2. Structured operatingHours with a non-empty days list → precise day+time check.
+     *  3. Plain-text openingHours string (e.g. "Mon-Sat: 8am-6pm") → parsed fallback.
+     *  4. Static Firestore isOpen field → last resort for legacy data.
+     *
+     * Uses Africa/Kigali timezone (UTC+2) for all time comparisons.
      */
     @get:com.google.firebase.firestore.Exclude
     val isCurrentlyOpen: Boolean
         get() {
+            // ── Priority 1: explicit 24/7 flags ──────────────────────────────────
             if (is24_7) return true
             val hours = parsedOperatingHours
             if (hours.is24Hours) return true
 
-            // Use Africa/Kigali timezone explicitly so the result is always correct
-            // even when the user's device is set to a different timezone.
             val kigaliTz = java.util.TimeZone.getTimeZone("Africa/Kigali")
             val now = java.util.Calendar.getInstance(kigaliTz)
-
             val fullDayNames = listOf(
                 "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
             )
             val todayFull = fullDayNames.getOrNull(now.get(java.util.Calendar.DAY_OF_WEEK) - 1)
                 ?: return false
-            val todayAbbrev = todayFull.take(3) // e.g. "Mon"
-
-            // Case-insensitive match against both full and abbreviated stored day names.
-            val isWorkingDay = hours.days.any { storedDay ->
-                storedDay.equals(todayFull, ignoreCase = true) ||
-                storedDay.equals(todayAbbrev, ignoreCase = true)
-            }
-            if (!isWorkingDay) return false
-
+            val todayAbbrev = todayFull.take(3)
             val currentMinutes =
                 now.get(java.util.Calendar.HOUR_OF_DAY) * 60 + now.get(java.util.Calendar.MINUTE)
 
-            val openParts  = hours.openTime.split(":").mapNotNull { it.toIntOrNull() }
-            val closeParts = hours.closeTime.split(":").mapNotNull { it.toIntOrNull() }
-            if (openParts.size < 2 || closeParts.size < 2) return false
+            // ── Priority 2: structured operating hours ────────────────────────────
+            if (hours.days.isNotEmpty()) {
+                val isWorkingDay = hours.days.any { storedDay ->
+                    storedDay.equals(todayFull, ignoreCase = true) ||
+                    storedDay.equals(todayAbbrev, ignoreCase = true)
+                }
+                if (!isWorkingDay) return false
+                val openParts  = hours.openTime.split(":").mapNotNull { it.toIntOrNull() }
+                val closeParts = hours.closeTime.split(":").mapNotNull { it.toIntOrNull() }
+                if (openParts.size < 2 || closeParts.size < 2) return false
+                val openMinutes  = openParts[0] * 60 + openParts[1]
+                val closeMinutes = closeParts[0] * 60 + closeParts[1]
+                return currentMinutes >= openMinutes && currentMinutes <= closeMinutes
+            }
 
-            val openMinutes  = openParts[0] * 60 + openParts[1]
-            val closeMinutes = closeParts[0] * 60 + closeParts[1]
+            // ── Priority 3: parse plain-text openingHours string ─────────────────
+            // Handles formats like: "Mon-Sat: 8am-6pm", "Mon–Fri: 08:00–18:00",
+            //                       "Mon-Sun: 24/7", "Mon-Sat: 8am–6pm"
+            val fallback = parseFallbackHours()
+            if (fallback != null) {
+                if (fallback.is24Hours) return true
+                val isWorkingDay = fallback.days.any { d ->
+                    d.equals(todayFull, ignoreCase = true) ||
+                    d.equals(todayAbbrev, ignoreCase = true)
+                }
+                if (!isWorkingDay) return false
+                val openParts  = fallback.openTime.split(":").mapNotNull { it.toIntOrNull() }
+                val closeParts = fallback.closeTime.split(":").mapNotNull { it.toIntOrNull() }
+                if (openParts.size < 2 || closeParts.size < 2) return false
+                val openMinutes  = openParts[0] * 60 + openParts[1]
+                val closeMinutes = closeParts[0] * 60 + closeParts[1]
+                return currentMinutes >= openMinutes && currentMinutes <= closeMinutes
+            }
 
-            return currentMinutes in openMinutes until closeMinutes
+            // ── Priority 4: static Firestore isOpen field (legacy) ────────────────
+            return isOpen
+        }
+
+    /**
+     * Parse the plain-text [openingHours] string into an [OperatingHours] object.
+     * Returns null if the string is blank or does not match any known pattern.
+     *
+     * Supported formats (dash or en-dash, with or without spaces):
+     *  "Mon-Sat: 8am-6pm"        → Mon..Sat, 08:00–18:00
+     *  "Mon–Fri: 08:00–18:00"    → Mon..Fri, 08:00–18:00
+     *  "Mon-Sun: 24/7"           → all days, is24Hours = true
+     *  "Mon-Sat: 7am-10pm"       → Mon..Sat, 07:00–22:00
+     */
+    @get:com.google.firebase.firestore.Exclude
+    val parseFallbackHours: () -> OperatingHours?
+        get() = {
+            val raw = openingHours.trim()
+            if (raw.isBlank()) {
+                null
+            } else {
+                // Normalise various dash characters to ASCII "-"
+                val s = raw.replace("–", "-").replace("—", "-")
+                // Pattern: <dayRange>: <timeRange>
+                // e.g. "Mon-Sat: 8am-6pm" or "Mon-Sat: 08:00-18:00"
+                val colonIdx = s.indexOf(':')
+                if (colonIdx <= 0) {
+                    null
+                } else {
+                    val dayPart  = s.substring(0, colonIdx).trim()   // "Mon-Sat"
+                    val timePart = s.substring(colonIdx + 1).trim()  // "8am-6pm"
+
+                    // Expand day range to full list
+                    val allDays = listOf("Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday")
+                    val abbrevDays = listOf("Mon","Tue","Wed","Thu","Fri","Sat","Sun")
+
+                    fun dayIndex(abbrev: String): Int =
+                        abbrevDays.indexOfFirst { it.equals(abbrev.trim(), ignoreCase = true) }
+
+                    val expandedDays: List<String> = if (dayPart.contains("-")) {
+                        val parts = dayPart.split("-")
+                        val fromIdx = dayIndex(parts[0])
+                        val toIdx   = dayIndex(parts.getOrElse(1) { parts[0] })
+                        if (fromIdx >= 0 && toIdx >= 0) {
+                            if (fromIdx <= toIdx) allDays.subList(fromIdx, toIdx + 1)
+                            else allDays.subList(fromIdx, allDays.size) + allDays.subList(0, toIdx + 1)
+                        } else emptyList()
+                    } else {
+                        // Single day like "Mon"
+                        val idx = dayIndex(dayPart)
+                        if (idx >= 0) listOf(allDays[idx]) else emptyList()
+                    }
+
+                    if (expandedDays.isEmpty()) {
+                        null
+                    } else if (timePart.contains("24/7", ignoreCase = true) ||
+                               timePart.contains("24hrs", ignoreCase = true) ||
+                               timePart.contains("24 hrs", ignoreCase = true)) {
+                        OperatingHours(is24Hours = true, days = expandedDays, openTime = "00:00", closeTime = "23:59")
+                    } else {
+                        // Parse times: "8am-6pm", "08:00-18:00", "7:30am-10:00pm"
+                        fun parseTime(t: String): String? {
+                            val clean = t.trim()
+                            // Try HH:mm format first
+                            val hhMm = Regex("^(\\d{1,2}):(\\d{2})$").find(clean)
+                            if (hhMm != null) {
+                                val h = hhMm.groupValues[1].toIntOrNull() ?: return null
+                                val m = hhMm.groupValues[2].toIntOrNull() ?: return null
+                                return String.format("%02d:%02d", h, m)
+                            }
+                            // Try 12h format: "8am", "6pm", "7:30am", "10:00pm"
+                            val amPm = Regex("^(\\d{1,2})(?::(\\d{2}))?\\s*(am|pm)$", RegexOption.IGNORE_CASE).find(clean)
+                            if (amPm != null) {
+                                var h = amPm.groupValues[1].toIntOrNull() ?: return null
+                                val m = amPm.groupValues[2].toIntOrNull() ?: 0
+                                val meridiem = amPm.groupValues[3].lowercase()
+                                if (meridiem == "pm" && h != 12) h += 12
+                                if (meridiem == "am" && h == 12) h = 0
+                                return String.format("%02d:%02d", h, m)
+                            }
+                            return null
+                        }
+
+                        // The time separator is the middle "-" in "8am-6pm"
+                        // Split carefully: last "-" that separates open from close
+                        val timeTokens = timePart.split("-")
+                        if (timeTokens.size < 2) {
+                            null
+                        } else {
+                            // Handle "7:30am-10:00pm" → split on last "-"
+                            val lastDash = timePart.lastIndexOf('-')
+                            val openStr  = timePart.substring(0, lastDash).trim()
+                            val closeStr = timePart.substring(lastDash + 1).trim()
+                            val openTime  = parseTime(openStr)
+                            val closeTime = parseTime(closeStr)
+                            if (openTime != null && closeTime != null) {
+                                OperatingHours(
+                                    is24Hours = false,
+                                    days = expandedDays,
+                                    openTime = openTime,
+                                    closeTime = closeTime
+                                )
+                            } else null
+                        }
+                    }
+                }
+            }
         }
 
     @get:com.google.firebase.firestore.Exclude
@@ -129,9 +253,12 @@ data class Pharmacy(
         get() {
             val hours = parsedOperatingHours
             if (hours.is24Hours) return "Open 24/7"
-            if (hours.days.isEmpty()) return openingHours.ifBlank { "—" }
-            val dayStr = hours.days.joinToString(", ") { it.take(3) }
-            return "$dayStr: ${hours.openTime}–${hours.closeTime}"
+            if (hours.days.isNotEmpty()) {
+                val dayStr = hours.days.joinToString(", ") { it.take(3) }
+                return "$dayStr: ${hours.openTime}–${hours.closeTime}"
+            }
+            // Fall back to the plain-text string as-is
+            return openingHours.ifBlank { "—" }
         }
 
     /**

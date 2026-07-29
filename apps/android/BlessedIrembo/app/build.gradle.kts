@@ -33,8 +33,8 @@ android {
         applicationId = "com.blessedirembo.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.0.4"
+        versionCode = 5
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -125,6 +125,9 @@ dependencies {
 
     // Location services (for nearby pharmacy detection)
     implementation("com.google.android.gms:play-services-location:21.3.0")
+
+    // Google Play In-App Updates
+    implementation("com.google.android.play:app-update-ktx:2.1.0")
 
     // Debug
     debugImplementation("androidx.compose.ui:ui-tooling")
