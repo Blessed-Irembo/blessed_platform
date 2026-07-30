@@ -147,7 +147,8 @@ fun GoogleMapView(
                     )
                 } else {
                     val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
-                    pharmacies.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
+                    // Only bound to the nearest 5 pharmacies to avoid zooming out too far
+                    pharmacies.take(5).forEach { builder.include(LatLng(it.latitude, it.longitude)) }
                     // Also include user location in the bounds if available
                     userLocation?.let { builder.include(LatLng(it.latitude, it.longitude)) }
                     try {

@@ -384,10 +384,13 @@ fun FindPharmaciesScreen(
 
                     is PharmacyUiState.Success -> {
                         // Sort pharmacies by distance from the user (closest first)
+                        // Also filter out invalid coordinates (e.g., 0.0, 0.0 in the ocean)
                         val sortedPharmacies = remember(state.pharmacies, userLocation) {
-                            state.pharmacies.sortedBy { pharmacy ->
-                                distanceInMeters(userLocation, pharmacy.latitude, pharmacy.longitude)
-                            }
+                            state.pharmacies
+                                .filter { it.latitude != 0.0 && it.longitude != 0.0 }
+                                .sortedBy { pharmacy ->
+                                    distanceInMeters(userLocation, pharmacy.latitude, pharmacy.longitude)
+                                }
                         }
 
                         Row(

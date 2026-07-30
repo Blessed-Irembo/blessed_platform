@@ -59,7 +59,16 @@ class PharmacyRepository {
                 .whereEqualTo("isVerified", true)
                 .get()
                 .await()
-            val pharmacies = snapshot.toObjects(Pharmacy::class.java).filter { it.isActive }
+            // toObject() reflection silently returns null for nested Map<String,Any>? fields
+            // in Kotlin data classes (type erasure). We manually patch operatingHours from
+            // the raw document snapshot using doc.get(), which always works correctly.
+            val pharmacies = snapshot.documents.mapNotNull { doc ->
+                doc.toObject(Pharmacy::class.java)?.let { pharmacy ->
+                    @Suppress("UNCHECKED_CAST")
+                    val ohMap = doc.get("operatingHours") as? Map<String, Any>
+                    if (ohMap != null) pharmacy.copy(operatingHours = ohMap) else pharmacy
+                }
+            }.filter { it.isActive }
             Result.success(pharmacies)
         } catch (e: Exception) {
             Result.failure(e)
@@ -74,7 +83,10 @@ class PharmacyRepository {
             val doc = pharmaciesCollection.document(pharmacyId).get().await()
             val pharmacy = doc.toObject(Pharmacy::class.java)
                 ?: return Result.failure(Exception("Pharmacy not found"))
-            Result.success(pharmacy)
+            @Suppress("UNCHECKED_CAST")
+            val ohMap = doc.get("operatingHours") as? Map<String, Any>
+            val patched = if (ohMap != null) pharmacy.copy(operatingHours = ohMap) else pharmacy
+            Result.success(patched)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -90,12 +102,24 @@ class PharmacyRepository {
                 .limit(1)
                 .get()
                 .await()
-            var pharmacy = snapshot.documents.firstOrNull()?.toObject(Pharmacy::class.java)
+
+            fun patchOperatingHours(doc: com.google.firebase.firestore.DocumentSnapshot, pharmacy: Pharmacy): Pharmacy {
+                @Suppress("UNCHECKED_CAST")
+                val ohMap = doc.get("operatingHours") as? Map<String, Any>
+                return if (ohMap != null) pharmacy.copy(operatingHours = ohMap) else pharmacy
+            }
+
+            val firstDoc = snapshot.documents.firstOrNull()
+            var pharmacy = firstDoc?.toObject(Pharmacy::class.java)?.let { p ->
+                patchOperatingHours(firstDoc, p)
+            }
 
             // Fallback: check by document ID (matching iOS behavior)
             if (pharmacy == null) {
                 val doc = pharmaciesCollection.document(ownerId).get().await()
-                pharmacy = doc.toObject(Pharmacy::class.java)
+                pharmacy = doc.toObject(Pharmacy::class.java)?.let { p ->
+                    patchOperatingHours(doc, p)
+                }
             }
 
             Result.success(pharmacy)
