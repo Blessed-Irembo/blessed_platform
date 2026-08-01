@@ -62,6 +62,12 @@ enum Translations {
             "guest.modeBanner": "Browsing as Guest",
             "guest.detailGate": "Sign in to view full pharmacy details.",
             
+            // App Update
+            "update.title": "Update Available",
+            "update.message": "A new version of Blessed Irembo is available on the App Store. Update now to get the latest features and bug fixes.",
+            "update.button": "Update Now",
+            "update.later": "Later",
+            
             // Authentication
             "auth.signInTitle": "Welcome Back",
             "auth.signInSubtitle": "Sign in to your account to continue",
@@ -418,6 +424,12 @@ enum Translations {
             "guest.continueBrowsing": "Komeza Gukora Ubushakashatsi",
             "guest.modeBanner": "Uri gukora ubushakashatsi nk'inshuti",
             "guest.detailGate": "Injira kugira ngo ubone amakuru yuzuye ya farumasi.",
+            
+            // App Update
+            "update.title": "Amakuru Mashya Arahari",
+            "update.message": "Porogaramu nshya ya Blessed Irembo irahari kuri App Store. Ivugurure uyu munsi kugira ngo ubone ibyiza bishya.",
+            "update.button": "Ivugurure Ako Kanya",
+            "update.later": "Hanyuma",
             
             // Authentication
             "auth.signInTitle": "Murakaza Neza",
