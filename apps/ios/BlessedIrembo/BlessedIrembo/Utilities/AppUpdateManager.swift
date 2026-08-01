@@ -21,7 +21,7 @@ class AppUpdateManager: ObservableObject {
             DispatchQueue.main.async {
                 self.isUpdateAvailable = true
                 self.updateVersion = "2.0.0 (Test Mode)"
-                self.appStoreURL = URL(string: "https://apps.apple.com/app/id6739989932")
+                self.appStoreURL = URL(string: "https://apps.apple.com/us/app/blessed-irembo/id6788066341")
             }
             return
         }
