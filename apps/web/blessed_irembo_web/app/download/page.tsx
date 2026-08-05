@@ -34,7 +34,9 @@ export default function DownloadAppPage() {
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               {/* Google Play Store Button */}
               <a
-                href="#"
+                href="https://play.google.com/store/apps/details?id=com.blessedirembo.app"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 bg-gray-950 text-white px-5 py-3 rounded-xl hover:bg-teal-950 hover:scale-[1.02] active:scale-100 transition-all shadow-md shadow-gray-200"
               >
                 <svg className="w-6 h-6 text-white fill-current shrink-0" viewBox="0 0 24 24">
@@ -54,7 +56,9 @@ export default function DownloadAppPage() {
 
               {/* Apple App Store Button */}
               <a
-                href="#"
+                href="https://apps.apple.com/rw/app/blessed-irembo/id6788066341"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-3 bg-gray-950 text-white px-5 py-3 rounded-xl hover:bg-teal-950 hover:scale-[1.02] active:scale-100 transition-all shadow-md shadow-gray-200"
               >
                 <svg className="w-6 h-6 text-white fill-current shrink-0" viewBox="0 0 24 24">
