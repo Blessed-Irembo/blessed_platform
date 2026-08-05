@@ -3,6 +3,7 @@ import CoreLocation
 struct QuickDetailsSheet: View {
     let pharmacy: Pharmacy
     let userLocation: CLLocationCoordinate2D
+    @Binding var showAuthPrompt: Bool
     let onClose: () -> Void
     @EnvironmentObject var appState: AppState
     
@@ -89,22 +90,39 @@ struct QuickDetailsSheet: View {
             
             // Actions
             HStack(spacing: 12) {
-                NavigationLink(destination: PharmacyDetailsView(pharmacy: pharmacy, userLocation: userLocation)) {
-                    Text(appState.t("map.viewDetails"))
-                        .font(.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(Color.primaryTeal)
-                        .cornerRadius(12)
+                if appState.currentUser == nil {
+                    Button(action: { showAuthPrompt = true }) {
+                        Text(appState.t("map.viewDetails"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.primaryTeal)
+                            .cornerRadius(12)
+                    }
+                } else {
+                    NavigationLink(destination: PharmacyDetailsView(pharmacy: pharmacy, userLocation: userLocation)) {
+                        Text(appState.t("map.viewDetails"))
+                            .font(.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(Color.primaryTeal)
+                            .cornerRadius(12)
+                    }
                 }
                 
                 // Call Button
                 Button(action: {
-                    let phoneDigits = pharmacy.phoneNumber.filter { $0.isNumber || $0 == "+" }
-                    if let url = URL(string: "tel:\(phoneDigits)"), UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
+                    if appState.currentUser == nil {
+                        showAuthPrompt = true
+                    } else {
+                        let phoneDigits = pharmacy.phoneNumber.filter { $0.isNumber || $0 == "+" }
+                        if let url = URL(string: "tel:\(phoneDigits)"), UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
                     }
                 }) {
                     Image(systemName: "phone.fill")
@@ -117,9 +135,13 @@ struct QuickDetailsSheet: View {
                 
                 // WhatsApp Button
                 Button(action: {
-                    let phoneDigits = pharmacy.whatsAppNumber.filter { $0.isNumber || $0 == "+" }
-                    if let url = URL(string: "https://wa.me/\(phoneDigits)"), UIApplication.shared.canOpenURL(url) {
-                        UIApplication.shared.open(url)
+                    if appState.currentUser == nil {
+                        showAuthPrompt = true
+                    } else {
+                        let phoneDigits = pharmacy.whatsAppNumber.filter { $0.isNumber || $0 == "+" }
+                        if let url = URL(string: "https://wa.me/\(phoneDigits)"), UIApplication.shared.canOpenURL(url) {
+                            UIApplication.shared.open(url)
+                        }
                     }
                 }) {
                     Image(systemName: "message.fill")

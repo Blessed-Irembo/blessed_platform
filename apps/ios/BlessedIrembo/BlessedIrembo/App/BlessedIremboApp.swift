@@ -34,6 +34,8 @@ struct BlessedIremboApp: App {
 /// Kept separate from BlessedIremboApp so @EnvironmentObject is available.
 private struct ContentRootView: View {
     @EnvironmentObject var appState: AppState
+    @StateObject private var updateManager = AppUpdateManager.shared
+    @State private var showUpdatePopup = true
 
     var body: some View {
         NavigationStack(path: $appState.navigationPath) {
@@ -74,5 +76,20 @@ private struct ContentRootView: View {
             .animation(.easeInOut(duration: 0.35), value: appState.hasCompletedOnboarding)
         }
         .id(appState.isAuthenticated ? (appState.currentUser?.id ?? appState.currentPharmacy?.id ?? "auth") : "guest")
+        .overlay {
+            if updateManager.isUpdateAvailable && showUpdatePopup {
+                AppUpdatePopupView(
+                    appStoreURL: updateManager.appStoreURL,
+                    updateVersion: updateManager.updateVersion ?? "",
+                    onDismiss: {
+                        showUpdatePopup = false
+                    }
+                )
+                .environmentObject(appState)
+            }
+        }
+        .onAppear {
+            updateManager.checkForUpdate()
+        }
     }
 }

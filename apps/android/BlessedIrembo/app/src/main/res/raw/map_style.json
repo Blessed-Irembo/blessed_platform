@@ -167,6 +167,15 @@
   },
   {
     "featureType": "poi.medical",
+    "elementType": "labels",
+    "stylers": [
+      {
+        "visibility": "on"
+      }
+    ]
+  },
+  {
+    "featureType": "poi.medical",
     "elementType": "geometry",
     "stylers": [
       {
@@ -178,6 +187,9 @@
     "featureType": "poi.medical",
     "elementType": "labels.icon",
     "stylers": [
+      {
+        "visibility": "on"
+      },
       {
         "color": "#c84040"
       }

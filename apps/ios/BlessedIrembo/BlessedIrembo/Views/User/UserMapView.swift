@@ -18,6 +18,9 @@ struct UserMapView: View {
     @State private var hasInitialLocationSet: Bool = false
     @EnvironmentObject var appState: AppState
     
+    @State private var showAuthPrompt = false
+    @State private var pharmacyToNavigate: Pharmacy?
+    
     var body: some View {
         ZStack(alignment: .top) {
             // Full screen Map Backdrop
@@ -53,6 +56,7 @@ struct UserMapView: View {
                     QuickDetailsSheet(
                         pharmacy: selected,
                         userLocation: locationManager.location ?? MockData.defaultLocation,
+                        showAuthPrompt: $showAuthPrompt,
                         onClose: {
                             withAnimation(.spring()) {
                                 self.selectedPharmacy = nil
@@ -96,6 +100,19 @@ struct UserMapView: View {
         }
         .navigationTitle(appState.t("nav.findPharmacies"))
         .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(isPresented: Binding(
+            get: { pharmacyToNavigate != nil },
+            set: { if !$0 { pharmacyToNavigate = nil } }
+        )) {
+            if let pharmacy = pharmacyToNavigate {
+                PharmacyDetailsView(pharmacy: pharmacy, userLocation: locationManager.location ?? MockData.defaultLocation)
+                    .environmentObject(appState)
+            }
+        }
+        .sheet(isPresented: $showAuthPrompt) {
+            GuestSignInPromptView()
+                .environmentObject(appState)
+        }
         .onAppear {
             setupLocationTracking()
         }
@@ -151,7 +168,13 @@ struct UserMapView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(viewModel.pharmaciesByDistance()) { pharmacy in
-                    NavigationLink(destination: PharmacyDetailsView(pharmacy: pharmacy, userLocation: locationManager.location ?? MockData.defaultLocation)) {
+                    Button(action: {
+                        if appState.currentUser == nil {
+                            showAuthPrompt = true
+                        } else {
+                            pharmacyToNavigate = pharmacy
+                        }
+                    }) {
                         PharmacyListCard(
                             pharmacy: pharmacy,
                             userLocation: locationManager.location ?? MockData.defaultLocation,

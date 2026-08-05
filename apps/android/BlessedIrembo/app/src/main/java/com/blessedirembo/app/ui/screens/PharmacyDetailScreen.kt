@@ -391,52 +391,112 @@ fun PharmacyDetailScreen(
                                 .background(Color(0xFFF9FAFB), RoundedCornerShape(10.dp))
                         ) {
                             val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-                            val calendar = Calendar.getInstance()
+                            // Use Africa/Kigali timezone — matches isCurrentlyOpen logic
+                            val calendar = Calendar.getInstance(java.util.TimeZone.getTimeZone("Africa/Kigali"))
                             val todayIndex = (calendar.get(Calendar.DAY_OF_WEEK) + 5) % 7 // Monday = 0
                             val todayName = daysOfWeek[todayIndex]
                             val oh = p.parsedOperatingHours
 
-                            daysOfWeek.forEachIndexed { index, day ->
-                                val isToday = day == todayName
-                                val isOpen = oh.is24Hours || oh.days.contains(day)
+                            // If no structured days, try to parse the plain-text openingHours string.
+                            val effectiveHours = if (oh.days.isNotEmpty() || oh.is24Hours) oh
+                                                 else p.parseFallbackHours() ?: oh
 
-                                Row(
+                            // hasHoursData: true when we have ANY real hours info.
+                            // p.operatingHours != null covers the Akedah case: days=[] but
+                            // openTime/closeTime are set. days.isNotEmpty covers Blessing case.
+                            val hasHoursData = effectiveHours.is24Hours ||
+                                effectiveHours.days.isNotEmpty() ||
+                                (p.operatingHours != null &&
+                                    effectiveHours.openTime.isNotBlank() &&
+                                    effectiveHours.closeTime.isNotBlank())
+
+                            // treatAsOpenEveryDay: days=[] + valid times = open daily (iOS behaviour)
+                            val treatAsOpenEveryDay = p.operatingHours != null &&
+                                !effectiveHours.is24Hours &&
+                                effectiveHours.days.isEmpty() &&
+                                effectiveHours.openTime.isNotBlank() &&
+                                effectiveHours.closeTime.isNotBlank()
+
+                            if (!hasHoursData) {
+                                // No hours data in Firestore at all — show a clear message
+                                Box(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .background(if (isToday) Color(0xFFF0FDFA) else Color.Transparent)
-                                        .padding(horizontal = 12.dp, vertical = 10.dp),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                        .padding(horizontal = 12.dp, vertical = 16.dp),
+                                    contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = day,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Normal,
-                                        color = if (isToday) Color(0xFF0F766E) else Gray900
-                                    )
-                                    if (oh.is24Hours) {
-                                        Text(
-                                            text = t("details.open24Hours"),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = if (isToday) Color(0xFF0D9488) else Gray500
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Schedule,
+                                            contentDescription = null,
+                                            tint = Gray300,
+                                            modifier = Modifier.size(28.dp)
                                         )
-                                    } else if (isOpen) {
+                                        Spacer(modifier = Modifier.height(8.dp))
                                         Text(
-                                            text = "${oh.openTime} – ${oh.closeTime}",
+                                            text = "Hours not specified",
                                             style = MaterialTheme.typography.bodyMedium,
-                                            fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Normal,
-                                            color = if (isToday) Color(0xFF0D9488) else Gray500
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = Gray500
                                         )
-                                    } else {
+                                        Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = t("map.closed"),
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = if (isToday) Color.Red else Gray500.copy(alpha = 0.6f)
+                                            text = "Contact the pharmacy for opening hours",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = Gray500.copy(alpha = 0.7f)
                                         )
                                     }
                                 }
-                                if (index < daysOfWeek.size - 1) {
-                                    HorizontalDivider(color = Gray100)
+                            } else {
+                                daysOfWeek.forEachIndexed { index, day ->
+                                    val isToday = day == todayName
+                                    // treatAsOpenEveryDay: days=[] means open daily (iOS match).
+                                    // Otherwise do case-insensitive day match.
+                                    val isDayOpen = effectiveHours.is24Hours ||
+                                        treatAsOpenEveryDay ||
+                                        effectiveHours.days.any { d ->
+                                            d.equals(day, ignoreCase = true) ||
+                                            d.equals(day.take(3), ignoreCase = true)
+                                        }
+
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(if (isToday) Color(0xFFF0FDFA) else Color.Transparent)
+                                            .padding(horizontal = 12.dp, vertical = 10.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = day,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Normal,
+                                            color = if (isToday) Color(0xFF0F766E) else Gray900
+                                        )
+                                        if (effectiveHours.is24Hours) {
+                                            Text(
+                                                text = t("details.open24Hours"),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = if (isToday) Color(0xFF0D9488) else Gray500
+                                            )
+                                        } else if (isDayOpen) {
+                                            Text(
+                                                text = "${effectiveHours.openTime} – ${effectiveHours.closeTime}",
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                fontWeight = if (isToday) FontWeight.SemiBold else FontWeight.Normal,
+                                                color = if (isToday) Color(0xFF0D9488) else Gray500
+                                            )
+                                        } else {
+                                            Text(
+                                                text = t("map.closed"),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = if (isToday) Color.Red else Gray500.copy(alpha = 0.6f)
+                                            )
+                                        }
+                                    }
+                                    if (index < daysOfWeek.size - 1) {
+                                        HorizontalDivider(color = Gray100)
+                                    }
                                 }
                             }
                         }

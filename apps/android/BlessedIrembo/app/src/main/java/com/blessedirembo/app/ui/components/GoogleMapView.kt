@@ -21,12 +21,14 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MapStyleOptions
+import com.google.maps.android.compose.Circle
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
+import androidx.compose.ui.graphics.Color as ComposeColor
 
 /**
  * Data class representing a pharmacy for display in maps and lists.
@@ -69,6 +71,7 @@ fun GoogleMapView(
     pharmacies: List<PharmacyInfo>,
     selectedPharmacyId: String?,
     onPharmacyClick: (String) -> Unit,
+    userLocation: android.location.Location? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -89,12 +92,16 @@ fun GoogleMapView(
         }
     }
 
-    // ── Fix #2: Stable MapProperties. We hold it in a var so it can be updated if needed
-    //    in future (e.g., when isMyLocationEnabled must change at runtime).
-    val hasLocationPermission = remember(context) {
-        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
-        ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-    }
+    // ── Fix #2: Stable MapProperties.
+    //    hasLocationPermission is computed fresh each recomposition so it reacts
+    //    correctly if permission is granted while the screen is open.
+    val hasLocationPermission =
+        ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.ACCESS_FINE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+        ContextCompat.checkSelfPermission(
+            context, android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == android.content.pm.PackageManager.PERMISSION_GRANTED
 
     val mapProperties = remember(mapStyleOptions, hasLocationPermission) {
         MapProperties(
@@ -112,8 +119,22 @@ fun GoogleMapView(
     }
 
     // ── Fix #3: Camera animation wrapped in try-catch.
+    //    Priority: user location > pharmacies bounds > Kigali default.
     //    GoogleMap raises IllegalStateException / CancellationException if the map
     //    composable isn't fully laid out yet (common on first open).
+
+    // Animate to user's location when it first becomes available.
+    LaunchedEffect(userLocation) {
+        val loc = userLocation ?: return@LaunchedEffect
+        try {
+            cameraPositionState.animate(
+                com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
+                    LatLng(loc.latitude, loc.longitude), 14f
+                )
+            )
+        } catch (e: Exception) { /* map not yet ready */ }
+    }
+
     LaunchedEffect(pharmacies) {
         if (pharmacies.isNotEmpty()) {
             try {
@@ -126,7 +147,10 @@ fun GoogleMapView(
                     )
                 } else {
                     val builder = com.google.android.gms.maps.model.LatLngBounds.Builder()
-                    pharmacies.forEach { builder.include(LatLng(it.latitude, it.longitude)) }
+                    // Only bound to the nearest 5 pharmacies to avoid zooming out too far
+                    pharmacies.take(5).forEach { builder.include(LatLng(it.latitude, it.longitude)) }
+                    // Also include user location in the bounds if available
+                    userLocation?.let { builder.include(LatLng(it.latitude, it.longitude)) }
                     try {
                         cameraPositionState.animate(
                             com.google.android.gms.maps.CameraUpdateFactory.newLatLngBounds(
@@ -134,13 +158,15 @@ fun GoogleMapView(
                             )
                         )
                     } catch (boundsEx: Exception) {
-                        // Fallback: animate to average centre
-                        val avgLat = pharmacies.map { it.latitude }.average()
-                        val avgLng = pharmacies.map { it.longitude }.average()
+                        // Fallback: animate to average centre or user location
+                        val target = userLocation?.let { LatLng(it.latitude, it.longitude) }
+                            ?: run {
+                                val avgLat = pharmacies.map { it.latitude }.average()
+                                val avgLng = pharmacies.map { it.longitude }.average()
+                                LatLng(avgLat, avgLng)
+                            }
                         cameraPositionState.animate(
-                            com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(
-                                LatLng(avgLat, avgLng), 12f
-                            )
+                            com.google.android.gms.maps.CameraUpdateFactory.newLatLngZoom(target, 12f)
                         )
                     }
                 }
@@ -181,6 +207,28 @@ fun GoogleMapView(
                         onPharmacyClick(pharmacy.id)
                         true // consume click — prevents default info window
                     }
+                )
+            }
+        }
+
+        // ── User location dot — shown as a custom blue pulsing marker.
+        //    The native isMyLocationEnabled blue dot is already enabled when permission
+        //    is granted. This custom marker acts as a reliable fallback / always-visible
+        //    indicator that clearly marks "you are here" on the map.
+        userLocation?.let { loc ->
+            val userLatLng = LatLng(loc.latitude, loc.longitude)
+            val userMarkerIcon = remember(loc.latitude, loc.longitude) {
+                createUserLocationMarkerIcon(context)
+            }
+            key("user_location") {
+                Marker(
+                    state = remember(loc.latitude, loc.longitude) {
+                        MarkerState(position = userLatLng)
+                    },
+                    title = "Your Location",
+                    icon = userMarkerIcon,
+                    zIndex = 10f, // Always on top of pharmacy markers
+                    onClick = { true } // no-op, just consume click
                 )
             }
         }
@@ -313,6 +361,48 @@ private fun createPharmacyMarkerIcon(
         // Horizontal
         canvas.drawLine(crossInset, cy, bubbleSizePx - crossInset, cy, paint)
     }
+
+    return BitmapDescriptorFactory.fromBitmap(bitmap)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// User location marker icon — a blue pulsing dot (matches Google Maps style)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Creates a blue filled circle with a white border and a translucent halo ring
+ * to mark the user's current position on the map.
+ *
+ *   ○ ← translucent blue halo (accuracy ring)
+ *   ● ← solid blue dot with white border
+ */
+private fun createUserLocationMarkerIcon(context: Context): BitmapDescriptor {
+    val density = context.resources.displayMetrics.density
+
+    val dotRadiusPx  = 10f * density   // inner solid blue dot
+    val borderPx     = 2.5f * density  // white border around dot
+    val haloRadiusPx = 22f * density   // outer translucent ring
+
+    val totalSize = (haloRadiusPx * 2).toInt()
+    val bitmap = Bitmap.createBitmap(totalSize, totalSize, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    val cx = haloRadiusPx
+    val cy = haloRadiusPx
+
+    val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    // Outer halo ring (translucent blue)
+    paint.style = Paint.Style.FILL
+    paint.color = Color.argb(60, 26, 115, 232) // ~0.24 alpha Google blue
+    canvas.drawCircle(cx, cy, haloRadiusPx, paint)
+
+    // White border around the dot
+    paint.color = Color.WHITE
+    canvas.drawCircle(cx, cy, dotRadiusPx + borderPx, paint)
+
+    // Inner solid blue dot
+    paint.color = Color.rgb(26, 115, 232) // Google Maps blue #1A73E8
+    canvas.drawCircle(cx, cy, dotRadiusPx, paint)
 
     return BitmapDescriptorFactory.fromBitmap(bitmap)
 }

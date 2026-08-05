@@ -1,0 +1,92 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ── Helper: check if requester is a Blessed admin ──
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // ── Helper: check if a pharmacy's subscription/trial is still valid ─
+    function pharmacySubscriptionValid() {
+      let data = resource.data;
+      return data.isActive == true
+        || (data.subscriptionEndDate == null
+            && data.createdAt != null
+            && request.time < data.createdAt + duration.value(90, 'd'))
+        || (data.subscriptionEndDate != null
+            && data.subscriptionEndDate > request.time);
+    }
+    
+    // Allow anyone to read the pharmacies list (for the map and admin dashboard)
+    match /pharmacies/{pharmacyId} {
+      allow read: if true;
+      
+      // New pharmacy registration: any authenticated user can create
+      allow create: if request.auth != null;
+      
+      // Updates & deletes:
+      //  - Admins can always write (approve subscriptions, set isActive, etc.)
+      //  - Pharmacies can only update their OWN document while subscription is valid
+      allow update, delete: if isAdmin() 
+        || (request.auth != null 
+            && request.auth.uid == pharmacyId 
+            && pharmacySubscriptionValid());
+    }
+
+    // Allow anyone (unauthenticated users) to verify their license number during registration
+    match /licensed_pharmacies/{document=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Allow logged-in users to check if they are an admin
+    match /admins/{userId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Only allow writes from the Firebase Console
+    }
+    
+    // Allow secure phone number login lookups
+    match /phone_to_email/{phoneNumber} {
+      allow get: if true;    // Let the app look up a known phone number
+      allow list: if false;  // Prevent scraping/downloading the list
+      allow write: if request.auth != null;
+    }
+
+    // ── NOTIFICATIONS ──
+    match /notifications/{notificationId} {
+      // 1. Any authenticated user can CREATE a notification
+      allow create: if request.auth != null;
+      
+      // 2. Users can READ their own notifications. Admins can read "ADMIN" notifications.
+      allow read: if request.auth != null && (
+        resource.data.recipientId == request.auth.uid || 
+        (resource.data.recipientId == "ADMIN" && isAdmin())
+      );
+      
+      // 3. Users can UPDATE (mark as read) their own notifications. Admins can update "ADMIN" notifications.
+      allow update: if request.auth != null && (
+        resource.data.recipientId == request.auth.uid || 
+        (resource.data.recipientId == "ADMIN" && isAdmin())
+      );
+      
+      // 4. No deleting allowed to keep a paper trail.
+      allow delete: if false;
+    }
+
+    // ── PHARMACY NPC ADDITION REQUESTS ──
+    match /pharmacy_addition_requests/{requestId} {
+      // Allow anyone (including guests/unauthenticated users) to submit a request
+      allow create: if true;
+      // Only admins can read, update, or delete addition requests
+      allow read, update, delete: if isAdmin();
+    }
+    
+    // Default rule for everything else
+    match /{document=**} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
