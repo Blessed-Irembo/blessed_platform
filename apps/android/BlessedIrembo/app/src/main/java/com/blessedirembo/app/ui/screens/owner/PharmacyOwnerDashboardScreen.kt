@@ -189,10 +189,12 @@ fun PharmacyOwnerDashboardScreen(
             )
             // Subscription status
             val isPremium = pharmacy?.isPremium == true
+            val planDisplay = pharmacy?.subscriptionPlan?.takeIf { it.isNotBlank() && it != "Free" }
+                ?: if (isPremium) "Premium" else "Free Trial"
             StatCard(
                 icon = if (isPremium) Icons.Filled.Star else Icons.Filled.Person,
                 iconBackgroundColor = if (isPremium) PurpleAccent else Teal500,
-                value = pharmacy?.subscriptionPlan ?: "Free",
+                value = planDisplay,
                 label = t("dashboard.subscription"),
                 percentageChange = "",
                 isPositive = true,

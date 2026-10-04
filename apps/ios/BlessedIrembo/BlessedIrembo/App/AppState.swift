@@ -34,10 +34,10 @@ class AppState: ObservableObject {
         }
 
         let now = Date()
-        if let endDate = pharmacy.subscriptionEndDate {
+        if pharmacy.isPremium, let endDate = pharmacy.subscriptionEndDate {
             return endDate > now ? .premium(expiresOn: endDate) : .expired
         }
-        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt) ?? pharmacy.createdAt
+        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt) ?? (pharmacy.subscriptionEndDate ?? pharmacy.createdAt)
         if trialEnd > now {
             let days = max(0, Calendar.current.dateComponents([.day], from: now, to: trialEnd).day ?? 0)
             return .freeTrial(daysRemaining: days)

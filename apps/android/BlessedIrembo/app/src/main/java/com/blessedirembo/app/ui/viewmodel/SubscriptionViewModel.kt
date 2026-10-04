@@ -64,22 +64,30 @@ class SubscriptionViewModel : ViewModel() {
             return
         }
 
+        val isPaid = pharmacy.isPremium || pharmacy.hasPaidSubscription || pharmacy.subscriptionPlan.equals("Premium", ignoreCase = true)
         val endDate = pharmacy.subscriptionEndDate?.toDate()
-        if (endDate != null) {
+        if (isPaid && endDate != null) {
             _status.value = if (endDate.after(now)) {
                 SubscriptionStatus.Premium(expiresOn = endDate)
             } else {
                 SubscriptionStatus.Expired
             }
         } else {
-            // No paid subscription — check 90-day free trial
-            val createdAt = pharmacy.createdAt?.toDate() ?: now
-            val trialEnd = Calendar.getInstance().apply {
-                time = createdAt
-                add(Calendar.DAY_OF_YEAR, 90)
-            }.time
+            // Free Trial (3 months / 90 days from registration)
+            val trialEnd = if (pharmacy.trialEndDate != null) {
+                pharmacy.trialEndDate.toDate()
+            } else if (pharmacy.createdAt != null) {
+                Calendar.getInstance().apply {
+                    time = pharmacy.createdAt.toDate()
+                    add(Calendar.DAY_OF_YEAR, 90)
+                }.time
+            } else if (endDate != null && !isPaid) {
+                endDate
+            } else {
+                null
+            }
 
-            if (trialEnd.after(now)) {
+            if (trialEnd != null && trialEnd.after(now)) {
                 val diffMs = trialEnd.time - now.time
                 val daysRemaining = (diffMs / (1000 * 60 * 60 * 24)).toInt()
                 _status.value = SubscriptionStatus.FreeTrial(daysRemaining = maxOf(daysRemaining, 0))

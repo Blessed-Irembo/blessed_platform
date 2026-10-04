@@ -14,6 +14,7 @@ import LoadingScreen from '@/components/ui/LoadingScreen';
 import { checkIfPharmacyIsOpen, formatOperatingHours } from '@/lib/pharmacyUtils';
 import { useLanguage } from '@/lib/LanguageContext';
 import Header from '@/components/layout/Header';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 
 // Load PharmacyMap client-side only (Google Maps needs browser APIs)
 const PharmacyMap = dynamic(() => import('@/components/PharmacyMap'), {
@@ -89,7 +90,9 @@ export default function PharmaciesPage() {
         const list: Pharmacy[] = snapshot.docs
           .filter((docSnap) => {
             const data = docSnap.data();
-            return data.isActive !== false;
+            if (data.isActive === false) return false;
+            const sub = getSubscriptionStatus(data);
+            return !sub.isExpired;
           })
           .map((docSnap) => {
             const data = docSnap.data();

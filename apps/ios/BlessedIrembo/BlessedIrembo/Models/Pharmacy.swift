@@ -123,6 +123,17 @@ struct Pharmacy: Codable, Identifiable, Hashable {
         CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
     }
 
+    /// Whether the pharmacy has an active paid subscription or is within its 90-day free trial.
+    var hasValidSubscription: Bool {
+        if !isActive { return false }
+        let now = Date()
+        if isPremium, let endDate = subscriptionEndDate {
+            return endDate > now
+        }
+        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: createdAt) ?? (subscriptionEndDate ?? createdAt)
+        return trialEnd > now
+    }
+
     /// Distance in metres from a given coordinate
     func distance(from location: CLLocationCoordinate2D) -> CLLocationDistance {
         CLLocation(latitude: latitude, longitude: longitude)

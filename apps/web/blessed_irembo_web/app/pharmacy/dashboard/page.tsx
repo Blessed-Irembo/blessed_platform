@@ -81,7 +81,9 @@ export default function PharmacyDashboard() {
             <span className="inline-block bg-teal-600 text-white text-sm font-semibold px-3 py-1 rounded-full mb-2">
               {t.pharmacyDashboard.overview.stats.active}
             </span>
-            <p className="text-lg font-semibold text-gray-700">{pharmacy?.subscriptionPlan ?? 'Free'}</p>
+            <p className="text-lg font-semibold text-gray-700">
+              {pharmacy?.isPremium || pharmacy?.subscriptionPlan === 'Premium' ? 'Premium' : 'Free Trial'}
+            </p>
           </div>
         </div>
 

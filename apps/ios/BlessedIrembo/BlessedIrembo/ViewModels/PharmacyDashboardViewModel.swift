@@ -57,7 +57,12 @@ class PharmacyDashboardViewModel: ObservableObject {
                     self.whatsappClicks  = data["whatsappClicks"]  as? Int    ?? 0
                     self.profileViews    = data["profileViews"]    as? Int    ?? 0
                     self.isPremium       = data["isPremium"]        as? Bool   ?? false
-                    self.subscriptionPlan = data["subscriptionPlan"] as? String ?? (self.isPremium ? "Premium" : "Free")
+                    let rawPlan = data["subscriptionPlan"] as? String ?? ""
+                    if !rawPlan.isEmpty && rawPlan != "Free" {
+                        self.subscriptionPlan = rawPlan
+                    } else {
+                        self.subscriptionPlan = self.isPremium ? "Premium" : "Free Trial"
+                    }
                 }
             }
     }

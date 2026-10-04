@@ -53,9 +53,11 @@ data class Pharmacy(
     // Dashboard metrics (mirroring iOS PharmacyDashboardViewModel)
     val whatsappClicks: Int = 0,
     val profileViews: Int = 0,
-    val subscriptionPlan: String = "Free",
+    val subscriptionPlan: String = "Free Trial",
     val isPremium: Boolean = false,
+    val hasPaidSubscription: Boolean = false,
     val isActive: Boolean = true,
+    val trialEndDate: com.google.firebase.Timestamp? = null,
     @com.google.firebase.firestore.ServerTimestamp
     val subscriptionEndDate: com.google.firebase.Timestamp? = null,
     @com.google.firebase.firestore.ServerTimestamp
@@ -276,20 +278,23 @@ data class Pharmacy(
             if (!isActive) return false
             
             val now = java.util.Date()
-            if (subscriptionEndDate != null && subscriptionEndDate.toDate().after(now)) {
-                return true
+            val isPaid = isPremium || hasPaidSubscription || subscriptionPlan.equals("Premium", ignoreCase = true)
+            if (isPaid && subscriptionEndDate != null) {
+                return subscriptionEndDate.toDate().after(now)
             }
             
-            // Check 90-day trial based on createdAt
-            if (createdAt != null) {
-                val trialDurationMs = 90L * 24 * 60 * 60 * 1000
-                val trialEndDate = java.util.Date(createdAt.toDate().time + trialDurationMs)
-                if (trialEndDate.after(now)) {
-                    return true
-                }
+            // Check 90-day Free Trial
+            val trialEnd = if (trialEndDate != null) {
+                trialEndDate.toDate()
+            } else if (createdAt != null) {
+                java.util.Date(createdAt.toDate().time + 90L * 24 * 60 * 60 * 1000)
+            } else if (subscriptionEndDate != null && !isPaid) {
+                subscriptionEndDate.toDate()
+            } else {
+                null
             }
-            
-            return false
+
+            return trialEnd != null && trialEnd.after(now)
         }
 }
 

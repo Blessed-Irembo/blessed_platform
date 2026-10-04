@@ -236,6 +236,10 @@ class AuthViewModel: ObservableObject {
                     "closeTime": closeTime
                 ] as [String: Any],
                 "is24_7": is24Hours,
+                "subscriptionPlan": "Free Trial",
+                "isPremium": false,
+                "hasPaidSubscription": false,
+                "trialEndDate": Date().addingTimeInterval(90 * 24 * 60 * 60),
                 "createdAt": FieldValue.serverTimestamp()
             ]
             

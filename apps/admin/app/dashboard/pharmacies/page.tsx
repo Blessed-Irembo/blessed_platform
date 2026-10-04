@@ -45,19 +45,34 @@ export default function PharmaciesPage() {
       const now = new Date();
       const list = snapshot.docs.map(docSnap => {
         const data = docSnap.data();
+        const isPaid = data.isPremium === true ||
+          data.hasPaidSubscription === true ||
+          data.subscriptionPlan === 'Premium';
         const endData = data.subscriptionEndDate?.toDate();
 
         let subscriptionStatus = 'Expired';
         let isActive = false;
 
-        if (endData) {
+        if (isPaid && endData) {
           isActive = endData > now;
           subscriptionStatus = isActive ? 'Premium' : 'Expired';
-        } else if (data.createdAt) {
-          const trialEnd = new Date(data.createdAt.toDate());
-          trialEnd.setDate(trialEnd.getDate() + 90);
-          isActive = trialEnd > now;
-          subscriptionStatus = isActive ? 'Free Trial' : 'Expired';
+        } else {
+          // Free Trial check
+          let trialEnd: Date | null = null;
+          if (data.trialEndDate) {
+            trialEnd = data.trialEndDate.toDate ? data.trialEndDate.toDate() : new Date(data.trialEndDate);
+          } else if (data.createdAt) {
+            const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+            trialEnd = new Date(createdAt);
+            trialEnd.setDate(trialEnd.getDate() + 90);
+          } else if (endData && !isPaid) {
+            trialEnd = endData;
+          }
+
+          if (trialEnd) {
+            isActive = trialEnd > now;
+            subscriptionStatus = isActive ? 'Free Trial' : 'Expired';
+          }
         }
 
         return {

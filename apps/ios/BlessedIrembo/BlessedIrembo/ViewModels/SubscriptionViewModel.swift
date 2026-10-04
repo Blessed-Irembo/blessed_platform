@@ -45,16 +45,16 @@ class SubscriptionViewModel: ObservableObject {
             return
         }
 
-        if let endDate = pharmacy.subscriptionEndDate {
-            // Has a paid subscription
+        if pharmacy.isPremium, let endDate = pharmacy.subscriptionEndDate {
+            // Has an active paid subscription
             if endDate > now {
                 status = .premium(expiresOn: endDate)
             } else {
                 status = .expired
             }
         } else {
-            // No paid subscription — check 90-day free trial
-            let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt) ?? pharmacy.createdAt
+            // Free Trial (3 months / 90 days from registration)
+            let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt) ?? (pharmacy.subscriptionEndDate ?? pharmacy.createdAt)
             if trialEnd > now {
                 let daysRemaining = Calendar.current.dateComponents([.day], from: now, to: trialEnd).day ?? 0
                 status = .freeTrial(daysRemaining: max(daysRemaining, 0))

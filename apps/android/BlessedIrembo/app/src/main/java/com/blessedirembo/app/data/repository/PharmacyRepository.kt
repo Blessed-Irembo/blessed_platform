@@ -68,7 +68,7 @@ class PharmacyRepository {
                     val ohMap = doc.get("operatingHours") as? Map<String, Any>
                     if (ohMap != null) pharmacy.copy(operatingHours = ohMap) else pharmacy
                 }
-            }.filter { it.isActive }
+            }.filter { it.isActive && it.hasValidSubscription }
             Result.success(pharmacies)
         } catch (e: Exception) {
             Result.failure(e)
@@ -182,8 +182,10 @@ class PharmacyRepository {
                 "reviewCount" to 0,
                 "whatsappClicks" to 0,
                 "profileViews" to 0,
-                "subscriptionPlan" to "Free",
+                "subscriptionPlan" to "Free Trial",
                 "isPremium" to false,
+                "hasPaidSubscription" to false,
+                "trialEndDate" to com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() + 90L * 24 * 60 * 60 * 1000)),
                 "createdAt" to FieldValue.serverTimestamp()
             )
             pharmaciesCollection.document(uid).set(data).await()

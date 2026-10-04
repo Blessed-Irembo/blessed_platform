@@ -32,8 +32,12 @@ export function getSubscriptionStatus(pharmacy: any): SubscriptionStatusResult {
     return { status: 'expired', isExpired: true, daysRemaining: null, expiresOn: null };
   }
 
-  // ── Premium: has a paid subscriptionEndDate ──────────────────────────────
-  if (pharmacy.subscriptionEndDate) {
+  // ── Paid Premium Subscription ───────────────────────────────────────────
+  const isPaid = pharmacy.isPremium === true ||
+    pharmacy.hasPaidSubscription === true ||
+    pharmacy.subscriptionPlan === 'Premium';
+
+  if (isPaid && pharmacy.subscriptionEndDate) {
     const endDate: Date =
       typeof pharmacy.subscriptionEndDate.toDate === 'function'
         ? pharmacy.subscriptionEndDate.toDate()
@@ -46,21 +50,33 @@ export function getSubscriptionStatus(pharmacy: any): SubscriptionStatusResult {
     return { status: 'expired', isExpired: true, daysRemaining: null, expiresOn: endDate };
   }
 
-  // ── Free Trial: no paid sub, check 90-day trial window ────────────────────
-  if (pharmacy.createdAt) {
+  // ── Free Trial: 3 months / 90 days from registration ──────────────────────
+  let trialEnd: Date | null = null;
+  if (pharmacy.trialEndDate) {
+    trialEnd = typeof pharmacy.trialEndDate.toDate === 'function'
+      ? pharmacy.trialEndDate.toDate()
+      : new Date(pharmacy.trialEndDate);
+  } else if (pharmacy.createdAt) {
     const createdAt: Date =
       typeof pharmacy.createdAt.toDate === 'function'
         ? pharmacy.createdAt.toDate()
         : new Date(pharmacy.createdAt);
-
-    const trialEnd = new Date(createdAt);
+    trialEnd = new Date(createdAt);
     trialEnd.setDate(trialEnd.getDate() + 90);
+  } else if (pharmacy.subscriptionEndDate && !isPaid) {
+    // Fallback for legacy signups where trial end was stored in subscriptionEndDate
+    trialEnd = typeof pharmacy.subscriptionEndDate.toDate === 'function'
+      ? pharmacy.subscriptionEndDate.toDate()
+      : new Date(pharmacy.subscriptionEndDate);
+  }
 
+  if (trialEnd) {
     if (trialEnd > now) {
       const msRemaining = trialEnd.getTime() - now.getTime();
       const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
       return { status: 'freeTrial', isExpired: false, daysRemaining, expiresOn: trialEnd };
     }
+    return { status: 'expired', isExpired: true, daysRemaining: 0, expiresOn: trialEnd };
   }
 
   // ── Expired ───────────────────────────────────────────────────────────────

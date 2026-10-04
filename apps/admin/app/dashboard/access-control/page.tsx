@@ -52,11 +52,7 @@ export default function AccessControlPage() {
     const unsub = onSnapshot(collection(db, 'pharmacies'), (snap) => {
       const rows: PharmacyRow[] = snap.docs.map((docSnap) => {
         const data = docSnap.data();
-        const mockPharmacy = {
-          subscriptionEndDate: data.subscriptionEndDate,
-          createdAt: data.createdAt,
-        };
-        const { status } = getSubscriptionStatus(mockPharmacy);
+        const { status } = getSubscriptionStatus(data);
 
         const statusMap: Record<string, { label: string; color: string }> = {
           premium: { label: 'Premium', color: 'bg-teal-100 text-teal-800' },

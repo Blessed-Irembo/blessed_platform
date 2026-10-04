@@ -53,6 +53,56 @@ struct PharmacyProfileView: View {
                 .padding(.vertical, 20)
                 .listRowBackground(Color.clear)
             }
+
+            // Expired Subscription Alert Banner
+            if case .expired = appState.subscriptionStatus {
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.title3)
+                                .foregroundColor(.orange)
+                                .padding(.top, 2)
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(appState.t("profile.subscriptionExpiredBannerTitle"))
+                                    .font(.subheadline.weight(.bold))
+                                    .foregroundColor(.textPrimary)
+                                
+                                Text(appState.t("profile.subscriptionExpiredBannerMessage"))
+                                    .font(.caption)
+                                    .foregroundColor(.textSecondary)
+                                    .lineSpacing(2)
+                            }
+                        }
+                        
+                        NavigationLink(destination: PharmacySubscriptionView()) {
+                            HStack {
+                                Spacer()
+                                Image(systemName: "arrow.clockwise.circle.fill")
+                                Text(appState.t("profile.renewNow"))
+                                    .fontWeight(.semibold)
+                                Spacer()
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding(.vertical, 10)
+                            .background(Color.primaryTeal)
+                            .cornerRadius(10)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.vertical, 6)
+                }
+                .listRowBackground(
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(Color.orange.opacity(0.08))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14)
+                                .stroke(Color.orange.opacity(0.25), lineWidth: 1)
+                        )
+                )
+            }
         
             // Business Info
             Section(appState.t("profile.businessInfo")) {
@@ -90,17 +140,32 @@ struct PharmacyProfileView: View {
             // Management
             Section(appState.t("profile.management")) {
                 NavigationLink(destination: PharmacySubscriptionView()) {
-                    Label {
-                        Text(appState.t("profile.subscriptionPlan"))
-                    } icon: {
-                        Image(systemName: "creditcard.fill")
-                            .foregroundColor(.purple)
+                    HStack {
+                        Label {
+                            Text(appState.t("profile.subscriptionPlan"))
+                        } icon: {
+                            Image(systemName: "creditcard.fill")
+                                .foregroundColor(.purple)
+                        }
+                        Spacer()
+                        if case .expired = appState.subscriptionStatus {
+                            Text(appState.t("subscription.listingPausedStatus"))
+                                .font(.caption.weight(.semibold))
+                                .foregroundColor(.orange)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.orange.opacity(0.12))
+                                .cornerRadius(8)
+                        }
                     }
                 }
             }
         
             // App Settings
             Section(appState.t("profile.appSettings")) {
+                NavigationLink(destination: UserAppearanceSettingsView()) {
+                    Label(appState.t("profile.appLanguage"), systemImage: "character.bubble.fill")
+                }
                 NavigationLink(destination: PharmacyNotificationSettingsView()) {
                     Label(appState.t("profile.notifications"), systemImage: "bell.fill")
                 }

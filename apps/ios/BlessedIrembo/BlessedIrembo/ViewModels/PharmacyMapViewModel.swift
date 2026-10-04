@@ -67,7 +67,7 @@ class PharmacyMapViewModel: ObservableObject {
             .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
             .joined(separator: " ")
 
-        return Pharmacy(
+        let pharmacy = Pharmacy(
             id: doc.documentID,
             name: data["name"] as? String ?? "",
             ownerName: data["ownerName"] as? String ?? "",
@@ -95,6 +95,9 @@ class PharmacyMapViewModel: ObservableObject {
             operatingHours: oh,
             imageUrls: data["imageUrls"] as? [String] ?? []
         )
+
+        guard pharmacy.hasValidSubscription else { return nil }
+        return pharmacy
     }
 
     /// Decodes the Firestore `operatingHours` field into an OperatingHours struct.

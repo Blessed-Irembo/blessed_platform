@@ -10,6 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import LoadingScreen from '@/components/ui/LoadingScreen';
 import { sendNotification } from '@/lib/notificationUtils';
 import { useLanguage } from '@/lib/LanguageContext';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 
 export default function PharmacySubscription() {
   const { currentUser } = useAuth();
@@ -176,17 +177,24 @@ export default function PharmacySubscription() {
   }
 
   // Calculate current status
-  const now = new Date();
-  let subEndDate = pharmacy?.subscriptionEndDate?.toDate();
-  if (!subEndDate && pharmacy?.createdAt) {
-      const fallback = new Date(pharmacy.createdAt.toDate());
-      fallback.setDate(fallback.getDate() + 90);
-      subEndDate = fallback;
+  const subStatus = getSubscriptionStatus(pharmacy);
+  const isPremiumPlan = subStatus.status === 'premium';
+  const isFreeTrial = subStatus.status === 'freeTrial';
+  const isActive = !subStatus.isExpired;
+
+  let statusBadgeText = t.pharmacyDashboard.subscription.status.expired;
+  let statusBadgeClass = 'bg-red-100 text-red-700';
+  if (isPremiumPlan) {
+    statusBadgeText = language === 'en' ? 'Premium Active' : 'Ifatabuguzi Rikora';
+    statusBadgeClass = 'bg-teal-100 text-teal-700';
+  } else if (isFreeTrial) {
+    statusBadgeText = language === 'en' 
+      ? `Free Trial (${subStatus.daysRemaining ?? 0} days remaining)`
+      : `Gahunda y'Igerageza (Hasigaye iminsi ${subStatus.daysRemaining ?? 0})`;
+    statusBadgeClass = 'bg-blue-100 text-blue-700';
   }
 
-  const isActive = subEndDate && subEndDate > now;
-  const statusLabel = isActive ? t.pharmacyDashboard.subscription.status.active : t.pharmacyDashboard.subscription.status.expired;
-  const endsOn = subEndDate ? subEndDate.toLocaleDateString() : 'N/A';
+  const endsOn = subStatus.expiresOn ? subStatus.expiresOn.toLocaleDateString() : 'N/A';
 
   return (
     <div className="p-4 sm:p-6 md:p-8 pb-24 md:pb-8">
@@ -195,16 +203,14 @@ export default function PharmacySubscription() {
 
         {/* Current Status Card */}
         <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 mb-8 shadow-sm overflow-hidden relative">
-          <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-10 ${isActive ? 'bg-teal-600' : 'bg-red-600'}`}></div>
+          <div className={`absolute top-0 right-0 w-32 h-32 -mr-8 -mt-8 rounded-full opacity-10 ${isActive ? (isPremiumPlan ? 'bg-teal-600' : 'bg-blue-600') : 'bg-red-600'}`}></div>
           
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 relative z-10">
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h2 className="text-xl font-bold text-gray-900">{t.pharmacyDashboard.subscription.status.title}</h2>
-                <span className={`px-4 py-1 rounded-full font-bold text-xs uppercase tracking-wider ${
-                  isActive ? 'bg-teal-100 text-teal-700' : 'bg-red-100 text-red-700'
-                }`}>
-                  {statusLabel}
+                <span className={`px-4 py-1 rounded-full font-bold text-xs uppercase tracking-wider ${statusBadgeClass}`}>
+                  {statusBadgeText}
                 </span>
               </div>
               {!isActive && (

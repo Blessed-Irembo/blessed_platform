@@ -75,8 +75,9 @@ fun AnalyticsScreen(
 
     val whatsappClicks = pharmacy?.whatsappClicks ?: 0
     val profileViews = pharmacy?.profileViews ?: 0
-    val subscriptionPlan = pharmacy?.subscriptionPlan ?: "Free"
     val isPremium = pharmacy?.isPremium == true
+    val subscriptionPlan = pharmacy?.subscriptionPlan?.takeIf { it.isNotBlank() && it != "Free" }
+        ?: if (isPremium) "Premium" else "Free Trial"
     val isOpen = pharmacy?.isCurrentlyOpen == true
 
     Column(

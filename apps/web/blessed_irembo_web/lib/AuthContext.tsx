@@ -169,7 +169,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       registrationNumber: regNum,
       role: 'pharmacy',
       isVerified: true, // verified via licensed_pharmacies list
-      subscriptionEndDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months free trial
+      subscriptionPlan: 'Free Trial',
+      isPremium: false,
+      hasPaidSubscription: false,
+      trialEndDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months free trial
       // Location info from licensed list
       province: licenseData.province ?? '',
       district: licenseData.district ?? '',

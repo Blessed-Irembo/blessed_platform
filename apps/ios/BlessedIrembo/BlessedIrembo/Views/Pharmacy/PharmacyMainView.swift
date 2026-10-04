@@ -50,15 +50,9 @@ struct PharmacyMainView: View {
             .tabItem { Label(appState.t("nav.analytics"), systemImage: "chart.bar.fill") }
             .tag(1)
 
-            // Profile — gated when expired
+            // Profile — ALWAYS accessible so pharmacy owners can manage account, switch language, or log out
             NavigationStack {
-                if isExpired {
-                    ExpiredSubscriptionView(selectedTab: $selectedTab, subscriptionTabIndex: 3)
-                        .navigationTitle(appState.t("nav.profile"))
-                        .navigationBarTitleDisplayMode(.large)
-                } else {
-                    PharmacyProfileView()
-                }
+                PharmacyProfileView()
             }
             .tabItem { Label(appState.t("nav.profile"), systemImage: "person.crop.circle.fill") }
             .tag(2)

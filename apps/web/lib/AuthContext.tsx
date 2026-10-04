@@ -157,6 +157,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       licenseExpiryDate: licenseData.licenseExpiryDate ?? '',
       rating: 0,
       reviewCount: 0,
+      subscriptionPlan: 'Free Trial',
+      isPremium: false,
+      hasPaidSubscription: false,
       createdAt: serverTimestamp(),
     });
 

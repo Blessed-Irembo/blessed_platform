@@ -19,6 +19,8 @@ interface Pharmacy {
   subscriptionEndDate: any;
   isActive: boolean;
   expiresOn: string;
+  isPaid: boolean;
+  plan: string;
 }
 
 interface SubscriptionRequest {
@@ -82,23 +84,40 @@ export default function SubscriptionsPage() {
 
       snap.forEach(doc => {
         const data = doc.data();
+        const isPaid = data.isPremium === true ||
+          data.hasPaidSubscription === true ||
+          data.subscriptionPlan === 'Premium';
         const endData = data.subscriptionEndDate?.toDate();
         
         let isActive = false;
         let expiresOn = 'N/A';
+        let plan = 'Free Trial';
 
-        if (endData) {
+        if (isPaid && endData) {
           isActive = endData > now;
           expiresOn = endData.toLocaleDateString();
-        } else if (data.createdAt) {
-          const trialEnd = new Date(data.createdAt.toDate());
-          trialEnd.setDate(trialEnd.getDate() + 90);
-          isActive = trialEnd > now;
-          expiresOn = `${trialEnd.toLocaleDateString()} (Trial)`;
+          plan = 'Premium';
         } else {
-          // Legacy pharmacies with no dates
-          isActive = false;
-          expiresOn = 'Expired';
+          let trialEnd: Date | null = null;
+          if (data.trialEndDate) {
+            trialEnd = data.trialEndDate.toDate ? data.trialEndDate.toDate() : new Date(data.trialEndDate);
+          } else if (data.createdAt) {
+            const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
+            trialEnd = new Date(createdAt);
+            trialEnd.setDate(trialEnd.getDate() + 90);
+          } else if (endData && !isPaid) {
+            trialEnd = endData;
+          }
+
+          if (trialEnd) {
+            isActive = trialEnd > now;
+            expiresOn = `${trialEnd.toLocaleDateString()} (Trial)`;
+            plan = 'Free Trial';
+          } else {
+            isActive = false;
+            expiresOn = 'Expired';
+            plan = 'Expired';
+          }
         }
 
         const pharm: Pharmacy = {
@@ -109,7 +128,9 @@ export default function SubscriptionsPage() {
           createdAt: data.createdAt,
           subscriptionEndDate: data.subscriptionEndDate,
           isActive,
-          expiresOn
+          expiresOn,
+          isPaid,
+          plan
         };
 
         if (isActive) {
@@ -175,6 +196,9 @@ export default function SubscriptionsPage() {
 
       await updateDoc(pharmacyRef, {
         subscriptionEndDate: newEndDate,
+        subscriptionPlan: 'Premium',
+        isPremium: true,
+        hasPaidSubscription: true,
         isActive: true,   // ← restore public listing visibility on approval
       });
 
@@ -467,7 +491,7 @@ export default function SubscriptionsPage() {
                               <div className="text-xs text-gray-500">{pharm.phone}</div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">
-                              {pharm.subscriptionEndDate ? (
+                              {pharm.isPaid ? (
                                 <span className="bg-teal-100 text-teal-800 px-2 py-1 rounded text-xs font-semibold">Premium</span>
                               ) : (
                                 <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs font-semibold">Free Trial</span>

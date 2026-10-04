@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       version_number:
-        description: 'App Store Version (e.g. 1.0.0)'
+        description: 'App Store Version (e.g. 1.0.4)'
         required: true
-        default: '1.0.0'
+        default: '1.0.4'
       build_number:
         description: 'Internal Build Number (e.g. 1)'
         required: true
