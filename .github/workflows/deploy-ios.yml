@@ -110,6 +110,13 @@ jobs:
                      -exportOptionsPlist apps/ios/BlessedIrembo/ExportOptions.plist \
                      -exportPath $RUNNER_TEMP/build
 
+      - name: Save IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlessedIrembo-v${{ github.event.inputs.version_number }}-b${{ github.event.inputs.build_number }}
+          path: ${{ runner.temp }}/build/BlessedIrembo.ipa
+          retention-days: 14
+
       - name: Upload Build to App Store Connect
         uses: apple-actions/upload-testflight-build@v5
         with:
