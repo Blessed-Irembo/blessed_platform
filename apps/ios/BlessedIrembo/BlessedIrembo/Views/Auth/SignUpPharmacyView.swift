@@ -487,7 +487,13 @@ struct SignUpPharmacyView: View {
                 coordinateConfirmation(lat: loc.latitude, lng: loc.longitude)
             }
 
-            Link(destination: URL(string: "https://maps.google.com")!) {
+            Button {
+                if let url = URL(string: "maps://"), UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else if let web = URL(string: "https://maps.apple.com") {
+                    UIApplication.shared.open(web)
+                }
+            } label: {
                 Label(appState.t("auth.openMapsHint"), systemImage: "arrow.up.right.square")
                     .font(.caption)
                     .foregroundColor(.primaryTeal)

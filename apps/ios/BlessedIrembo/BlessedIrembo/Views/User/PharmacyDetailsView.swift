@@ -9,6 +9,7 @@
 
 import SwiftUI
 import CoreLocation
+import MapKit
 import GoogleMaps
 import FirebaseFirestore
 
@@ -19,6 +20,7 @@ struct PharmacyDetailsView: View {
     @Environment(\.dismiss) var dismiss
     @EnvironmentObject var appState: AppState
     @State private var hoursExpanded = false
+    @State private var showDirectionsDialog = false
 
     var body: some View {
         ScrollView {
@@ -34,6 +36,19 @@ struct PharmacyDetailsView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 shareButton
             }
+        }
+        .confirmationDialog(
+            appState.t("details.chooseMapApp"),
+            isPresented: $showDirectionsDialog,
+            titleVisibility: .visible
+        ) {
+            Button(appState.t("details.openAppleMaps")) {
+                openInAppleMaps()
+            }
+            Button(appState.t("details.openGoogleMaps")) {
+                openInGoogleMaps()
+            }
+            Button(appState.t("common.cancel"), role: .cancel) {}
         }
         .onAppear {
             // Track this view in Firestore — mirrors whatsappClicks tracking.
@@ -369,19 +384,38 @@ struct PharmacyDetailsView: View {
             .updateData(["whatsappClicks": FieldValue.increment(Int64(1))])
     }
 
-    /// Opens Google Maps with turn-by-turn directions, falling back to Apple Maps.
+    /// Opens directions. If Google Maps is installed on the device, offers choice between
+    /// native Apple Maps and Google Maps; otherwise launches native Apple Maps directly.
     private func openDirections() {
+        let googleAppURL = URL(string: "comgooglemaps://")
+        if let gURL = googleAppURL, UIApplication.shared.canOpenURL(gURL) {
+            showDirectionsDialog = true
+        } else {
+            openInAppleMaps()
+        }
+    }
+
+    /// Natively launches Apple Maps with turn-by-turn driving directions to the pharmacy.
+    private func openInAppleMaps() {
+        let coordinate = CLLocationCoordinate2D(latitude: pharmacy.latitude, longitude: pharmacy.longitude)
+        let placemark = MKPlacemark(coordinate: coordinate)
+        let mapItem = MKMapItem(placemark: placemark)
+        mapItem.name = pharmacy.name
+        mapItem.openInMaps(launchOptions: [
+            MKLaunchOptionsDirectionsModeKey: MKLaunchOptionsDirectionsModeDriving
+        ])
+    }
+
+    /// Opens Google Maps app or web directions.
+    private func openInGoogleMaps() {
         let lat = pharmacy.latitude
         let lon = pharmacy.longitude
         let googleURL = URL(string: "comgooglemaps://?daddr=\(lat),\(lon)&directionsmode=driving")
         let webURL = URL(string: "https://maps.google.com/?daddr=\(lat),\(lon)&travelmode=driving")
-        let appleMapsURL = URL(string: "maps://?daddr=\(lat),\(lon)")
 
         if let url = googleURL, UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url)
         } else if let url = webURL {
-            UIApplication.shared.open(url)
-        } else if let url = appleMapsURL {
             UIApplication.shared.open(url)
         }
     }
