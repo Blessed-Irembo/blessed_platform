@@ -555,16 +555,20 @@ export default function PharmaciesPage() {
                   {/* Operating Hours */}
                   <div>
                     <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-4 border-b pb-2">Operating Schedule</h3>
-                    {selectedPharmacy.operatingHours ? (
+                    {selectedPharmacy.operatingHours || selectedPharmacy.hours ? (
                       <div className="bg-gray-50 rounded-lg p-5 border border-gray-100">
-                        {selectedPharmacy.operatingHours.is24Hours ? (
+                        {typeof selectedPharmacy.operatingHours === 'string' ? (
+                          <div className="text-gray-900 font-medium text-sm">
+                            {selectedPharmacy.operatingHours}
+                          </div>
+                        ) : selectedPharmacy.operatingHours?.is24Hours ? (
                           <div className="flex items-center gap-2 text-green-600 font-bold text-lg">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
                             Open 24/7
                           </div>
-                        ) : (
+                        ) : selectedPharmacy.operatingHours ? (
                           <div className="space-y-4">
                             <div className="flex items-center gap-2 text-teal-600 font-bold text-lg">
                               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -575,19 +579,31 @@ export default function PharmaciesPage() {
                             <div className="grid grid-cols-12 gap-y-3 gap-x-4 max-w-lg bg-white p-4 rounded-lg border border-gray-200">
                               <span className="col-span-5 text-gray-500 font-semibold text-sm self-center">Days Operation:</span>
                               <span className="col-span-7 text-gray-900 font-medium text-sm line-clamp-2">
-                                {selectedPharmacy.operatingHours.days?.join(', ') || 'N/A'}
+                                {Array.isArray(selectedPharmacy.operatingHours.days)
+                                  ? (selectedPharmacy.operatingHours.days.length > 0 ? selectedPharmacy.operatingHours.days.join(', ') : 'N/A')
+                                  : typeof selectedPharmacy.operatingHours.days === 'string'
+                                    ? selectedPharmacy.operatingHours.days
+                                    : (Array.isArray(selectedPharmacy.operatingDays)
+                                        ? selectedPharmacy.operatingDays.join(', ')
+                                        : typeof selectedPharmacy.operatingDays === 'string'
+                                          ? selectedPharmacy.operatingDays
+                                          : 'N/A')}
                               </span>
                               
                               <span className="col-span-5 text-gray-500 font-semibold text-sm self-center">Opening Time:</span>
                               <span className="col-span-7 text-gray-900 font-medium text-sm">
-                                {selectedPharmacy.operatingHours.openTime || 'N/A'}
+                                {selectedPharmacy.operatingHours.openTime || selectedPharmacy.openTime || 'N/A'}
                               </span>
                               
                               <span className="col-span-5 text-gray-500 font-semibold text-sm self-center">Closing Time:</span>
                               <span className="col-span-7 text-gray-900 font-medium text-sm">
-                                {selectedPharmacy.operatingHours.closeTime || 'N/A'}
+                                {selectedPharmacy.operatingHours.closeTime || selectedPharmacy.closeTime || 'N/A'}
                               </span>
                             </div>
+                          </div>
+                        ) : (
+                          <div className="text-gray-900 font-medium text-sm">
+                            {selectedPharmacy.hours}
                           </div>
                         )}
                       </div>
