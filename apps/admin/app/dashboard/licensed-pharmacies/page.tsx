@@ -33,6 +33,8 @@ export default function LicensedPharmaciesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'registered' | 'unregistered'>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   // Modals state
   const [showAddModal, setShowAddModal] = useState(false);
@@ -245,28 +247,40 @@ export default function LicensedPharmaciesPage() {
   const registeredCount = licenses.filter((l) => l.isRegistered).length;
   const unregisteredCount = totalCount - registeredCount;
 
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filteredLicenses.length / pageSize));
+  const validCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (validCurrentPage - 1) * pageSize;
+  const paginatedLicenses = filteredLicenses.slice(startIndex, startIndex + pageSize);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, pageSize]);
+
   if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Header />
 
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-w-0">
         <Sidebar />
 
-        <main className="flex-1 w-full p-4 sm:p-8 pb-20 sm:pb-8">
+        <main className="flex-1 min-w-0 w-full p-4 sm:p-6 lg:p-8 pb-20 sm:pb-8">
           {/* Page Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 sm:mb-8">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">Licensed Pharmacy Registry</h1>
-              <p className="text-gray-600">Add, edit, or remove Rwanda FDA permitted NPC numbers and manage their registration associations.</p>
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Licensed Pharmacy Registry</h1>
+              <p className="text-sm sm:text-base text-gray-600">
+                Add, edit, or remove Rwanda FDA permitted NPC numbers and manage their registration associations.
+              </p>
             </div>
-            <div>
+            <div className="shrink-0">
               <button
                 onClick={() => setShowAddModal(true)}
-                className="w-full sm:w-auto px-5 py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-5 py-2.5 sm:py-3 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 whitespace-nowrap text-sm sm:text-base"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 Add New License
@@ -275,154 +289,238 @@ export default function LicensedPharmaciesPage() {
           </div>
 
           {/* Quick Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="text-gray-500 text-sm font-medium mb-3">Total Licensed NPCs</h3>
-              <div className="text-4xl font-bold text-gray-900 mb-1">{loading ? '-' : totalCount}</div>
-              <p className="text-xs text-gray-400 font-medium">Permitted in database</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+              <h3 className="text-gray-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2">Total Licensed NPCs</h3>
+              <div className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-1">{loading ? '-' : totalCount.toLocaleString()}</div>
+              <p className="text-xs text-gray-400 font-medium">Permitted in official database</p>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="text-gray-500 text-sm font-medium mb-3">Registered Listings</h3>
-              <div className="text-4xl font-bold text-teal-600 mb-1">{loading ? '-' : registeredCount}</div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm">
+              <h3 className="text-gray-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2">Registered Listings</h3>
+              <div className="text-3xl sm:text-4xl font-extrabold text-teal-600 mb-1">{loading ? '-' : registeredCount.toLocaleString()}</div>
               <p className="text-xs text-gray-400 font-medium">Active platform accounts</p>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-              <h3 className="text-gray-500 text-sm font-medium mb-3">Available Registry Slots</h3>
-              <div className="text-4xl font-bold text-amber-600 mb-1">{loading ? '-' : unregisteredCount}</div>
+            <div className="bg-white rounded-xl border border-gray-200 p-5 sm:p-6 shadow-sm sm:col-span-2 lg:col-span-1">
+              <h3 className="text-gray-500 text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2">Available Registry Slots</h3>
+              <div className="text-3xl sm:text-4xl font-extrabold text-amber-600 mb-1">{loading ? '-' : unregisteredCount.toLocaleString()}</div>
               <p className="text-xs text-gray-400 font-medium">NPCs waiting to sign up</p>
             </div>
           </div>
 
-          {/* Search, Filter & Table Block */}
-          <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              {/* Search Field */}
-              <div className="flex-1 relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
+          {/* Search, Filter & Table Card */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            {/* Toolbar */}
+            <div className="p-4 sm:p-6 border-b border-gray-100 bg-white">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                {/* Search Field */}
+                <div className="flex-1 relative">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search by NPC license, name, district, or registered UID..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="block w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 placeholder-gray-400 font-medium"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  placeholder="Search by NPC license, name, district, or registered UID..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 placeholder-gray-400 font-medium"
-                />
-              </div>
 
-              {/* Status Filter */}
-              <div className="w-full md:w-56">
-                <select
-                  value={statusFilter}
-                  onChange={(e: any) => setStatusFilter(e.target.value)}
-                  className="block w-full px-4 py-3 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-semibold"
-                >
-                  <option value="all">All Registrations</option>
-                  <option value="registered">Registered Only</option>
-                  <option value="unregistered">Available Only</option>
-                </select>
+                {/* Status Filter */}
+                <div className="w-full sm:w-56 shrink-0">
+                  <select
+                    value={statusFilter}
+                    onChange={(e: any) => setStatusFilter(e.target.value)}
+                    className="block w-full px-3.5 py-2.5 border border-gray-300 rounded-lg text-sm bg-white text-gray-900 focus:ring-2 focus:ring-teal-500 focus:border-teal-500 font-semibold"
+                  >
+                    <option value="all">All Registrations ({totalCount})</option>
+                    <option value="registered">Registered Only ({registeredCount})</option>
+                    <option value="unregistered">Available Only ({unregisteredCount})</option>
+                  </select>
+                </div>
               </div>
             </div>
 
             {/* List Table */}
             {loading ? (
-              <div className="py-12 flex justify-center">
+              <div className="py-16 flex flex-col items-center justify-center gap-3">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+                <p className="text-xs text-gray-400 font-medium">Loading licensed records…</p>
               </div>
             ) : filteredLicenses.length === 0 ? (
-              <div className="text-center py-12 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+              <div className="text-center py-16 px-4">
                 <svg className="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                <h3 className="text-lg font-medium text-gray-900">No records found</h3>
-                <p className="text-gray-500 mt-1">Try adjusting your search criteria or register filter.</p>
+                <h3 className="text-base font-semibold text-gray-900">No records found</h3>
+                <p className="text-sm text-gray-500 mt-1 max-w-sm mx-auto">
+                  {searchQuery ? `No results matching "${searchQuery}".` : 'No records match the selected registration filter.'}
+                </p>
+                {(searchQuery || statusFilter !== 'all') && (
+                  <button
+                    onClick={() => { setSearchQuery(''); setStatusFilter('all'); }}
+                    className="mt-4 px-4 py-2 text-sm text-teal-600 hover:text-teal-700 font-semibold hover:bg-teal-50 rounded-lg transition-colors"
+                  >
+                    Clear filters
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">NPC Code</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pharmacy Name</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">District / Address</th>
-                      <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredLicenses.map((license) => (
-                      <tr key={license.id} className="hover:bg-gray-50 transition-colors">
-                        {/* NPC Code */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="font-bold text-gray-900 font-mono bg-gray-100 px-2.5 py-1 border border-gray-200 rounded uppercase">
-                            {license.registrationNumber}
-                          </span>
-                        </td>
-                        
-                        {/* Name */}
-                        <td className="px-6 py-4">
-                          <div className="font-bold text-gray-900 uppercase truncate max-w-xs">{license.name}</div>
-                          {license.councilTechnician && (
-                            <div className="text-xs text-gray-500 mt-0.5">Technician: {license.councilTechnician}</div>
-                          )}
-                        </td>
-
-                        {/* Location */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-800">{license.district || '—'}</div>
-                          {license.province && (
-                            <div className="text-xs text-gray-400 font-semibold">{license.province} Province</div>
-                          )}
-                        </td>
-
-                        {/* Status */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {license.isRegistered ? (
-                            <div className="flex flex-col">
-                              <span className="inline-flex items-center gap-1.5 self-start bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-1 rounded-full">
-                                <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
-                                Registered
-                              </span>
-                              {license.registeredUid && (
-                                <span className="text-[10px] text-gray-400 font-mono mt-1 select-all" title="Registered User UID">
-                                  UID: {license.registeredUid.slice(0, 8)}…
-                                </span>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">
-                              <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
-                              Available
-                            </span>
-                          )}
-                        </td>
-
-                        {/* Action buttons */}
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-semibold">
-                          <div className="flex justify-end items-center gap-3">
-                            <button
-                              onClick={() => handleStartEdit(license)}
-                              className="text-teal-600 hover:text-teal-900 px-3 py-1.5 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDeleteLicense(license)}
-                              className="text-red-600 hover:text-red-900 px-3 py-1.5 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
+              <>
+                <div className="overflow-x-auto w-full">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50/80">
+                      <tr>
+                        <th scope="col" className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">NPC Code</th>
+                        <th scope="col" className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider min-w-[200px]">Pharmacy Name</th>
+                        <th scope="col" className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">District / Address</th>
+                        <th scope="col" className="px-4 sm:px-6 py-3.5 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                        <th scope="col" className="px-4 sm:px-6 py-3.5 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-100">
+                      {paginatedLicenses.map((license) => (
+                        <tr key={license.id} className="hover:bg-gray-50/70 transition-colors">
+                          {/* NPC Code */}
+                          <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                            <span className="font-bold text-gray-900 font-mono bg-gray-100 px-2.5 py-1 border border-gray-200 rounded text-xs sm:text-sm uppercase inline-block">
+                              {license.registrationNumber}
+                            </span>
+                          </td>
+                          
+                          {/* Name */}
+                          <td className="px-4 sm:px-6 py-3.5">
+                            <div className="font-bold text-gray-900 uppercase text-xs sm:text-sm line-clamp-1 max-w-xs" title={license.name}>
+                              {license.name}
+                            </div>
+                            {license.councilTechnician && (
+                              <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-1">
+                                Tech: <span className="text-gray-700 font-medium">{license.councilTechnician}</span>
+                              </div>
+                            )}
+                          </td>
+
+                          {/* Location */}
+                          <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                            <div className="text-xs sm:text-sm font-medium text-gray-800">{license.district || '—'}</div>
+                            {license.province && (
+                              <div className="text-[11px] text-gray-400 font-medium">{license.province}</div>
+                            )}
+                          </td>
+
+                          {/* Status */}
+                          <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
+                            {license.isRegistered ? (
+                              <div className="flex flex-col">
+                                <span className="inline-flex items-center gap-1.5 self-start bg-teal-100 text-teal-800 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+                                  Registered
+                                </span>
+                                {license.registeredUid && (
+                                  <span className="text-[10px] text-gray-400 font-mono mt-0.5 select-all" title="Registered User UID">
+                                    UID: {license.registeredUid.slice(0, 8)}…
+                                  </span>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 bg-gray-100 text-gray-600 text-xs font-bold px-2.5 py-0.5 rounded-full">
+                                <span className="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                Available
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Actions */}
+                          <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap text-right text-sm font-semibold">
+                            <div className="flex justify-end items-center gap-2">
+                              <button
+                                onClick={() => handleStartEdit(license)}
+                                className="text-teal-600 hover:text-teal-800 px-2.5 py-1.5 bg-teal-50 hover:bg-teal-100 rounded-lg transition-colors text-xs font-semibold"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDeleteLicense(license)}
+                                className="text-red-600 hover:text-red-800 px-2.5 py-1.5 bg-red-50 hover:bg-red-100 rounded-lg transition-colors text-xs font-semibold"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination Controls */}
+                <div className="px-4 sm:px-6 py-4 border-t border-gray-100 bg-gray-50/60 flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 text-xs sm:text-sm text-gray-600 w-full sm:w-auto justify-between sm:justify-start">
+                    <span>
+                      Showing <strong className="text-gray-900">{filteredLicenses.length === 0 ? 0 : startIndex + 1}</strong> to{' '}
+                      <strong className="text-gray-900">{Math.min(startIndex + pageSize, filteredLicenses.length)}</strong> of{' '}
+                      <strong className="text-gray-900">{filteredLicenses.length.toLocaleString()}</strong> results
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs text-gray-400 hidden md:inline">Per page:</span>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => setPageSize(Number(e.target.value))}
+                        className="bg-white border border-gray-200 rounded px-2 py-1 text-xs font-semibold text-gray-700 focus:ring-1 focus:ring-teal-500"
+                      >
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={validCurrentPage <= 1}
+                      className="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                      </svg>
+                      Previous
+                    </button>
+
+                    <span className="text-xs sm:text-sm font-medium text-gray-600 px-2">
+                      Page <strong className="text-gray-900">{validCurrentPage}</strong> of{' '}
+                      <strong className="text-gray-900">{totalPages}</strong>
+                    </span>
+
+                    <button
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={validCurrentPage >= totalPages}
+                      className="px-3 py-1.5 text-xs sm:text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:hover:bg-white transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      Next
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </>
             )}
           </div>
         </main>
