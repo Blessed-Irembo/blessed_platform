@@ -9,6 +9,7 @@ import { useRequireAdmin } from '@/lib/adminAuthHooks';
 import { collection, doc, updateDoc, getDoc, onSnapshot, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { sendNotification } from '@/lib/notificationUtils';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 
 interface Pharmacy {
   id: string;
@@ -84,41 +85,13 @@ export default function SubscriptionsPage() {
 
       snap.forEach(doc => {
         const data = doc.data();
-        const isPaid = data.isPremium === true ||
-          data.hasPaidSubscription === true ||
-          data.subscriptionPlan === 'Premium';
-        const endData = data.subscriptionEndDate?.toDate();
-        
-        let isActive = false;
-        let expiresOn = 'N/A';
-        let plan = 'Free Trial';
-
-        if (isPaid && endData) {
-          isActive = endData > now;
-          expiresOn = endData.toLocaleDateString();
-          plan = 'Premium';
-        } else {
-          let trialEnd: Date | null = null;
-          if (data.trialEndDate) {
-            trialEnd = data.trialEndDate.toDate ? data.trialEndDate.toDate() : new Date(data.trialEndDate);
-          } else if (data.createdAt) {
-            const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-            trialEnd = new Date(createdAt);
-            trialEnd.setDate(trialEnd.getDate() + 90);
-          } else if (endData && !isPaid) {
-            trialEnd = endData;
-          }
-
-          if (trialEnd) {
-            isActive = trialEnd > now;
-            expiresOn = `${trialEnd.toLocaleDateString()} (Trial)`;
-            plan = 'Free Trial';
-          } else {
-            isActive = false;
-            expiresOn = 'Expired';
-            plan = 'Expired';
-          }
-        }
+        const sub = getSubscriptionStatus(data);
+        const isActive = !sub.isExpired;
+        const plan = sub.status === 'premium' ? 'Premium' : sub.status === 'freeTrial' ? 'Free Trial' : 'Expired';
+        const expiresOn = sub.expiresOn
+          ? (sub.status === 'freeTrial' ? `${sub.expiresOn.toLocaleDateString()} (Trial)` : sub.expiresOn.toLocaleDateString())
+          : 'Expired';
+        const isPaid = sub.status === 'premium';
 
         const pharm: Pharmacy = {
           id: doc.id,

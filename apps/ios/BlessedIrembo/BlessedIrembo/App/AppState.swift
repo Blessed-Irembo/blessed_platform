@@ -34,11 +34,23 @@ class AppState: ObservableObject {
         }
 
         let now = Date()
-        if pharmacy.isPremium, let endDate = pharmacy.subscriptionEndDate {
-            return endDate > now ? .premium(expiresOn: endDate) : .expired
+        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt)
+
+        if let endDate = pharmacy.subscriptionEndDate {
+            if endDate > now {
+                let isPastTrial = trialEnd.map { endDate > $0.addingTimeInterval(86400) || now > $0 } ?? true
+                if pharmacy.isPremium || isPastTrial {
+                    return .premium(expiresOn: endDate)
+                } else {
+                    let days = max(0, Calendar.current.dateComponents([.day], from: now, to: endDate).day ?? 0)
+                    return .freeTrial(daysRemaining: days)
+                }
+            } else {
+                return .expired
+            }
         }
-        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: pharmacy.createdAt) ?? (pharmacy.subscriptionEndDate ?? pharmacy.createdAt)
-        if trialEnd > now {
+
+        if let trialEnd = trialEnd, trialEnd > now {
             let days = max(0, Calendar.current.dateComponents([.day], from: now, to: trialEnd).day ?? 0)
             return .freeTrial(daysRemaining: days)
         }

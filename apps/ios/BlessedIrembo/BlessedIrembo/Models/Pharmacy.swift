@@ -127,10 +127,10 @@ struct Pharmacy: Codable, Identifiable, Hashable {
     var hasValidSubscription: Bool {
         if !isActive { return false }
         let now = Date()
-        if isPremium, let endDate = subscriptionEndDate {
+        if let endDate = subscriptionEndDate {
             return endDate > now
         }
-        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: createdAt) ?? (subscriptionEndDate ?? createdAt)
+        let trialEnd = Calendar.current.date(byAdding: .day, value: 90, to: createdAt) ?? createdAt
         return trialEnd > now
     }
 

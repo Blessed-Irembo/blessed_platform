@@ -8,6 +8,7 @@ import Sidebar from '@/components/layout/Sidebar';
 import Footer from '@/components/layout/Footer';
 import { collection, onSnapshot, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { getSubscriptionStatus } from '@/lib/useSubscriptionStatus';
 
 export default function PharmaciesPage() {
   const router = useRouter();
@@ -45,35 +46,9 @@ export default function PharmaciesPage() {
       const now = new Date();
       const list = snapshot.docs.map(docSnap => {
         const data = docSnap.data();
-        const isPaid = data.isPremium === true ||
-          data.hasPaidSubscription === true ||
-          data.subscriptionPlan === 'Premium';
-        const endData = data.subscriptionEndDate?.toDate();
-
-        let subscriptionStatus = 'Expired';
-        let isActive = false;
-
-        if (isPaid && endData) {
-          isActive = endData > now;
-          subscriptionStatus = isActive ? 'Premium' : 'Expired';
-        } else {
-          // Free Trial check
-          let trialEnd: Date | null = null;
-          if (data.trialEndDate) {
-            trialEnd = data.trialEndDate.toDate ? data.trialEndDate.toDate() : new Date(data.trialEndDate);
-          } else if (data.createdAt) {
-            const createdAt = data.createdAt.toDate ? data.createdAt.toDate() : new Date(data.createdAt);
-            trialEnd = new Date(createdAt);
-            trialEnd.setDate(trialEnd.getDate() + 90);
-          } else if (endData && !isPaid) {
-            trialEnd = endData;
-          }
-
-          if (trialEnd) {
-            isActive = trialEnd > now;
-            subscriptionStatus = isActive ? 'Free Trial' : 'Expired';
-          }
-        }
+        const sub = getSubscriptionStatus(data);
+        const subscriptionStatus = sub.status === 'premium' ? 'Premium' : sub.status === 'freeTrial' ? 'Free Trial' : 'Expired';
+        const isActive = !sub.isExpired;
 
         return {
           id: docSnap.id,

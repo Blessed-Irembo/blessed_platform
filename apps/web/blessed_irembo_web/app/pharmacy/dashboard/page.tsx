@@ -82,7 +82,7 @@ export default function PharmacyDashboard() {
               {t.pharmacyDashboard.overview.stats.active}
             </span>
             <p className="text-lg font-semibold text-gray-700">
-              {pharmacy?.isPremium || pharmacy?.subscriptionPlan === 'Premium' ? 'Premium' : 'Free Trial'}
+              {subscriptionStatus.status === 'premium' ? 'Premium' : 'Free Trial'}
             </p>
           </div>
         </div>

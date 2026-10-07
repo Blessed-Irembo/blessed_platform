@@ -278,9 +278,9 @@ data class Pharmacy(
             if (!isActive) return false
             
             val now = java.util.Date()
-            val isPaid = isPremium || hasPaidSubscription || subscriptionPlan.equals("Premium", ignoreCase = true)
-            if (isPaid && subscriptionEndDate != null) {
-                return subscriptionEndDate.toDate().after(now)
+            val endDate = subscriptionEndDate?.toDate()
+            if (endDate != null) {
+                return endDate.after(now)
             }
             
             // Check 90-day Free Trial
@@ -288,8 +288,6 @@ data class Pharmacy(
                 trialEndDate.toDate()
             } else if (createdAt != null) {
                 java.util.Date(createdAt.toDate().time + 90L * 24 * 60 * 60 * 1000)
-            } else if (subscriptionEndDate != null && !isPaid) {
-                subscriptionEndDate.toDate()
             } else {
                 null
             }
