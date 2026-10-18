@@ -22,7 +22,7 @@ build/
 .AppleDouble
 .LSOverride
 
-# Xcode
+.build/
 *.xcuserstate
 *.xcworkspace/xcuserdata/
 xcuserdata/
